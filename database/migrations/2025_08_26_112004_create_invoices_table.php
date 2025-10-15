@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('student_id')->constrained()->onDelete('cascade');
-            $table->foreignId('term_id')->constrained()->onDelete('cascade');
+            $table->foreignId('student_id')->constrained();
+            $table->foreignId('term_id')->constrained();
             $table->decimal('total_amount', 10, 2)->default(0);
             $table->decimal('amount_paid', 10, 2)->default(0);
             $table->decimal('balance', 10, 2)->default(0);

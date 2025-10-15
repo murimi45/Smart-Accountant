@@ -21,6 +21,7 @@ use App\Http\Controllers\IncomeCategoryController;
 use App\Http\Controllers\OtherIncomeController;
 use App\Http\Controllers\CashbookController;
 use App\Http\Controllers\paymentChannelController;
+use App\Http\Controllers\PromotionController;
 
 
 Route::get('/try', function () {
@@ -142,5 +143,9 @@ Route::get('/cashbook', [CashbookController::class, 'index'])->name('cashbook.in
     Route::put('/payment_channels/{id}', [PaymentChannelController::class, 'update'])->name('payment_channels.update');
     Route::get('/payment_channels/{id}/deactivate', [PaymentChannelController::class, 'deactivate'])->name('payment_channels.deactivate');
     Route::get('/payment_channels/{id}/activate', [PaymentChannelController::class, 'activate'])->name('payment_channels.activate');
+
+
+    Route::post('/promotions/term', [PromotionController::class, 'promoteToNextTerm'])->name('promotions.term');
+    Route::post('/promotions/class', [PromotionController::class, 'promoteToNextClass'])->name('promotions.class');
 
 });

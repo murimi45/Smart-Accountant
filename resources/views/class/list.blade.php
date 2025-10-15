@@ -14,6 +14,10 @@
                 <button type="button" class="btn btn-success px-4 py-2 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addClassModal">
                     <i class="fa fa-plus me-2"></i>Add New Grade
                 </button>
+                <button type="button" class="btn btn-warning px-4 py-2 fw-bold shadow-sm ms-2" data-bs-toggle="modal" data-bs-target="#promoteModal">
+    <i class="fa fa-level-up-alt me-2"></i>Promote Students
+</button>
+
             </div>
         </div>
     </div>
@@ -195,6 +199,57 @@
         </div>
     </div>
 </div>
+
+<!-- Promote Students Modal -->
+<div class="modal fade" id="promoteModal" tabindex="-1" aria-labelledby="promoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+            <form action="{{ route('promotions.class') }}" method="POST">
+                @csrf
+                <div class="modal-header" style="background: linear-gradient(135deg, #f6c90e 0%, #f39c12 100%); border-radius: 12px 12px 0 0;">
+                    <h5 class="modal-title" id="promoteModalLabel" style="color: white; font-weight: 600;">
+                        <i class="fa fa-level-up-alt me-2"></i>Promote Students to Next Class
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body" style="padding: 30px;">
+                    <p class="text-muted mb-3">
+                        This action will promote all eligible students to the next class and create invoices for the new term.
+                    </p>
+
+                    <div class="form-group mb-3">
+                        <label for="academic_year" class="form-label fw-semibold">
+                            <i class="fa fa-calendar me-2 text-warning"></i>Academic Year <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" 
+                            name="academic_year" 
+                            id="academic_year" 
+                            class="form-control" 
+                            value="{{ date('Y') }}" 
+                            placeholder="Enter academic year (e.g., 2025)" 
+                            required>
+                    </div>
+
+                    <div class="alert alert-warning d-flex align-items-center" style="border-radius: 10px;">
+                        <i class="fa fa-exclamation-triangle me-2"></i>
+                        <div><strong>Note:</strong> This process cannot be undone. Please confirm before proceeding.</div>
+                    </div>
+                </div>
+
+                <div class="modal-footer" style="border-top: 1px solid #e8eaed; padding: 20px 30px;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px; padding: 10px 20px;">
+                        <i class="fa fa-times me-1"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-warning text-white" style="border-radius: 8px; padding: 10px 20px;">
+                        <i class="fa fa-check me-1"></i>Confirm Promotion
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 
 <style>
 /* Modal Styling */

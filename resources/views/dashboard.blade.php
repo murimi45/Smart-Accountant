@@ -9,6 +9,48 @@
         <p class="text-muted mb-0">Here's your School Accounts overview</p>
     </div>
 
+
+    <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <form method="GET" action="{{ route('dashboard') }}" class="d-flex gap-2">
+            
+            <!-- View Type -->
+            <select name="view" class="form-select" onchange="this.form.submit()">
+                <option value="term" {{ $viewType === 'term' ? 'selected' : '' }}>Term View</option>
+                <option value="annual" {{ $viewType === 'annual' ? 'selected' : '' }}>Annual View</option>
+            </select>
+
+            @if($viewType === 'term')
+                <!-- Term Dropdown -->
+                <select name="term_id" class="form-select" onchange="this.form.submit()">
+                    @foreach($terms as $term)
+                        <option value="{{ $term->id }}" 
+                            {{ isset($selectedTerm) && $selectedTerm->id == $term->id ? 'selected' : '' }}>
+                            {{ $term->name }} ({{ $term->year }})
+                        </option>
+                    @endforeach
+                </select>
+            @else
+                <!-- Year Dropdown -->
+                <select name="year" class="form-select" onchange="this.form.submit()">
+                    @foreach($years as $year)
+                        <option value="{{ $year }}" 
+                            {{ isset($selectedYear) && $selectedYear == $year ? 'selected' : '' }}>
+                            {{ $year }}
+                        </option>
+                    @endforeach
+                </select>
+            @endif
+
+        </form>
+    </div>
+</div>
+
+
+   
+
+
+
     {{-- Financial Summary Cards --}}
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-6 col-lg-3">

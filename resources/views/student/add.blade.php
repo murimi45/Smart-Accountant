@@ -179,7 +179,7 @@
                                         <option value="">Select Term</option>
                                         @foreach($terms as $term)
                                             <option value="{{ $term->id }}" {{ old('term_id') == $term->id ? 'selected' : '' }}>
-                                                {{ $term->name }}
+                                               {{ $term->name }} - {{ $term->year }}
                                             </option>
                                         @endforeach
                                     </select>

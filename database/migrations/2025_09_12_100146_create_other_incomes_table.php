@@ -19,7 +19,7 @@ return new class extends Migration
             $table->decimal('amount', 15, 2);
             $table->string('payment_method')->nullable(); // cash, mpesa, bank
             $table->date('income_date')->nullable();
-            $table->foreignId('term_id')->constrained('terms')->onDelete('cascade');
+            $table->foreignId('term_id')->constrained('terms');
             $table->Year('year');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();

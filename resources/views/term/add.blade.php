@@ -143,13 +143,13 @@
                         </div>
 
                         {{-- Status Section --}}
-                        <div class="form-section mb-4">
+                        <!-- <div class="form-section mb-4">
                             <h5 class="section-title mb-4" style="color: #2c3e50; font-weight: 600; font-size: 16px; display: flex; align-items: center; padding-bottom: 12px; border-bottom: 2px solid #e8eaed;">
                                 <i class="fa fa-toggle-on me-2" style="color: #fabb3d;"></i>
                                 Term Status
-                            </h5>
+                            </h5> -->
 
-                            <div class="row">
+                            <!-- <div class="row">
                                 {{-- Status --}}
                                 <div class="col-md-6 mb-4">
                                     <label for="active" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
@@ -171,7 +171,7 @@
                                         <i class="fa fa-info-circle me-1"></i>Active terms will be available for student enrollment
                                     </small>
                                 </div>
-                            </div>
+                            </div> -->
                         </div>
 
                         {{-- Form Actions --}}

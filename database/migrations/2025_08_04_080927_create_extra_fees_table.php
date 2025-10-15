@@ -18,10 +18,10 @@ return new class extends Migration
             $table->boolean('is_quantity_based')->default(false);
             $table->text('description')->nullable();
             $table->string('status')->default('active');
-            $table->foreignId('term_id')->constrained('terms')->onDelete('cascade');
+            $table->foreignId('term_id')->constrained('terms');
             $table->Year('year');
-            $table->foreignId('school_id')->constrained()->onDelete('cascade');
-            $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
+            $table->foreignId('school_id')->constrained();
+            $table->foreignId('created_by')->constrained('users');
             $table->timestamps();
             $table->softDeletes();
         });

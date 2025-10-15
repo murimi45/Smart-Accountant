@@ -16,6 +16,13 @@ class TermController extends Controller
             ->orderBy('start_date', 'desc')
             ->get();
 
+        $termId = Term::currentId();
+        $currentTerm = Term::current();
+        $terms = Term::get();
+        $data['termId'] = $termId;
+        $data['currentTerm'] = $currentTerm;
+        $data['terms'] = $terms;
+
         return view('term.list', $data);
     }
 
@@ -24,20 +31,19 @@ class TermController extends Controller
         return view('term.add');
     }
 
-     public function insertTerm(Request $request)
-    {
-        $schoolId = auth()->user()->school_id;
+    public function insertTerm(Request $request)
+{
+    $schoolId = auth()->user()->school_id;
 
-      
-        $request->validate([
-            'name'       => 'required|string|max:50',
-            'year'       => 'required|digits:4|integer',
-            'start_date' => 'required|date',
-            'end_date'   => 'nullable|date|after_or_equal:start_date',
-            'active'     => 'nullable|boolean',
-        ]);
+    $request->validate([
+        'name'       => 'required|string|max:50',
+        'year'       => 'required|digits:4|integer',
+        'start_date' => 'required|date',
+        'end_date'   => 'nullable|date|after_or_equal:start_date',
+    ]);
 
-        $exists = Term::where('school_id', $schoolId)
+    // Prevent duplicate terms in same year
+    $exists = Term::where('school_id', $schoolId)
         ->where('name', $request->name)
         ->where('year', $request->year)
         ->exists();
@@ -48,22 +54,25 @@ class TermController extends Controller
             ->with('error', 'A term with this name and year already exists.');
     }
 
-       
-        if ($request->active) {
-            Term::where('school_id', $schoolId)->update(['active' => false]);
-        }
+    // ✅ Check if this is the school's first term
+    $hasExistingTerm = Term::where('school_id', $schoolId)->exists();
 
-        $save = new Term;
-        $save->school_id  = $schoolId;
-        $save->name       = $request->name;
-        $save->year       = $request->year;
-        $save->start_date = $request->start_date;
-        $save->end_date   = $request->end_date;
-        $save->active     = $request->active ?? false;
-        $save->save();
+    // Create new term
+    $term = new Term();
+    $term->school_id  = $schoolId;
+    $term->name       = $request->name;
+    $term->year       = $request->year;
+    $term->start_date = $request->start_date;
+    $term->end_date   = $request->end_date;
+    $term->active     = $hasExistingTerm ? false : true; // First term auto-active
+    $term->save();
 
-        return redirect()->route('termlist')->with('success', 'Term Created Successfully');
-    }
+    return redirect()->route('termlist')
+        ->with('success', $hasExistingTerm
+            ? 'Term created successfully.'
+            : 'First term created and set as active.');
+}
+
 
 
     public function editTerm($id,Request $request){
@@ -81,12 +90,8 @@ class TermController extends Controller
             'active'     => 'nullable|boolean',
         ]);
 
-        // ✅ If this term is set active, deactivate others
-        if ($request->active) {
-            Term::where('school_id', $schoolId)
-                ->where('id', '!=', $id)
-                ->update(['active' => false]);
-        }
+      
+       
 
         $term->name       = $request->name;
         $term->year       = $request->year;

@@ -13,16 +13,16 @@ return new class extends Migration
     {
         Schema::create('extra_fee_assignments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('student_id')->constrained()->onDelete('cascade');
-            $table->foreignId('extra_fee_id')->constrained('extra_fees')->onDelete('cascade');
+            $table->foreignId('student_id')->constrained();
+            $table->foreignId('extra_fee_id')->constrained('extra_fees');
             
             // Quantity and amount
             $table->integer('quantity'); 
             $table->decimal('amount', 10, 2); 
     
             // Multi-tenancy & tracking
-            $table->foreignId('school_id')->constrained()->onDelete('cascade');
-            $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
+            $table->foreignId('school_id')->constrained();
+            $table->foreignId('created_by')->constrained('users');
             $table->timestamps();
             $table->softDeletes();
               $table->unique(['student_id', 'extra_fee_id']);

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('subscriptions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('school_id')->constrained()->onDelete('cascade');
+            $table->foreignId('school_id')->constrained();
            
             $table->integer('student_count')->default(0);
             $table->decimal('total_fee',10,2)->default(0.00);
