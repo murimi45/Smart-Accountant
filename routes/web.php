@@ -51,10 +51,10 @@ Route::get('/deletestudent/{id}', [StudentController::class, 'deleteStudent'])->
 
 
 Route::get('/class', [ClassController::class, 'listClass'])->name('classlist');
-Route::get('/addClass', [ClassController::class, 'addClass'])->name('addclass');
-Route::post('/addClass', [ClassController::class, 'insert'])->name('insertclass');
-Route::post('/editClass/{id}', [ClassController::class, 'edit'])->name('editclass');
-Route::get('/editClass/{id}', [ClassController::class, 'update'])->name('updateclass');
+// Route::get('/addClass', [ClassController::class, 'addClass'])->name('addclass');
+Route::post('/insertClass', [ClassController::class, 'insert'])->name('insertclass');
+Route::post('/editClass/{id}', [ClassController::class, 'update'])->name('editclass');
+// Route::get('/editClass/{id}', [ClassController::class, 'update'])->name('updateclass');
 Route::get('/deleteClass/{id}', [ClassController::class, 'delete'])->name('deleteclass');
 // Route::get('/student', [DashboardController::class, 'showDashboard'])->name('dashboard');
 // Route::get('/student', [DashboardController::class, 'showDashboard'])->name('dashboard');

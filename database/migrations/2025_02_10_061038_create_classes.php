@@ -15,6 +15,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('school_id')->constrained('schools');
             $table->string('name');
+            $table->foreignId('next_class_id')
+                ->nullable()
+                ->constrained('classes')
+                ->nullOnDelete(); 
            
             $table->timestamps();
         });

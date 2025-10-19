@@ -6,21 +6,28 @@ use App\Models\ClassFee;
 
 class ClassFeeObserver
 {
-    public function created(ClassFee $classFee)
-    {
-        foreach ($classFee->class->students as $student) {
-            app(InvoiceService::class)
-                ->createOrUpdateInvoice($student, $classFee->term_id);
-        }
-    }
-
     public function updated(ClassFee $classFee)
-    {
-        foreach ($classFee->class->students as $student) {
-            app(InvoiceService::class)
-                ->createOrUpdateInvoice($student, $classFee->term_id);
+{
+    foreach ($classFee->class->students as $student) {
+
+        // ✅ Only create/update invoice if student is currently in this term
+        if ($student->term_id == $classFee->term_id) {
+            app(InvoiceService::class)->createOrUpdateInvoice($student, $classFee->term_id);
         }
     }
+}
+
+public function created(ClassFee $classFee)
+{
+    foreach ($classFee->class->students as $student) {
+
+        // ✅ Same check here
+        if ($student->term_id == $classFee->term_id) {
+            app(InvoiceService::class)->createOrUpdateInvoice($student, $classFee->term_id);
+        }
+    }
+}
+
 
     /**
      * Handle the ClassFee "deleted" event.

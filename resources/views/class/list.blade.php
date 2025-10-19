@@ -15,9 +15,8 @@
                     <i class="fa fa-plus me-2"></i>Add New Grade
                 </button>
                 <button type="button" class="btn btn-warning px-4 py-2 fw-bold shadow-sm ms-2" data-bs-toggle="modal" data-bs-target="#promoteModal">
-    <i class="fa fa-level-up-alt me-2"></i>Promote Students
-</button>
-
+                    <i class="fa fa-level-up-alt me-2"></i>Promote Students
+                </button>
             </div>
         </div>
     </div>
@@ -35,6 +34,19 @@
         <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert" style="border-left: 4px solid #dc3545; border-radius: 8px;">
             <i class="fa fa-exclamation-circle me-2"></i>
             <strong>Error!</strong> {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert" style="border-left: 4px solid #dc3545; border-radius: 8px;">
+            <i class="fa fa-exclamation-circle me-2"></i>
+            <strong>Validation Error!</strong>
+            <ul class="mb-0 mt-2">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
@@ -59,6 +71,7 @@
                                 <tr>
                                     <th style="width: 80px;"><i class="fa fa-hashtag me-2"></i>ID</th>
                                     <th><i class="fa fa-school me-2"></i>Class Name</th>
+                                    <th><i class="fa fa-arrow-right me-2"></i>Next Class</th>
                                     <th class="text-center" style="width: 200px;"><i class="fa fa-cog me-2"></i>Actions</th>
                                 </tr>
                             </thead>
@@ -78,6 +91,15 @@
                                             <strong>{{ $value->name }}</strong>
                                         </div>
                                     </td>
+                                    <td>
+                                        @if($value->next_class_id)
+                                            <span class="badge bg-info" style="padding: 6px 12px; border-radius: 6px;">
+                                                {{ $value->nextClass->name ?? 'N/A' }}
+                                            </span>
+                                        @else
+                                            <span class="text-muted">None</span>
+                                        @endif
+                                    </td>
                                     <td class="text-center">
                                         <div class="d-flex gap-2 justify-content-center">
                                             <button 
@@ -85,6 +107,7 @@
                                                 style="border-radius: 6px; padding: 6px 14px;"
                                                 data-id="{{ $value->id }}"
                                                 data-name="{{ $value->name }}"
+                                                data-next-class-id="{{ $value->next_class_id }}"
                                                 title="Edit Grade">
                                                 <i class="fa fa-edit me-1"></i>Edit
                                             </button>
@@ -100,7 +123,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="3" class="text-center py-5">
+                                    <td colspan="4" class="text-center py-5">
                                         <div style="color: #9ca3af;">
                                             <i class="fa fa-inbox fa-3x mb-3" style="opacity: 0.3;"></i>
                                             <p class="mb-0">No grades found</p>
@@ -122,7 +145,7 @@
 <div class="modal fade" id="editClassModal" tabindex="-1" aria-labelledby="editClassModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
-            <form id="editClassForm" method="POST">
+            <form id="editClassForm" method="POST" action="">
                 @csrf
                 <div class="modal-header" style="background: linear-gradient(135deg, #36a9e2 0%, #1e88c7 100%); border-radius: 12px 12px 0 0; border: none;">
                     <h5 class="modal-title" id="editClassModalLabel" style="color: white; font-weight: 600;">
@@ -131,7 +154,7 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" style="padding: 30px;">
-                    <div class="form-group mb-0">
+                    <div class="form-group mb-3">
                         <label for="editName" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
                             <i class="fa fa-school me-2 text-primary"></i>Class Name <span class="text-danger">*</span>
                         </label>
@@ -142,6 +165,25 @@
                                placeholder="Enter class name"
                                style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
                                required>
+                    </div>
+
+                    <div class="form-group mb-0">
+                        <label for="editNextClass" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
+                            <i class="fa fa-arrow-right me-2 text-primary"></i>Next Class (Optional)
+                        </label>
+                        <select id="editNextClass" 
+                                name="next_class_id" 
+                                class="form-select" 
+                                style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;">
+                            <option value="">-- Select Next Class --</option>
+                            @foreach($getRecord as $class)
+                                <option value="{{ $class->id }}">{{ $class->name }}</option>
+                            @endforeach
+                        </select>
+                        <small class="text-muted mt-1 d-block">
+                            <i class="fa fa-info-circle me-1"></i>
+                            Students will automatically progress to this class upon promotion
+                        </small>
                     </div>
                 </div>
                 <div class="modal-footer" style="border-top: 1px solid #e8eaed; padding: 20px 30px;">
@@ -159,9 +201,9 @@
 
 {{-- Add Class Modal --}}
 <div class="modal fade" id="addClassModal" tabindex="-1" aria-labelledby="addClassModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
-            <form id="addClassForm" action="{{ route('insertclass') }}" method="POST">
+            <form id="addClassForm" action="{{ url('/insertClass') }}" method="POST">
                 @csrf
                 <div class="modal-header" style="background: linear-gradient(135deg, #79c347 0%, #5fa732 100%); border-radius: 12px 12px 0 0; border: none;">
                     <h5 class="modal-title" id="addClassModalLabel" style="color: white; font-weight: 600;">
@@ -171,21 +213,46 @@
                 </div>
                 <div class="modal-body" style="padding: 30px;">
                     <div id="classInputs">
-                        <div class="form-group mb-3">
-                            <label class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                                <i class="fa fa-school me-2 text-success"></i>Class Name <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" 
-                                   name="name[]" 
-                                   class="form-control" 
-                                   placeholder="Enter class name"
-                                   style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
-                                   required>
+                        <div class="class-input-group mb-3 p-3" style="border: 1px solid #e0e0e0; border-radius: 8px; background: #f9f9f9;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3 mb-md-0">
+                                        <label class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
+                                            <i class="fa fa-school me-2 text-success"></i>Class Name <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" 
+                                               name="classes[0][name]" 
+                                               class="form-control" 
+                                               placeholder="Enter class name"
+                                               style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
+                                               required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-0">
+                                        <label class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
+                                            <i class="fa fa-arrow-right me-2 text-success"></i>Next Class (Optional)
+                                        </label>
+                                        <select name="classes[0][next_class_id]" 
+                                                class="form-select next-class-select" 
+                                                style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;">
+                                            <option value="">-- Select Next Class --</option>
+                                            @foreach($getRecord as $class)
+                                                <option value="{{ $class->id }}">{{ $class->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <button type="button" class="btn btn-outline-success btn-sm" id="addMoreInput" style="border-radius: 6px;">
                         <i class="fa fa-plus-circle me-1"></i>Add Another Class
                     </button>
+                    <small class="text-muted d-block mt-2">
+                        <i class="fa fa-info-circle me-1"></i>
+                        Tip: Add classes in order (e.g., Grade 1, Grade 2, Grade 3) and set their progression paths
+                    </small>
                 </div>
                 <div class="modal-footer" style="border-top: 1px solid #e8eaed; padding: 20px 30px;">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px; padding: 10px 20px;">
@@ -266,7 +333,8 @@
 }
 
 /* Form Control Focus */
-.form-control:focus {
+.form-control:focus,
+.form-select:focus {
     border-color: #79c347;
     box-shadow: 0 0 0 0.2rem rgba(121, 195, 71, 0.15);
 }
@@ -326,6 +394,15 @@
     color: white;
 }
 
+/* Remove button styling */
+.remove-input {
+    transition: all 0.2s ease;
+}
+
+.remove-input:hover {
+    transform: scale(1.1);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .modal-body {
@@ -346,32 +423,62 @@
         padding: 4px 10px !important;
         font-size: 12px;
     }
+    
+    .class-input-group {
+        padding: 15px !important;
+    }
 }
 </style>
 
 <script>
+let classInputCounter = 1;
+
 // Add More Input Fields
 document.getElementById('addMoreInput').addEventListener('click', function() {
     const container = document.getElementById('classInputs');
     const inputGroup = document.createElement('div');
-    inputGroup.classList.add('form-group', 'mb-3', 'position-relative');
+    inputGroup.classList.add('class-input-group', 'mb-3', 'p-3', 'position-relative');
+    inputGroup.style.cssText = 'border: 1px solid #e0e0e0; border-radius: 8px; background: #f9f9f9;';
+    
     inputGroup.innerHTML = `
-        <label class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-            <i class="fa fa-school me-2 text-success"></i>Class Name <span class="text-danger">*</span>
-        </label>
-        <div class="input-group">
-            <input type="text" 
-                   name="name[]" 
-                   class="form-control" 
-                   placeholder="Enter class name"
-                   style="border-radius: 8px 0 0 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
-                   required>
-            <button type="button" class="btn btn-outline-danger remove-input" style="border-radius: 0 8px 8px 0;">
-                <i class="fa fa-times"></i>
-            </button>
+        <button type="button" class="btn btn-sm btn-danger remove-input" 
+                style="position: absolute; top: 10px; right: 10px; z-index: 10; border-radius: 50%; width: 30px; height: 30px; padding: 0;">
+            <i class="fa fa-times"></i>
+        </button>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group mb-3 mb-md-0">
+                    <label class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
+                        <i class="fa fa-school me-2 text-success"></i>Class Name <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" 
+                           name="classes[${classInputCounter}][name]" 
+                           class="form-control" 
+                           placeholder="Enter class name"
+                           style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
+                           required>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group mb-0">
+                    <label class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
+                        <i class="fa fa-arrow-right me-2 text-success"></i>Next Class (Optional)
+                    </label>
+                    <select name="classes[${classInputCounter}][next_class_id]" 
+                            class="form-select next-class-select" 
+                            style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;">
+                        <option value="">-- Select Next Class --</option>
+                        @foreach($getRecord as $class)
+                            <option value="{{ $class->id }}">{{ $class->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
         </div>
     `;
+    
     container.appendChild(inputGroup);
+    classInputCounter++;
 
     // Add event listener to remove button
     inputGroup.querySelector('.remove-input').addEventListener('click', function() {
@@ -384,12 +491,28 @@ document.querySelectorAll('.editBtn').forEach(button => {
     button.addEventListener('click', function() {
         const id = this.getAttribute('data-id');
         const name = this.getAttribute('data-name');
+        const nextClassId = this.getAttribute('data-next-class-id');
 
-        // Set form action dynamically
-        document.getElementById('editClassForm').action = '/editClass/' + id;
+        // Set form action dynamically using url() helper
+        document.getElementById('editClassForm').action = '{{ url("/editClass") }}/' + id;
 
         // Set current name
         document.getElementById('editName').value = name;
+
+        // Set next class dropdown
+        const nextClassSelect = document.getElementById('editNextClass');
+        nextClassSelect.value = nextClassId || '';
+
+        // Remove the option for current class from next class dropdown
+        Array.from(nextClassSelect.options).forEach(option => {
+            if (option.value == id) {
+                option.disabled = true;
+                option.style.display = 'none';
+            } else {
+                option.disabled = false;
+                option.style.display = 'block';
+            }
+        });
 
         // Open modal using Bootstrap 5 API
         const editModal = new bootstrap.Modal(document.getElementById('editClassModal'));

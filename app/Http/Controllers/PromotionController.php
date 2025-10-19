@@ -97,21 +97,37 @@ class PromotionController extends Controller
     $schoolId = Auth::user()->school_id;
     $userId = Auth::id();
 
+    // Validate the academic year input
+    $request->validate([
+        'academic_year' => 'required|integer|min:2000|max:2100'
+    ]);
+
+    $targetYear = $request->academic_year;
+
+    // Find the active term OR the last term of the current year
     $activeTerm = Term::where('school_id', $schoolId)
         ->where('active', true)
         ->first();
 
+    // If no active term, get the last term of the previous year
     if (!$activeTerm) {
-        return back()->with('error', 'No active term found for the current year.');
+        $activeTerm = Term::where('school_id', $schoolId)
+            ->orderBy('year', 'desc')
+            ->orderBy('end_date', 'desc')
+            ->first();
+        
+        if (!$activeTerm) {
+            return back()->with('error', 'No terms found. Please create terms first.');
+        }
     }
 
     $studentsCount = Student::where('school_id', $schoolId)->count();
 
     if ($studentsCount === 0) {
-    return back()->with('error', 'No students found. Please add students before running class promotion.');
-   }
+        return back()->with('error', 'No students found. Please add students before running class promotion.');
+    }
 
-    // ✅ Check if this is the final term of the academic year
+    // Check if this is the final term of the academic year
     $termsInYear = Term::where('school_id', $schoolId)
         ->where('year', $activeTerm->year)
         ->orderBy('start_date')
@@ -123,21 +139,25 @@ class PromotionController extends Controller
         return back()->with('error', 'You can only promote to the next class after the final term of the year.');
     }
 
-    // ✅ Check if next year's first term exists
+    // Check if next year's first term exists
     $nextYearFirstTerm = Term::where('school_id', $schoolId)
-        ->where('year', $activeTerm->year + 1)
+        ->where('year', $targetYear)
         ->orderBy('start_date', 'asc')
         ->first();
 
     if (!$nextYearFirstTerm) {
         return redirect()->route('addterm')
-            ->with('error', 'Next academic year’s first term not found. Please create it first before promoting.');
+            ->with('error', "Next academic year's first term (Year {$targetYear}) not found. Please create it first before promoting.");
     }
 
-    // ✅ If all checks pass → run the promotion
-    $this->promotionService->promoteToNextClass($schoolId, $activeTerm->year, $userId);
-
-    return back()->with('success', 'Students promoted to next class successfully!');
+    try {
+        // Run the promotion
+        $this->promotionService->promoteToNextClass($schoolId, $activeTerm, $nextYearFirstTerm, $userId);
+        
+        return back()->with('success', 'Students promoted to next class successfully!');
+    } catch (\Exception $e) {
+        return back()->with('error', 'Promotion failed: ' . $e->getMessage());
+    }
 }
 
 }

@@ -54,6 +54,10 @@ class PromotionService
                     'credit_forward' => $creditForward,
                 ]);
 
+                 $student->update([
+                'term_id' => $toTermId,
+            ]);
+
                 // ✅ Record the promotion in student history
                 StudentHistory::create([
                     'student_id' => $student->id,
@@ -74,51 +78,40 @@ class PromotionService
     /**
      * Promote students to the next class at the end of the academic year.
      */
-    public function promoteToNextClass($schoolId, $academicYear, $userId = null)
+
+
+public function promoteToNextClass($schoolId, $fromTerm, $toTerm, $userId = null)
 {
-    DB::transaction(function () use ($schoolId, $academicYear, $userId) {
-
-        $activeTerm = Term::where('school_id', $schoolId)
-            ->where('active', true)
-            ->first();
-
-        if (!$activeTerm) {
-            throw new Exception('No active term found for the current year.');
+    DB::transaction(function () use ($schoolId, $fromTerm, $toTerm, $userId) {
+        
+        // Verify the target term exists
+        if (!$toTerm) {
+            throw new \Exception('Target term not found.');
         }
 
-        // ✅ Find or create the next year's first term
-        $nextYearFirstTerm = Term::where('school_id', $schoolId)
-            ->where('year', $activeTerm->year + 1)
-            ->orderBy('start_date', 'asc')
-            ->first();
-
-       if (!$nextYearFirstTerm) {
-    return redirect()->back()->with('error', 'Next academic year’s first term not found. Please create it first before promoting.');
-}
-
-
-        // ✅ Log the class promotion run
+        // Log the class promotion run
         PromotionRun::create([
             'school_id' => $schoolId,
-            'from_term_id' => $activeTerm->id,
-            'to_term_id' => $nextYearFirstTerm->id,
+            'from_term_id' => $fromTerm->id,
+            'to_term_id' => $toTerm->id,
             'promoted_by' => $userId,
             'type' => 'class_promotion',
         ]);
 
-        // ✅ Get all students in this school
+        // Get all students in this school
         $students = Student::where('school_id', $schoolId)->get();
+        $promotedCount = 0;
 
         foreach ($students as $student) {
             $currentClass = $student->class;
 
             if (!$currentClass || !$currentClass->next_class_id) {
-                continue; // skip if no next class defined
+                continue; // Skip if no next class defined
             }
 
-            // 🔹 Get latest invoice for the active term
+            // Get latest invoice for the from term
             $previousInvoice = Invoice::where('student_id', $student->id)
-                ->where('term_id', $activeTerm->id)
+                ->where('term_id', $fromTerm->id)
                 ->latest('id')
                 ->first();
 
@@ -130,38 +123,47 @@ class PromotionService
                 $creditForward = max(-$previousInvoice->balance, 0);
             }
 
-            // 🔹 Move student to the next class and term
+            // Move student to the next class and term
             $student->update([
                 'class_id' => $currentClass->next_class_id,
-                'term_id' => $nextYearFirstTerm->id,
+                'term_id' => $toTerm->id,
             ]);
 
-            // 🔹 Create new invoice for next year's first term
-            $nextClass = $student->fresh()->class; // refresh to get new class fee
+            // Create new invoice for next year's first term
+            $nextClass = $student->fresh()->class;
             Invoice::create([
                 'student_id' => $student->id,
-                'term_id' => $nextYearFirstTerm->id,
+                'term_id' => $toTerm->id,
                 'total_amount' => $nextClass->fee ?? 0,
                 'balance_forward' => $balanceForward,
                 'credit_forward' => $creditForward,
+                'balance' => ($nextClass->fee ?? 0) + $balanceForward - $creditForward,
             ]);
 
-            // 🔹 Record promotion history
+            // Record promotion history
             StudentHistory::create([
                 'student_id' => $student->id,
                 'from_class_id' => $currentClass->id,
                 'to_class_id' => $currentClass->next_class_id,
-                'from_term_id' => $activeTerm->id,
-                'to_term_id' => $nextYearFirstTerm->id,
+                'from_term_id' => $fromTerm->id,
+                'to_term_id' => $toTerm->id,
                 'carried_balance' => $balanceForward,
                 'carried_credit' => $creditForward,
             ]);
+
+            $promotedCount++;
         }
 
-        // ✅ Switch term activation
-        Term::where('school_id', $schoolId)->update(['active' => false]);
-        $nextYearFirstTerm->update(['active' => true]);
+        // Switch term activation
+        // Switch term activation
+Term::where('school_id', $schoolId)->update(['active' => false]);
+Term::where('id', $toTerm->id)->update(['active' => true]);
+
+
+        if ($promotedCount === 0) {
+            throw new \Exception('No students were promoted. Check class configurations.');
+        }
     });
 }
-
+/*******  ad54016e-78e6-4af2-9c25-3a7d6dfd9219  *******/
 }
