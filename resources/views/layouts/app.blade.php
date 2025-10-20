@@ -135,6 +135,7 @@
     <!-- Custom Dashboard JS -->
     <script src="/js/dashboard.js"></script>
     
-    
+    @livewireScripts
+
 </body>
 </html>

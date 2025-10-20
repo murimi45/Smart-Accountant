@@ -251,7 +251,7 @@
             </div>
 
             {{-- Notifications --}}
-            <div class="notifications-card">
+            <!-- <div class="notifications-card">
                 <h5><i class="fa fa-bell me-2"></i> Recent Notifications</h5>
                 
                 <div class="notification-item">
@@ -297,7 +297,9 @@
                         <small><i class="fa fa-clock"></i> 1 day ago</small>
                     </div>
                 </div>
-            </div>
+            </div> -->
+            @livewire('dashboard-notifications')
+
         </div>
     </div>
 
