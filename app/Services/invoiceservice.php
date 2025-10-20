@@ -7,6 +7,8 @@ use App\Models\InvoiceItem;
 use App\Models\ClassFee;
 use App\Models\StudentExtraFee;
 use App\Models\InvoicePayment;
+use Auth;
+use App\Notifications\IncomeRecordedNotification;
 
 class InvoiceService
 {
@@ -112,6 +114,14 @@ class InvoiceService
             'status' => $this->calculateStatus($invoice),
         ]);
         // event(new InvoiceUpdated($invoice));
+
+         $user = Auth::user();
+
+         $user->notify(new IncomeRecordedNotification([
+             'title' => 'Payment Received',
+             'message' => 'You have received KES ' . number_format($amount) . 
+                 ' from ' . $invoice->student->name . ' for invoice #' . $invoice->id . '.',
+         ]));
         return $invoice;
     }
 

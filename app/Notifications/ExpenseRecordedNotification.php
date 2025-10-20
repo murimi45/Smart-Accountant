@@ -9,25 +9,35 @@ class ExpenseRecordedNotification extends Notification
 {
     use Queueable;
 
-    protected $description, $amount;
+    protected $data;
 
-    public function __construct($description, $amount)
+    /**
+     * Create a new notification instance.
+     *
+     * @param array $data
+     */
+    public function __construct(array $data)
     {
-        $this->description = $description;
-        $this->amount = $amount;
+        $this->data = $data;
     }
 
+    /**
+     * Notification will be stored in database only
+     */
     public function via($notifiable)
     {
         return ['database'];
     }
 
-    public function toDatabase($notifiable)
+    /**
+     * Data that is stored in the database and read by Livewire
+     */
+    public function toArray($notifiable)
     {
         return [
             'type' => 'expense',
-            'title' => 'Expense Recorded',
-            'message' => 'KES ' . number_format($this->amount) . ' spent on ' . $this->description,
+            'title' => $this->data['title'] ?? 'Expense Recorded',
+            'message' => $this->data['message'] ?? '',
         ];
     }
 }

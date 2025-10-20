@@ -251,54 +251,9 @@
             </div>
 
             {{-- Notifications --}}
-            <!-- <div class="notifications-card">
-                <h5><i class="fa fa-bell me-2"></i> Recent Notifications</h5>
-                
-                <div class="notification-item">
-                    <div class="notification-icon warning">
-                        <i class="fa fa-exclamation-triangle"></i>
-                    </div>
-                    <div class="notification-content">
-                        <h6>Payment Overdue Alert</h6>
-                        <p>23 students have overdue fee payments for Term 1</p>
-                        <small><i class="fa fa-clock"></i> 2 hours ago</small>
-                    </div>
-                </div>
+            
+           <livewire:dashboard-notifications />
 
-                <div class="notification-item">
-                    <div class="notification-icon success">
-                        <i class="fa fa-check-circle"></i>
-                    </div>
-                    <div class="notification-content">
-                        <h6>Bulk Payment Received</h6>
-                        <p>Form 4A class fees received - KES 850,000</p>
-                        <small><i class="fa fa-clock"></i> 5 hours ago</small>
-                    </div>
-                </div>
-
-                <div class="notification-item">
-                    <div class="notification-icon info">
-                        <i class="fa fa-info-circle"></i>
-                    </div>
-                    <div class="notification-content">
-                        <h6>Fee Structure Updated</h6>
-                        <p>New fee schedule approved for Term 2, 2025</p>
-                        <small><i class="fa fa-clock"></i> 1 day ago</small>
-                    </div>
-                </div>
-
-                <div class="notification-item">
-                    <div class="notification-icon warning">
-                        <i class="fa fa-bell"></i>
-                    </div>
-                    <div class="notification-content">
-                        <h6>Reminder: End of Month</h6>
-                        <p>Monthly financial report due in 3 days</p>
-                        <small><i class="fa fa-clock"></i> 1 day ago</small>
-                    </div>
-                </div>
-            </div> -->
-            @livewire('dashboard-notifications')
 
         </div>
     </div>

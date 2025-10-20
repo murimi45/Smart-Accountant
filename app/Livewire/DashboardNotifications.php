@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
@@ -33,7 +33,7 @@ class DashboardNotifications extends Component
         });
 
         // re-render the component
-        $this->emitSelf('$refresh');
+         $this->emitTo('dashboard-notifications', 'refreshNotifications'); 
     }
 
     /**
@@ -49,6 +49,7 @@ class DashboardNotifications extends Component
             return [
                 'overdue' => collect(),
                 'income'  => collect(),
+                'other_income' => collect(),
                 'expense' => collect(),
                 'summary' => collect(),
             ];
@@ -71,6 +72,7 @@ class DashboardNotifications extends Component
         return [
             'overdue' => $filterByType('overdue'),
             'income'  => $filterByType('income'),
+            'other_income' => $filterByType('other_income'), 
             'expense' => $filterByType('expense'),
             'summary' => $filterByType('summary'),
         ];
@@ -83,6 +85,7 @@ class DashboardNotifications extends Component
         return view('livewire.dashboard-notifications', [
             'overdue' => $groups['overdue'],
             'income'  => $groups['income'],
+            'other_income' => $groups['other_income'],
             'expense' => $groups['expense'],
             'summary' => $groups['summary'],
         ]);

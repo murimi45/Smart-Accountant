@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('main')
-<div class="main-wrapper">
+<div class="container-fluid px-4">
     {{-- Page Header --}}
     <div class="page_title">
         <div class="row align-items-center mb-4">
@@ -35,9 +35,9 @@
         </div>
     @endif
 
-    {{-- Form Card --}}
+    {{-- Form Card - Full Width --}}
     <div class="row">
-        <div class="col-lg-8 mx-auto">
+        <div class="col-12">
             <div class="white_shd full margin_bottom_30" style="border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #f0f0f0;">
                 <div class="full graph_head" style="background: linear-gradient(135deg, #79c347 0%, #5fa732 100%); padding: 25px 30px; border-radius: 12px 12px 0 0;">
                     <div class="heading1 margin_0">
@@ -62,7 +62,7 @@
 
                             <div class="row">
                                 {{-- Income Category --}}
-                                <div class="col-md-6 mb-4">
+                                <div class="col-md-6 col-lg-3 mb-4">
                                     <label for="income_category_id" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
                                         <i class="fa fa-tags me-2 text-primary"></i>Income Category <span class="text-danger">*</span>
                                     </label>
@@ -84,7 +84,7 @@
                                 </div>
 
                                 {{-- Amount --}}
-                                <div class="col-md-6 mb-4">
+                                <div class="col-md-6 col-lg-3 mb-4">
                                     <label for="amount" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
                                         <i class="fa fa-coins me-2 text-success"></i>Amount (KSh) <span class="text-danger">*</span>
                                     </label>
@@ -109,7 +109,7 @@
                                 </div>
 
                                 {{-- Payment Method --}}
-                                <div class="col-md-6 mb-4">
+                                <div class="col-md-6 col-lg-3 mb-4">
                                     <label for="payment_method" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
                                         <i class="fa fa-credit-card me-2 text-info"></i>Payment Method
                                     </label>
@@ -129,7 +129,7 @@
                                 </div>
 
                                 {{-- Date --}}
-                                <div class="col-md-6 mb-4">
+                                <div class="col-md-6 col-lg-3 mb-4">
                                     <label for="income_date" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
                                         <i class="fa fa-calendar me-2 text-warning"></i>Date <span class="text-danger">*</span>
                                     </label>
@@ -156,7 +156,7 @@
 
                             <div class="row">
                                 {{-- Term --}}
-                                <div class="col-md-12 mb-4">
+                                <div class="col-md-6 mb-4">
                                     <label for="term_id" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
                                         <i class="fa fa-bookmark me-2 text-primary"></i>Term <span class="text-danger">*</span>
                                     </label>
@@ -188,7 +188,7 @@
 
                             <div class="row">
                                 {{-- Description --}}
-                                <div class="col-md-12 mb-4">
+                                <div class="col-12 mb-4">
                                     <label for="description" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
                                         <i class="fa fa-align-left me-2 text-secondary"></i>Description
                                     </label>
@@ -208,7 +208,7 @@
                         {{-- Form Actions --}}
                         <div class="form-actions mt-5 pt-4" style="border-top: 1px solid #e8eaed;">
                             <div class="row">
-                                <div class="col-md-12 text-center">
+                                <div class="col-12 text-center">
                                     <button type="submit" class="btn btn-success px-5 py-3 me-3" style="border-radius: 8px; font-weight: 600; font-size: 15px; min-width: 180px;">
                                         <i class="fa fa-check-circle me-2"></i>Save Income
                                     </button>
@@ -226,6 +226,13 @@
 </div>
 
 <style>
+/* Container Adjustments */
+.container-fluid {
+    max-width: 100%;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
 /* Form Control Focus Effects */
 .form-control:focus,
 .form-select:focus {

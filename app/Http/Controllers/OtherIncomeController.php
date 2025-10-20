@@ -9,6 +9,8 @@ use App\Models\IncomeCategory;
 use App\Models\Term;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\OtherIncomeNotification;
+
 
 class OtherIncomeController extends Controller
 {
@@ -38,20 +40,29 @@ class OtherIncomeController extends Controller
 
         $term = Term::findOrFail($request->term_id);
 
-        OtherIncome::create([
-            'school_id' => auth()->user()->school_id,
-            'income_category_id' => $request->income_category_id,
-            'amount' => $request->amount,
-            'payment_method' => $request->payment_method,
-            'income_date' => $request->income_date,
-            'term_id'=>$request->term_id,
+$incomeCategory = IncomeCategory::find($request->income_category_id);
 
-            'year' => $term->year, 
-            'description' => $request->description,
-            'created_by' => Auth::id(),
-        ]);
+OtherIncome::create([
+    'school_id' => auth()->user()->school_id,
+    'income_category_id' => $request->income_category_id,
+    'amount' => $request->amount,
+    'payment_method' => $request->payment_method,
+    'income_date' => $request->income_date,
+    'term_id'=> $request->term_id,
+    'year' => $term->year, 
+    'description' => $request->description,
+    'created_by' => Auth::id(),
+]);
 
-        return redirect()->route('other_incomes.index')->with('success', 'Income added successfully!');
+// ✅ Notify admin
+Auth::user()->notify(new OtherIncomeNotification(
+    $incomeCategory->name,   // <-- source
+    $request->description,
+    $request->amount
+));
+
+return redirect()->route('other_incomes.index')->with('success', 'Income added successfully!');
+
     }
 
     public function edit(OtherIncome $other_income)

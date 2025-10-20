@@ -29,6 +29,20 @@
         </div>
     @endforeach
 
+    @foreach($other_income as $item)
+    <div class="notification-item">
+        <div class="notification-icon success">
+            <i class="fa fa-check-circle"></i>
+        </div>
+        <div class="notification-content">
+            <h6>{{ $item->data['title'] ?? 'Other Income Recorded' }}</h6>
+            <p>{{ $item->data['message'] ?? '' }}</p>
+            <small><i class="fa fa-clock"></i> {{ $item->created_at->diffForHumans() }}</small>
+        </div>
+    </div>
+@endforeach
+
+
     {{-- EXPENSE (info/danger) --}}
     @foreach($expense as $item)
         <div class="notification-item">
