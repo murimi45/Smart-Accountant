@@ -8,4 +8,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote')->hourly();
 
 
-Schedule::command('summary:notify')->dailyAt('18:00');
+// Schedule::command('summary:notify')->dailyAt('18:00');

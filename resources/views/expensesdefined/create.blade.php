@@ -3,14 +3,14 @@
 
 <div class="main-wrapper">
     {{-- Page Header --}}
-    <div class="page_title">
-        <div class="row align-items-center mb-4">
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
             <div class="col-md-6">
-                <h4 class="mb-0">{{ isset($expense) ? 'Edit Expense' : 'Add Expense' }}</h4>
-                <p class="text-muted mb-0 mt-1">{{ isset($expense) ? 'Update expense information' : 'Record a new expense transaction' }}</p>
+                <h4 class="mb-1">{{ isset($expense) ? 'Edit Expense' : 'Add Expense' }}</h4>
+                <p class="text-muted mb-0">{{ isset($expense) ? 'Update expense information' : 'Record a new expense transaction' }}</p>
             </div>
             <div class="col-md-6 text-md-end mt-3 mt-md-0">
-                <a href="{{ route('expenses.index') }}" class="btn btn-secondary px-4 py-2">
+                <a href="{{ route('expenses.index') }}" class="btn btn-secondary">
                     <i class="fa fa-arrow-left me-2"></i>Back to List
                 </a>
             </div>
@@ -19,12 +19,12 @@
 
     {{-- Error Messages --}}
     @if($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert" style="border-left: 4px solid #dc3545; border-radius: 8px;">
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
             <div class="d-flex align-items-start">
-                <i class="fa fa-exclamation-circle me-3 mt-1" style="font-size: 20px;"></i>
+                <i class="fa fa-exclamation-circle me-3 mt-1"></i>
                 <div class="flex-grow-1">
                     <strong>Please fix the following errors:</strong>
-                    <ul class="mb-0 mt-2 ps-3">
+                    <ul class="mb-0 mt-2">
                         @foreach($errors->all() as $error)
                             <li>{{ $error }}</li>
                         @endforeach
@@ -36,223 +36,286 @@
     @endif
 
     {{-- Form Card --}}
-    <div class="row">
-        <div class="col-12">
-            <div class="white_shd full margin_bottom_30" style="border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #f0f0f0;">
-                <div class="full graph_head" style="background: linear-gradient(135deg, {{ isset($expense) ? '#36a9e2 0%, #1e88c7' : '#ff4748 0%, #e63946' }} 100%); padding: 25px 30px; border-radius: 12px 12px 0 0;">
-                    <div class="heading1 margin_0">
-                        <h2 style="font-size: 20px; color: #fff; font-weight: 600; margin: 0; display: flex; align-items: center;">
-                            <i class="fa fa-{{ isset($expense) ? 'edit' : 'shopping-cart' }} me-3" style="font-size: 24px;"></i>
-                            Expense Details
-                        </h2>
-                        <p class="mb-0 mt-2" style="color: rgba(255,255,255,0.9); font-size: 14px;">Fill in the details below to {{ isset($expense) ? 'update' : 'record' }} the expense</p>
+    <div class="card form-card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fa fa-{{ isset($expense) ? 'edit' : 'plus-circle' }} me-2"></i>
+                Expense Details
+            </h5>
+        </div>
+
+        <div class="card-body">
+            <form action="{{ isset($expense) ? route('expenses.update', $expense->id) : route('expenses.store') }}" method="POST">
+                @csrf
+                @if(isset($expense))
+                    @method('PUT')
+                @endif
+
+                {{-- Expense Information --}}
+                <div class="form-section mb-4">
+                    <h6 class="section-title mb-3">
+                        <i class="fa fa-info-circle me-2"></i>Expense Information
+                    </h6>
+
+                    <div class="row">
+                        {{-- Category --}}
+                        <div class="col-md-6 mb-3">
+                            <label for="expense_category_id" class="form-label">
+                                Category <span class="text-danger">*</span>
+                            </label>
+                            <select name="expense_category_id" 
+                                    id="expense_category_id" 
+                                    class="form-select @error('expense_category_id') is-invalid @enderror" 
+                                    required>
+                                <option value="">Select Category</option>
+                                @foreach($categories as $cat)
+                                    <option value="{{ $cat->id }}"
+                                        {{ (isset($expense) && $expense->expense_category_id == $cat->id) || old('expense_category_id') == $cat->id ? 'selected' : '' }}>
+                                        {{ $cat->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('expense_category_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        {{-- Amount --}}
+                        <div class="col-md-6 mb-3">
+                            <label for="amount" class="form-label">
+                                Amount (KSh) <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fa fa-money-bill-wave"></i>
+                                </span>
+                                <input type="number" 
+                                       id="amount" 
+                                       name="amount" 
+                                       class="form-control @error('amount') is-invalid @enderror" 
+                                       value="{{ $expense->amount ?? old('amount') }}" 
+                                       step="0.01"
+                                       min="0"
+                                       placeholder="Enter amount"
+                                       required>
+                                @error('amount')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        {{-- Description --}}
+                        <div class="col-md-12 mb-3">
+                            <label for="description" class="form-label">
+                                Description
+                            </label>
+                            <textarea id="description" 
+                                      name="description" 
+                                      class="form-control @error('description') is-invalid @enderror" 
+                                      rows="3"
+                                      placeholder="Enter expense description">{{ $expense->description ?? old('description') }}</textarea>
+                            @error('description')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
                     </div>
                 </div>
 
-                <div class="full inner_elements" style="padding: 35px 30px;">
-                    <form action="{{ isset($expense) ? route('expenses.update', $expense->id) : route('expenses.store') }}" method="POST">
-                        @csrf
-                        @if(isset($expense))
-                            @method('PUT')
-                        @endif
+                {{-- Payment Details --}}
+                <div class="form-section mb-4">
+                    <h6 class="section-title mb-3">
+                        <i class="fa fa-credit-card me-2"></i>Payment Details
+                    </h6>
 
-                        {{-- Expense Information Section --}}
-                        <div class="form-section mb-4">
-                            <h5 class="section-title mb-4" style="color: #2c3e50; font-weight: 600; font-size: 16px; display: flex; align-items: center; padding-bottom: 12px; border-bottom: 2px solid #e8eaed;">
-                                <i class="fa fa-info-circle me-2" style="color: #ff4748;"></i>
-                                Expense Information
-                            </h5>
-
-                            <div class="row">
-                                {{-- Category --}}
-                                <div class="col-md-6 mb-4">
-                                    <label for="expense_category_id" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                                        <i class="fa fa-tag me-2 text-danger"></i>Category <span class="text-danger">*</span>
-                                    </label>
-                                    <select name="expense_category_id" 
-                                            id="expense_category_id" 
-                                            class="form-select @error('expense_category_id') is-invalid @enderror" 
-                                            style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
-                                            required>
-                                        <option value="">-- Select Category --</option>
-                                        @foreach($categories as $cat)
-                                            <option value="{{ $cat->id }}"
-                                                {{ (isset($expense) && $expense->expense_category_id == $cat->id) || old('expense_category_id') == $cat->id ? 'selected' : '' }}>
-                                                {{ $cat->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('expense_category_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                {{-- Amount --}}
-                                <div class="col-md-6 mb-4">
-                                    <label for="amount" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                                        <i class="fa fa-coins me-2 text-danger"></i>Amount (KSh) <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="input-group" style="border-radius: 8px;">
-                                        <span class="input-group-text" style="background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px 0 0 8px;">
-                                            <i class="fa fa-money-bill-wave text-danger"></i>
-                                        </span>
-                                        <input type="number" 
-                                               id="amount" 
-                                               name="amount" 
-                                               class="form-control @error('amount') is-invalid @enderror" 
-                                               value="{{ $expense->amount ?? old('amount') }}" 
-                                               step="0.01"
-                                               min="0"
-                                               placeholder="Enter amount"
-                                               style="border-radius: 0 8px 8px 0; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
-                                               required>
-                                        @error('amount')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-
-                                {{-- Description --}}
-                                <div class="col-md-12 mb-4">
-                                    <label for="description" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                                        <i class="fa fa-file-alt me-2 text-primary"></i>Description
-                                    </label>
-                                    <textarea id="description" 
-                                              name="description" 
-                                              class="form-control @error('description') is-invalid @enderror" 
-                                              rows="3"
-                                              placeholder="Enter expense description"
-                                              style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;">{{ $expense->description ?? old('description') }}</textarea>
-                                    @error('description')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
+                    <div class="row">
+                        {{-- Payment Method --}}
+                        <div class="col-md-6 mb-3">
+                            <label for="payment_method" class="form-label">
+                                Payment Method <span class="text-danger">*</span>
+                            </label>
+                            <select name="payment_method" 
+                                    id="payment_method" 
+                                    class="form-select @error('payment_method') is-invalid @enderror" 
+                                    required>
+                                <option value="">Select Method</option>
+                                <option value="cash" {{ (isset($expense) && $expense->payment_method=='cash') || old('payment_method')=='cash' ? 'selected' : '' }}>Cash</option>
+                                <option value="mpesa" {{ (isset($expense) && $expense->payment_method=='mpesa') || old('payment_method')=='mpesa' ? 'selected' : '' }}>M-Pesa</option>
+                                <option value="bank" {{ (isset($expense) && $expense->payment_method=='bank') || old('payment_method')=='bank' ? 'selected' : '' }}>Bank Transfer</option>
+                                <option value="cheque" {{ (isset($expense) && $expense->payment_method=='cheque') || old('payment_method')=='cheque' ? 'selected' : '' }}>Cheque</option>
+                            </select>
+                            @error('payment_method')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
 
-                        {{-- Payment Details Section --}}
-                        <div class="form-section mb-4">
-                            <h5 class="section-title mb-4" style="color: #2c3e50; font-weight: 600; font-size: 16px; display: flex; align-items: center; padding-bottom: 12px; border-bottom: 2px solid #e8eaed;">
-                                <i class="fa fa-credit-card me-2" style="color: #ff4748;"></i>
-                                Payment Details
-                            </h5>
-
-                            <div class="row">
-                                {{-- Payment Method --}}
-                                <div class="col-md-6 mb-4">
-                                    <label for="payment_method" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                                        <i class="fa fa-wallet me-2 text-info"></i>Payment Method <span class="text-danger">*</span>
-                                    </label>
-                                    <select name="payment_method" 
-                                            id="payment_method" 
-                                            class="form-select @error('payment_method') is-invalid @enderror" 
-                                            style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
-                                            required>
-                                        <option value="">-- Select Method --</option>
-                                        <option value="cash" {{ (isset($expense) && $expense->payment_method=='cash') || old('payment_method')=='cash' ? 'selected' : '' }}>Cash</option>
-                                        <option value="mpesa" {{ (isset($expense) && $expense->payment_method=='mpesa') || old('payment_method')=='mpesa' ? 'selected' : '' }}>M-Pesa</option>
-                                        <option value="bank" {{ (isset($expense) && $expense->payment_method=='bank') || old('payment_method')=='bank' ? 'selected' : '' }}>Bank Transfer</option>
-                                        <option value="cheque" {{ (isset($expense) && $expense->payment_method=='cheque') || old('payment_method')=='cheque' ? 'selected' : '' }}>Cheque</option>
-                                    </select>
-                                    @error('payment_method')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                {{-- Expense Date --}}
-                                <div class="col-md-6 mb-4">
-                                    <label for="expense_date" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                                        <i class="fa fa-calendar me-2 text-warning"></i>Expense Date <span class="text-danger">*</span>
-                                    </label>
-                                    <input type="date" 
-                                           id="expense_date" 
-                                           name="expense_date" 
-                                           class="form-control @error('expense_date') is-invalid @enderror" 
-                                           value="{{ optional($expense)->expense_date?->format('Y-m-d') ?? old('expense_date', date('Y-m-d')) }}"
-                                           style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
-                                           required>
-                                    @error('expense_date')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
+                        {{-- Expense Date --}}
+                        <div class="col-md-6 mb-3">
+                            <label for="expense_date" class="form-label">
+                                Expense Date <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" 
+                                   id="expense_date" 
+                                   name="expense_date" 
+                                   class="form-control @error('expense_date') is-invalid @enderror" 
+                                   value="{{ optional($expense)->expense_date?->format('Y-m-d') ?? old('expense_date', date('Y-m-d')) }}"
+                                   required>
+                            @error('expense_date')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
-
-                        {{-- Term Information Section --}}
-                        <div class="form-section mb-4">
-                            <h5 class="section-title mb-4" style="color: #2c3e50; font-weight: 600; font-size: 16px; display: flex; align-items: center; padding-bottom: 12px; border-bottom: 2px solid #e8eaed;">
-                                <i class="fa fa-calendar-alt me-2" style="color: #ff4748;"></i>
-                                Academic Period
-                            </h5>
-
-                            <div class="row">
-                                {{-- Term --}}
-                                <div class="col-md-12 mb-4">
-                                    <label for="term_id" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                                        <i class="fa fa-bookmark me-2 text-primary"></i>Term <span class="text-danger">*</span>
-                                    </label>
-                                    <select name="term_id" 
-                                            id="term_id" 
-                                            class="form-select @error('term_id') is-invalid @enderror" 
-                                            style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
-                                            required>
-                                        <option value="">-- Select Term --</option>
-                                        @foreach($terms as $term)
-                                            <option value="{{ $term->id }}"
-                                                {{ (isset($expense) && $expense->term_id == $term->id) || old('term_id') == $term->id ? 'selected' : '' }}>
-                                                {{ $term->name }} ({{ $term->year }})
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('term_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Form Actions --}}
-                        <div class="form-actions mt-5 pt-4" style="border-top: 1px solid #e8eaed;">
-                            <div class="row">
-                                <div class="col-md-12 text-center">
-                                    <button type="submit" class="btn btn-{{ isset($expense) ? 'primary' : 'danger' }} px-5 py-3 me-3" style="border-radius: 8px; font-weight: 600; font-size: 15px; min-width: 180px;">
-                                        <i class="fa fa-{{ isset($expense) ? 'check-circle' : 'save' }} me-2"></i>{{ isset($expense) ? 'Update Expense' : 'Save Expense' }}
-                                    </button>
-                                    <a href="{{ route('expenses.index') }}" class="btn btn-outline-secondary px-5 py-3" style="border-radius: 8px; font-weight: 600; font-size: 15px; min-width: 180px;">
-                                        <i class="fa fa-times-circle me-2"></i>Cancel
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
+                    </div>
                 </div>
-            </div>
+
+                {{-- Academic Period --}}
+                <div class="form-section mb-4">
+                    <h6 class="section-title mb-3">
+                        <i class="fa fa-calendar-alt me-2"></i>Academic Period
+                    </h6>
+
+                    <div class="row">
+                        {{-- Term --}}
+                        <div class="col-md-12 mb-3">
+                            <label for="term_id" class="form-label">
+                                Term <span class="text-danger">*</span>
+                            </label>
+                            <select name="term_id" 
+                                    id="term_id" 
+                                    class="form-select @error('term_id') is-invalid @enderror" 
+                                    required>
+                                <option value="">Select Term</option>
+                                @foreach($terms as $term)
+                                    <option value="{{ $term->id }}"
+                                        {{ (isset($expense) && $expense->term_id == $term->id) || old('term_id') == $term->id ? 'selected' : '' }}>
+                                        {{ $term->name }} ({{ $term->year }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('term_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Form Actions --}}
+                <div class="form-actions pt-4 mt-4">
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="{{ route('expenses.index') }}" class="btn btn-secondary">
+                            <i class="fa fa-times me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-{{ isset($expense) ? 'primary' : 'success' }}">
+                            <i class="fa fa-{{ isset($expense) ? 'check' : 'save' }} me-2"></i>
+                            {{ isset($expense) ? 'Update Expense' : 'Save Expense' }}
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
 <style>
-/* Form Control Focus Effects */
+/* Base Variables */
+:root {
+    --primary-color: #36a9e2;
+    --success-color: #79c347;
+    --success-dark: #5fa732;
+    --danger-color: #ef4444;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-900: #111827;
+    --border-radius: 8px;
+}
+
+/* Page Header */
+.page-header h4 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0;
+}
+
+.page-header p {
+    font-size: 14px;
+    color: var(--gray-500);
+}
+
+/* Form Card */
+.form-card {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.form-card .card-header {
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+    padding: 16px 24px;
+}
+
+.form-card .card-header h5 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0;
+}
+
+.form-card .card-body {
+    padding: 32px 24px;
+}
+
+/* Form Sections */
+.form-section {
+    margin-bottom: 0;
+}
+
+.section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--gray-700);
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+/* Form Elements */
+.form-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-700);
+    margin-bottom: 6px;
+}
+
+.form-control,
+.form-select {
+    border: 1px solid var(--gray-300);
+    border-radius: var(--border-radius);
+    padding: 8px 12px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
 .form-control:focus,
 .form-select:focus {
-    border-color: #ff4748;
-    box-shadow: 0 0 0 0.2rem rgba(255, 71, 72, 0.15);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(54, 169, 226, 0.1);
 }
 
-/* Invalid Feedback Styling */
-.invalid-feedback {
-    font-size: 13px;
-    margin-top: 6px;
+.form-control::placeholder {
+    color: var(--gray-500);
+    font-size: 14px;
 }
 
-.is-invalid {
-    border-color: #dc3545 !important;
-}
-
-/* Input Group Styling */
+/* Input Group */
 .input-group-text {
-    background: #f8f9fa;
+    background-color: var(--gray-50);
+    border: 1px solid var(--gray-300);
     border-right: none;
+    color: var(--gray-600);
 }
 
 .input-group .form-control {
@@ -260,81 +323,90 @@
 }
 
 .input-group:focus-within .input-group-text {
-    border-color: #ff4748;
+    border-color: var(--primary-color);
+    background-color: var(--gray-100);
 }
 
 .input-group:focus-within .form-control {
-    border-color: #ff4748;
+    border-color: var(--primary-color);
 }
 
-/* Button Styles */
+/* Textarea */
+textarea.form-control {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Validation States */
+.is-invalid {
+    border-color: var(--danger-color) !important;
+}
+
+.invalid-feedback {
+    font-size: 13px;
+    color: var(--danger-color);
+    margin-top: 4px;
+}
+
+/* Buttons */
+.btn {
+    border-radius: var(--border-radius);
+    padding: 8px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
 .btn-primary {
-    background: linear-gradient(135deg, #36a9e2 0%, #1e88c7 100%);
-    border: none;
-    transition: all 0.3s ease;
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
 }
 
 .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(54, 169, 226, 0.3);
+    background-color: #2a8cbd;
+    border-color: #2a8cbd;
 }
 
-.btn-danger {
-    background: linear-gradient(135deg, #ff4748 0%, #e63946 100%);
-    border: none;
-    transition: all 0.3s ease;
+.btn-success {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
 }
 
-.btn-danger:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(255, 71, 72, 0.3);
-}
-
-.btn-outline-secondary {
-    border: 2px solid #6c757d;
-    color: #6c757d;
-    transition: all 0.3s ease;
-}
-
-.btn-outline-secondary:hover {
-    background: #6c757d;
-    color: white;
-    transform: translateY(-2px);
+.btn-success:hover {
+    background-color: var(--success-dark);
+    border-color: var(--success-dark);
 }
 
 .btn-secondary {
-    background: #6c757d;
-    border: none;
-    transition: all 0.3s ease;
+    background-color: var(--gray-600);
+    border-color: var(--gray-600);
 }
 
 .btn-secondary:hover {
-    background: #5a6268;
-    transform: translateY(-2px);
+    background-color: var(--gray-700);
+    border-color: var(--gray-700);
 }
 
-/* Form Section Styling */
-.form-section {
-    background: #fafbfc;
-    padding: 25px;
-    border-radius: 10px;
-    border: 1px solid #f0f0f0;
+/* Form Actions */
+.form-actions {
+    border-top: 1px solid var(--gray-200);
 }
 
-/* Placeholder Styling */
-.form-control::placeholder,
-.form-select::placeholder {
-    color: #b0b8c3;
-    font-size: 14px;
-}
-
-/* Alert Styling */
+/* Alerts */
 .alert {
-    border-radius: 8px;
+    border-radius: var(--border-radius);
+    border: none;
+    padding: 16px;
+}
+
+.alert-danger {
+    background-color: #fee2e2;
+    color: #991b1b;
 }
 
 .alert ul {
     margin-bottom: 0;
+    padding-left: 20px;
 }
 
 .alert li {
@@ -345,13 +417,7 @@
     margin-bottom: 0;
 }
 
-/* Textarea Styling */
-textarea.form-control {
-    resize: vertical;
-    min-height: 80px;
-}
-
-/* Date Input Styling */
+/* Date Input */
 input[type="date"]::-webkit-calendar-picker-indicator {
     cursor: pointer;
     opacity: 0.6;
@@ -363,50 +429,35 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .full.inner_elements {
-        padding: 25px 20px !important;
+    .form-card .card-body {
+        padding: 24px 16px;
     }
 
-    .form-section {
-        padding: 20px 15px;
+    .page-header h4 {
+        font-size: 20px;
     }
 
-    .btn-primary,
-    .btn-danger,
-    .btn-outline-secondary {
-        min-width: 140px !important;
-        padding: 12px 20px !important;
-        font-size: 14px !important;
+    .form-actions .d-flex {
+        flex-direction: column-reverse;
     }
 
-    .section-title {
-        font-size: 15px !important;
+    .form-actions .btn {
+        width: 100%;
+        margin-bottom: 8px;
     }
 
-    .full.graph_head {
-        padding: 20px 20px !important;
-    }
-
-    .full.graph_head h2 {
-        font-size: 18px !important;
-    }
-
-    .full.graph_head p {
-        font-size: 13px !important;
+    .form-actions .btn:last-child {
+        margin-bottom: 0;
     }
 }
 
 @media (max-width: 576px) {
-    .btn-primary,
-    .btn-danger,
-    .btn-outline-secondary {
-        width: 100%;
-        margin-bottom: 10px;
+    .section-title {
+        font-size: 14px;
     }
 
-    .btn-primary,
-    .btn-danger {
-        margin-right: 0 !important;
+    .form-card .card-header h5 {
+        font-size: 16px;
     }
 }
 </style>

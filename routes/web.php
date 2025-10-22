@@ -113,6 +113,10 @@ Route::prefix('invoices')->group(function () {
 
 Route::get('/statements/{student}', [StatementController::class, 'single'])->name('statements.single');
 Route::post('/statements/bulk', [StatementController::class, 'bulk'])->name('statements.bulk');
+Route::post('/statements/balance/bulk', [StatementController::class, 'bulkBalanceStatements'])->name('balances.statements.bulk');
+Route::post('/balances/sms/send', [StatementController::class, 'sendBulkBalanceSms'])
+    ->name('balances.sms.send');
+
 
 
 Route::resource('expense_categories', ExpenseCategoryController::class);

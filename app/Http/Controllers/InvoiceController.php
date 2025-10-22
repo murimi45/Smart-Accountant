@@ -10,19 +10,35 @@ use Illuminate\Http\Request;
 
 class InvoiceController extends Controller
 {
-    public function index()
-        {
-            $invoices=Invoice::with([
-                'student.class',
-                'items',
-                'payments'
-            ])->latest()->get();
-             $classes = Classes::all();
-             $terms   = Term::all();
+    public function index(Request $request)
+{
+    $query = Invoice::with(['student.class', 'items', 'payments']);
 
+    // Filter by class
+    if ($request->filled('class_id')) {
+        $query->whereHas('student', function ($q) use ($request) {
+            $q->where('class_id', $request->class_id);
+        });
+    }
 
-            return view('invoices.showinvoice',compact('invoices','classes','terms'));
-        }
+    // Filter by term
+    if ($request->filled('term_id')) {
+        $query->where('term_id', $request->term_id);
+    }
+
+    // Filter by student name (search)
+    if ($request->filled('search')) {
+        $query->whereHas('student', function ($q) use ($request) {
+            $q->where('name', 'LIKE', '%' . $request->search . '%');
+        });
+    }
+
+    $invoices = $query->latest()->get();
+    $classes  = Classes::all();
+    $terms    = Term::all();
+
+    return view('invoices.showinvoice', compact('invoices', 'classes', 'terms'));
+}
 
 
     public function storePayment(Request $request, Invoice $invoice)
