@@ -3,14 +3,14 @@
 
 <div class="main-wrapper">
     {{-- Page Header --}}
-    <div class="page_title">
-        <div class="row align-items-center mb-4">
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
             <div class="col-md-6">
-                <h4 class="mb-0">Extra Fee Management</h4>
-                <p class="text-muted mb-0 mt-1">Manage additional fees and charges</p>
+                <h4 class="mb-1">Extra Fee Management</h4>
+                <p class="text-muted mb-0">Manage additional fees and charges</p>
             </div>
             <div class="col-md-6 text-md-end mt-3 mt-md-0">
-                <a href="{{ route('addextrafee') }}" class="btn btn-success px-4 py-2 fw-bold shadow-sm">
+                <a href="{{ route('addextrafee') }}" class="btn btn-success">
                     <i class="fa fa-plus me-2"></i>Add New Fee
                 </a>
             </div>
@@ -19,197 +19,497 @@
 
     {{-- Alert Messages --}}
     @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert" style="border-left: 4px solid #28a745; border-radius: 8px;">
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
             <i class="fa fa-check-circle me-2"></i>
-            <strong>Success!</strong> {{ session('success') }}
+            {{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
     @if (session('error'))
-        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert" style="border-left: 4px solid #dc3545; border-radius: 8px;">
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
             <i class="fa fa-exclamation-circle me-2"></i>
-            <strong>Error!</strong> {{ session('error') }}
+            {{ session('error') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
-    {{-- Extra Fee List Table --}}
-    <div class="row">
-        <div class="col-12">
-            <div class="table-card">
-                <div class="card-header">
-                    <h5>
-                        <i class="fa fa-receipt me-2" style="color: #8e68ef;"></i>Extra Fee List
-                        <span class="badge bg-primary ms-2" style="font-size: 12px; padding: 6px 12px; border-radius: 20px;">
-                            {{ count($extraFees) }} Total
-                        </span>
-                    </h5>
-                </div>
+    {{-- Filters Card --}}
+    <div class="card filter-card mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ route('extrafeelist') }}" class="filter-form">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label"><i class="fa fa-calendar me-1"></i>Term</label>
+                        <select name="term_id" class="form-select">
+                            <option value="">All Terms</option>
+                            @foreach($terms ?? [] as $term)
+                                <option value="{{ $term->id }}" {{ request('term_id') == $term->id ? 'selected' : '' }}>
+                                    {{ $term->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
 
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table custom-table mb-0">
-                            <thead>
-                                <tr>
-                                    <th><i class="fa fa-tag me-2"></i>Name</th>
-                                    <th><i class="fa fa-dollar-sign me-2"></i>Amount</th>
-                                    <th><i class="fa fa-sort-numeric-up me-2"></i>Quantity Based</th>
-                                    <th><i class="fa fa-file-alt me-2"></i>Description</th>
-                                    <th><i class="fa fa-calendar me-2"></i>Term</th>
-                                    <th><i class="fa fa-calendar-alt me-2"></i>Year</th>
-                                    <th><i class="fa fa-user-shield me-2"></i>Created By</th>
-                                    <th style="min-width: 180px;"><i class="fa fa-cog me-2"></i>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($extraFees as $extraFee)
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="fee-icon me-3" style="width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, #8e68ef 0%, #7344e8 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 14px;">
-                                                {{ strtoupper(substr($extraFee->name, 0, 1)) }}
-                                            </div>
-                                            <strong>{{ $extraFee->name }}</strong>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge" style="background: linear-gradient(135deg, #fabb3d 0%, #f9a825 100%); color: white; padding: 8px 14px; border-radius: 6px; font-weight: 600; font-size: 13px;">
-                                            <i class="fa fa-coins me-1"></i>KSh {{ number_format($extraFee->amount, 2) }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        @if($extraFee->is_quantity_based)
-                                            <span class="badge" style="background: #e3f2fd; color: #1976d2; padding: 6px 12px; border-radius: 6px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
-                                                <i class="fa fa-check-circle"></i>Yes
-                                            </span>
-                                        @else
-                                            <span class="badge" style="background: #f3e5f5; color: #7b1fa2; padding: 6px 12px; border-radius: 6px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
-                                                <i class="fa fa-times-circle"></i>No
-                                            </span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if($extraFee->description)
-                                            <span style="color: #495057; font-size: 13px;">{{ Str::limit($extraFee->description, 40) }}</span>
-                                        @else
-                                            <span class="text-muted" style="font-style: italic; font-size: 13px;">
-                                                <i class="fa fa-minus-circle me-1"></i>No description
-                                            </span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <span class="badge" style="background: #fff3cd; color: #856404; padding: 6px 12px; border-radius: 6px; font-weight: 600;">
-                                            {{ $extraFee->term->name }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-light text-dark" style="padding: 6px 12px; border-radius: 6px; font-weight: 600;">
-                                            {{ $extraFee->year }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="user-avatar me-2" style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #36a9e2 0%, #1e88c7 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 11px;">
-                                                {{ strtoupper(substr($extraFee->creator->admin_name, 0, 1)) }}
-                                            </div>
-                                            <span style="font-size: 13px; color: #495057;">{{ $extraFee->creator->admin_name }}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex gap-2">
-                                            <a href="{{ url('/editextrafee/' . $extraFee->id) }}" 
-                                               class="btn btn-sm btn-primary" 
-                                               style="border-radius: 6px; padding: 6px 14px;" 
-                                               title="Edit Fee">
-                                                <i class="fa fa-edit"></i>
-                                            </a>
-                                            <a href="{{ url('/deleteextrafee/' . $extraFee->id) }}" 
-                                               class="btn btn-sm btn-danger" 
-                                               style="border-radius: 6px; padding: 6px 14px;"
-                                               onclick="return confirm('Are you sure you want to delete this extra fee?')" 
-                                               title="Delete Fee">
-                                                <i class="fa fa-trash"></i>
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="8" class="text-center py-5">
-                                        <div style="color: #9ca3af;">
-                                            <i class="fa fa-inbox fa-3x mb-3" style="opacity: 0.3;"></i>
-                                            <p class="mb-0">No extra fees configured</p>
-                                            <small>Click "Add New Fee" to create one</small>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                    <div class="col-md-3">
+                        <label class="form-label"><i class="fa fa-calendar-alt me-1"></i>Year</label>
+                        <select name="year" class="form-select">
+                            <option value="">All Years</option>
+                            @foreach($years ?? [] as $year)
+                                <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>
+                                    {{ $year }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label"><i class="fa fa-search me-1"></i>Search Fee Name</label>
+                        <input type="text" 
+                               name="search" 
+                               class="form-control" 
+                               value="{{ request('search') }}"
+                               placeholder="Enter fee name">
+                    </div>
+
+                    <div class="col-md-2">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-fill">
+                                <i class="fa fa-filter me-1"></i>Filter
+                            </button>
+                            <a href="{{ route('extrafeelist') }}" class="btn btn-outline-secondary" title="Reset">
+                                <i class="fa fa-redo"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Extra Fee Table --}}
+    <div class="card table-card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fa fa-receipt me-2"></i>Extra Fee List
+                </h5>
+                <span class="badge bg-light text-dark">{{ count($extraFees) }} Fees</span>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table fee-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Fee Name</th>
+                            <th>Amount</th>
+                            <th>Quantity Based</th>
+                            <th>Term</th>
+                            <th>Year</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($extraFees as $extraFee)
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="fee-icon">
+                                        {{ strtoupper(substr($extraFee->name, 0, 1)) }}
+                                    </div>
+                                    <div class="ms-3">
+                                        <div class="fee-name">{{ $extraFee->name }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="amount-text">KSh {{ number_format($extraFee->amount, 2) }}</span>
+                            </td>
+                            <td>
+                                @if($extraFee->is_quantity_based)
+                                    <span class="badge badge-success">
+                                        <i class="fa fa-check me-1"></i>Yes
+                                    </span>
+                                @else
+                                    <span class="badge-method">No</span>
+                                @endif
+                            </td>
+                            <td>
+                                <span class="badge-term">{{ $extraFee->term->name }}</span>
+                            </td>
+                            <td>
+                                <span class="year-text">{{ $extraFee->year }}</span>
+                            </td>
+                            <td>
+                                @if($extraFee->description)
+                                    <span class="description-text">{{ Str::limit($extraFee->description, 40) }}</span>
+                                @else
+                                    <span class="text-muted description-empty">
+                                        <i class="fa fa-minus me-1"></i>No description
+                                    </span>
+                                @endif
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{{ url('/editextrafee/' . $extraFee->id) }}" 
+                                       class="btn btn-sm btn-light" 
+                                       title="Edit Fee">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                    <a href="{{ url('/deleteextrafee/' . $extraFee->id) }}" 
+                                       class="btn btn-sm btn-danger" 
+                                       onclick="return confirm('Are you sure you want to delete this extra fee?')" 
+                                       title="Delete Fee">
+                                        <i class="fa fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <div class="empty-state">
+                                    <i class="fa fa-inbox fa-3x mb-3"></i>
+                                    <p class="mb-2">No extra fees configured</p>
+                                    <small class="d-block mb-3">Click "Add New Fee" to create one</small>
+                                    <a href="{{ route('addextrafee') }}" class="btn btn-success">
+                                        <i class="fa fa-plus me-2"></i>Add New Fee
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-/* Button Styles */
+/* Base Variables */
+:root {
+    --primary-color: #36a9e2;
+    --success-color: #79c347;
+    --success-dark: #5fa732;
+    --danger-color: #ef4444;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-900: #111827;
+    --border-radius: 8px;
+}
+
+/* Page Header */
+.page-header h4 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0;
+}
+
+.page-header p {
+    font-size: 14px;
+    color: var(--gray-500);
+}
+
+/* Cards */
+.filter-card,
+.table-card {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.filter-card .card-body {
+    padding: 20px;
+}
+
+.table-card .card-header {
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+    padding: 16px 20px;
+}
+
+/* Form Elements */
+.form-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-700);
+    margin-bottom: 6px;
+}
+
+.form-control,
+.form-select {
+    border: 1px solid var(--gray-300);
+    border-radius: var(--border-radius);
+    padding: 8px 12px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(54, 169, 226, 0.1);
+}
+
+/* Buttons */
+.btn {
+    border-radius: var(--border-radius);
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
 .btn-primary {
-    background: linear-gradient(135deg, #36a9e2 0%, #1e88c7 100%);
-    border: none;
-    transition: all 0.3s ease;
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
 }
 
 .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(54, 169, 226, 0.3);
+    background-color: #2a8cbd;
+    border-color: #2a8cbd;
 }
 
 .btn-success {
-    background: linear-gradient(135deg, #79c347 0%, #5fa732 100%);
-    border: none;
-    transition: all 0.3s ease;
+    background-color: var(--success-color);
+    border-color: var(--success-color);
 }
 
 .btn-success:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(121, 195, 71, 0.3);
+    background-color: var(--success-dark);
+    border-color: var(--success-dark);
 }
 
 .btn-danger {
-    background: linear-gradient(135deg, #ff4748 0%, #e63946 100%);
-    border: none;
-    transition: all 0.3s ease;
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
 }
 
 .btn-danger:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 71, 72, 0.3);
+    background-color: #dc2626;
+    border-color: #dc2626;
+}
+
+.btn-outline-secondary {
+    color: var(--gray-600);
+    border-color: var(--gray-300);
+    background: white;
+    padding: 8px 12px;
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--gray-50);
+    border-color: var(--gray-400);
+    color: var(--gray-700);
+}
+
+.btn-light {
+    background-color: var(--gray-100);
+    border-color: var(--gray-200);
+    color: var(--gray-700);
+}
+
+.btn-light:hover {
+    background-color: var(--gray-200);
+    border-color: var(--gray-300);
+}
+
+/* Table */
+.fee-table {
+    font-size: 14px;
+}
+
+.fee-table thead {
+    background-color: var(--gray-50);
+    border-bottom: 2px solid var(--gray-200);
+}
+
+.fee-table thead th {
+    font-weight: 600;
+    color: var(--gray-700);
+    padding: 12px 16px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.fee-table tbody td {
+    padding: 16px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.fee-table tbody tr:hover {
+    background-color: var(--gray-50);
+}
+
+/* Fee Icon */
+.fee-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background-color: var(--gray-100);
+    color: var(--gray-700);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.fee-name {
+    font-weight: 500;
+    color: var(--gray-900);
+}
+
+/* Amount */
+.amount-text {
+    font-weight: 600;
+    color: var(--gray-900);
+    font-size: 14px;
+}
+
+/* Badges */
+.badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 12px;
+}
+
+.badge-success {
+    background-color: #e8f5e0;
+    color: #3d7a1f;
+}
+
+.badge-method {
+    background-color: var(--gray-100);
+    color: var(--gray-700);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 12px;
+    display: inline-block;
+}
+
+.badge-term {
+    background-color: var(--gray-100);
+    color: var(--gray-700);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 12px;
+    display: inline-block;
+}
+
+/* Year */
+.year-text {
+    color: var(--gray-600);
+    font-weight: 500;
+    font-size: 13px;
+}
+
+/* Description */
+.description-text {
+    color: var(--gray-700);
+    font-size: 13px;
+}
+
+.description-empty {
+    font-size: 13px;
+    font-style: italic;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.action-buttons .btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+/* Empty State */
+.empty-state {
+    color: var(--gray-400);
+}
+
+.empty-state i {
+    opacity: 0.3;
+}
+
+.empty-state p {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--gray-600);
+}
+
+.empty-state small {
+    color: var(--gray-500);
+}
+
+/* Alerts */
+.alert {
+    border-radius: var(--border-radius);
+    border: none;
+    padding: 12px 16px;
+}
+
+.alert-success {
+    background-color: #e8f5e0;
+    color: #3d7a1f;
+}
+
+.alert-danger {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+/* Badge Override */
+.badge.bg-light {
+    background-color: var(--gray-100) !important;
+    color: var(--gray-700);
+    padding: 4px 12px;
+    font-weight: 500;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .fee-icon,
-    .user-avatar {
-        width: 32px !important;
-        height: 32px !important;
-        font-size: 12px !important;
+    .fee-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
     }
     
-    .btn-sm {
-        padding: 4px 10px !important;
+    .action-buttons .btn-sm {
+        padding: 6px 10px;
         font-size: 12px;
     }
     
-    .table {
+    .fee-table {
         font-size: 13px;
     }
 
-    .badge {
-        font-size: 11px !important;
-        padding: 4px 8px !important;
+    .fee-table thead th,
+    .fee-table tbody td {
+        padding: 10px;
+    }
+
+    .description-text {
+        font-size: 12px;
     }
 }
 </style>

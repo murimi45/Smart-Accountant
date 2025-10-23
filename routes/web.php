@@ -152,4 +152,7 @@ Route::get('/cashbook', [CashbookController::class, 'index'])->name('cashbook.in
     Route::post('/promotions/term', [PromotionController::class, 'promoteToNextTerm'])->name('promotions.term');
     Route::post('/promotions/class', [PromotionController::class, 'promoteToNextClass'])->name('promotions.class');
 
+
+    Route::get('/sms/logs', [\App\Http\Controllers\SmsLogController::class, 'index'])->name('sms.logs');
+
 });

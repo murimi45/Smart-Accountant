@@ -108,8 +108,19 @@
                                 <span>Settings</span>
                             </a>
                             <ul class="collapse list-unstyled" id="settingsMenu">
+                                <li><a href="{{ route('sms.logs') }}"><span>SmsLogs</span></a></li>
+                            </ul>
+                            <ul class="collapse list-unstyled" id="settingsMenu">
                                 <li><a href="{{ route('payment_channels.index') }}"><span>Payment Channels</span></a></li>
                             </ul>
+                        </li>
+
+                        <li>
+                            <a href="{{ route('sms.logs') }}" 
+                               class="nav-link {{ Request::is('sms/logs') ? 'active' : '' }}">
+                                <i class="fa fa-users orange_color"></i> 
+                                <span>SmsLogs</span>
+                            </a>
                         </li>
                     </ul>
                 </div>

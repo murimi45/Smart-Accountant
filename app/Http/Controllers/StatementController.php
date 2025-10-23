@@ -7,8 +7,10 @@ use Illuminate\Http\Request;
 use App\Models\Student;
 use App\Models\Class;
 use App\Models\Term;
+use App\Models\SmsLog;
 use Illuminate\Support\Facades\Storage;
 use App\Services\SendSmsService;
+use App\Jobs\SendSmsJob;
 
 class StatementController extends Controller
 {
@@ -123,46 +125,67 @@ public function bulkBalanceStatements(Request $request)
 
 
 
-public function sendBulkBalanceSms(Request $request, SendSmsService $smsService)
+public function sendBulkBalanceSms(Request $request)
 {
+$query = Student::with(['invoices.items', 'invoices.payments', 'class']);
+
+
+if ($request->filled('class_id')) {
+$query->where('class_id', $request->class_id);
+}
+
+
+if ($request->filled('term_id')) {
+$query->whereHas('invoices', function ($q) use ($request) {
+$q->where('term_id', $request->term_id);
+});
+} else {
+return back()->with('error', 'Please select a term.');
+}
+
+
+$students = $query->get()->filter(function ($student) use ($request) {
+$total = $student->invoices->where('term_id', $request->term_id)->sum(fn($i) => $i->items->sum('amount'));
+$paid = $student->invoices->where('term_id', $request->term_id)->sum(fn($i) => $i->payments->sum('amount'));
+return ($total - $paid) > 0;
+});
+
+
+$threshold = 0; // set to 0 since you chose option A (send to everyone with any balance)
+
+
+foreach ($students as $student) {
+
+   
+    $total = $student->invoices->where('term_id', $request->term_id)->sum(fn($i) => $i->items->sum('amount'));
+    $paid = $student->invoices->where('term_id', $request->term_id)->sum(fn($i) => $i->payments->sum('amount'));
+    $balance = $total - $paid;
+
     
-    $query = Student::with(['invoices.items', 'invoices.payments', 'class']);
 
-    if ($request->filled('class_id')) {
-        $query->where('class_id', $request->class_id);
-    }
+    $phone = $student->phone;
+    if (!$phone) continue;
 
-    if ($request->filled('term_id')) {
-        $query->whereHas('invoices', function ($q) use ($request) {
-            $q->where('term_id', $request->term_id);
-        });
-    } else {
-        return back()->with('error', 'Please select a term.');
-    }
+    $phone = preg_replace('/^0/', '+254', $phone);
 
-    $students = $query->get()->filter(function ($student) use ($request) {
-        $total = $student->invoices->where('term_id', $request->term_id)->sum(fn($i) => $i->items->sum('amount'));
-        $paid  = $student->invoices->where('term_id', $request->term_id)->sum(fn($i) => $i->payments->sum('amount'));
-        return ($total - $paid) > 0;
-    });
+    if ($balance <= 0) continue;
+     
 
-    foreach ($students as $student) {
-        
+    $message = "Dear Parent, {$student->name} has an outstanding balance of KES {$balance}. Kindly clear the balance. Thank you.";
 
-        $total = $student->invoices->where('term_id', $request->term_id)->sum(fn($i) => $i->items->sum('amount'));
-        $paid  = $student->invoices->where('term_id', $request->term_id)->sum(fn($i) => $i->payments->sum('amount'));
-        $balance = $total - $paid;
+    $smsLog = SmsLog::create([
+        'to' => $phone,
+        'message' => $message,
+        'status' => 'pending',
+        'student_id' => $student->id,
+    ]);
 
 
-        if ($student->phone) {
-            $message = "Dear Parent, {$student->name} has an outstanding balance of KES {$balance}. Kindly clear the balance. Thank you.";
-            $smsService->send($student->phone, $message);
-        }
-    }
-
-    return back()->with('success', 'SMS sent to all parents with outstanding balances.');
+    dispatch(new SendSmsJob($smsLog->id, $phone, $message));
 }
 
 
 
-}
+
+return back()->with('success', 'SMS sending jobs have been queued for students with outstanding balances.');
+}}

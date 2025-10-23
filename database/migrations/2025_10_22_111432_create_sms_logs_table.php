@@ -12,8 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('sms_logs', function (Blueprint $table) {
+            
             $table->id();
-            $table->timestamps();
+            $table->string('to');            
+            $table->text('message');
+            $table->string('status')->default('pending'); // pending, sent, delivered, failed
+            $table->text('response')->nullable();
+            $table->unsignedBigInteger('student_id')->nullable();
+            $table->timestamps();            
+           // $table->foreign('student_id')->references('id')->on('students')->onDelete('set null');
+
         });
     }
 
