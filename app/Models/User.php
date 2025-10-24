@@ -58,5 +58,14 @@ class User extends Authenticatable
         return $this->belongsTo(Schools::class);
     }
 
-   
+     public function isAdmin()
+{
+    return $this->role === 'admin';
+}
+
+public function isAccountant()
+{
+    return $this->role === 'accountant';
+}
+
 }

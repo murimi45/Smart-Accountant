@@ -4,17 +4,17 @@
 
 <div class="main-wrapper">
     {{-- Page Header --}}
-    <div class="page_title">
-        <div class="row align-items-center mb-4">
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
             <div class="col-md-6">
-                <h4 class="mb-0">Grade Management</h4>
-                <p class="text-muted mb-0 mt-1">Manage all class grades in the system</p>
+                <h4 class="mb-1">Grade Management</h4>
+                <p class="text-muted mb-0">Manage all class grades in the system</p>
             </div>
             <div class="col-md-6 text-md-end mt-3 mt-md-0">
-                <button type="button" class="btn btn-success px-4 py-2 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addClassModal">
+                <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#addClassModal">
                     <i class="fa fa-plus me-2"></i>Add New Grade
                 </button>
-                <button type="button" class="btn btn-warning px-4 py-2 fw-bold shadow-sm ms-2" data-bs-toggle="modal" data-bs-target="#promoteModal">
+                <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#promoteModal">
                     <i class="fa fa-level-up-alt me-2"></i>Promote Students
                 </button>
             </div>
@@ -23,23 +23,23 @@
 
     {{-- Alert Messages --}}
     @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert" style="border-left: 4px solid #28a745; border-radius: 8px;">
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
             <i class="fa fa-check-circle me-2"></i>
-            <strong>Success!</strong> {{ session('success') }}
+            {{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
     @if (session('error'))
-        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert" style="border-left: 4px solid #dc3545; border-radius: 8px;">
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
             <i class="fa fa-exclamation-circle me-2"></i>
-            <strong>Error!</strong> {{ session('error') }}
+            {{ session('error') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
     @if ($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert" style="border-left: 4px solid #dc3545; border-radius: 8px;">
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
             <i class="fa fa-exclamation-circle me-2"></i>
             <strong>Validation Error!</strong>
             <ul class="mb-0 mt-2">
@@ -52,90 +52,91 @@
     @endif
 
     {{-- Grade List Table --}}
-    <div class="row">
-        <div class="col-12">
-            <div class="table-card">
-                <div class="card-header">
-                    <h5>
-                        <i class="fa fa-list me-2" style="color: #79c347;"></i>Grade List
-                        <span class="badge bg-success ms-2" style="font-size: 12px; padding: 6px 12px; border-radius: 20px;">
-                            {{ count($getRecord) }} Total
-                        </span>
+    <div class="card table-card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">
+                        <i class="fa fa-list me-2"></i>Grade List
                     </h5>
+                    <small class="text-muted">Manage grade levels and progression paths</small>
                 </div>
+                <span class="badge bg-light text-dark">{{ count($getRecord) }} Grades</span>
+            </div>
+        </div>
 
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table custom-table mb-0">
-                            <thead>
-                                <tr>
-                                    <th style="width: 80px;"><i class="fa fa-hashtag me-2"></i>ID</th>
-                                    <th><i class="fa fa-school me-2"></i>Class Name</th>
-                                    <th><i class="fa fa-arrow-right me-2"></i>Next Class</th>
-                                    <th class="text-center" style="width: 200px;"><i class="fa fa-cog me-2"></i>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($getRecord as $value)
-                                <tr>
-                                    <td>
-                                        <span class="badge bg-light text-dark" style="padding: 6px 12px; border-radius: 6px; font-weight: 600;">
-                                            #{{ $value->id }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="grade-icon me-3" style="width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, #79c347 0%, #5fa732 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 14px;">
-                                                {{ strtoupper(substr($value->name, 0, 1)) }}
-                                            </div>
-                                            <strong>{{ $value->name }}</strong>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        @if($value->next_class_id)
-                                            <span class="badge bg-info" style="padding: 6px 12px; border-radius: 6px;">
-                                                {{ $value->nextClass->name ?? 'N/A' }}
-                                            </span>
-                                        @else
-                                            <span class="text-muted">None</span>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table grade-table mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">ID</th>
+                            <th>Class Name</th>
+                            <th>Next Class</th>
+                            <th style="width: 200px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($getRecord as $value)
+                        <tr>
+                            <td>
+                                <span class="row-number">#{{ $value->id }}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="grade-icon">
+                                        {{ strtoupper(substr($value->name, 0, 1)) }}
+                                    </div>
+                                    <div class="ms-3">
+                                        <div class="grade-name">{{ $value->name }}</div>
+                                        @if($value->description)
+                                            <div class="grade-description">{{ $value->description }}</div>
                                         @endif
-                                    </td>
-                                    <td class="text-center">
-                                        <div class="d-flex gap-2 justify-content-center">
-                                            <button 
-                                                class="btn btn-sm btn-primary editBtn"
-                                                style="border-radius: 6px; padding: 6px 14px;"
-                                                data-id="{{ $value->id }}"
-                                                data-name="{{ $value->name }}"
-                                                data-next-class-id="{{ $value->next_class_id }}"
-                                                title="Edit Grade">
-                                                <i class="fa fa-edit me-1"></i>Edit
-                                            </button>
-                                            <a href="{{ url('/deleteClass/' . $value->id) }}" 
-                                               class="btn btn-sm btn-danger" 
-                                               style="border-radius: 6px; padding: 6px 14px;"
-                                               onclick="return confirm('Are you sure you want to delete this grade?')"
-                                               title="Delete Grade">
-                                                <i class="fa fa-trash me-1"></i>Delete
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="4" class="text-center py-5">
-                                        <div style="color: #9ca3af;">
-                                            <i class="fa fa-inbox fa-3x mb-3" style="opacity: 0.3;"></i>
-                                            <p class="mb-0">No grades found</p>
-                                            <small>Click "Add New Grade" to create one</small>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                @if($value->next_class_id)
+                                    <span class="next-class-badge">{{ $value->nextClass->name ?? 'N/A' }}</span>
+                                @else
+                                    <span class="text-muted">None</span>
+                                @endif
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button 
+                                        class="btn btn-sm btn-light editBtn"
+                                        data-id="{{ $value->id }}"
+                                        data-name="{{ $value->name }}"
+                                        data-next-class-id="{{ $value->next_class_id }}"
+                                        title="Edit Grade">
+                                        <i class="fa fa-edit"></i>
+                                    </button>
+                                    <a href="{{ url('/deleteClass/' . $value->id) }}" 
+                                       class="btn btn-sm btn-danger" 
+                                       onclick="return confirm('Are you sure you want to delete this grade?')"
+                                       title="Delete Grade">
+                                        <i class="fa fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="4" class="text-center py-5">
+                                <div class="empty-state">
+                                    <i class="fa fa-inbox fa-3x mb-3"></i>
+                                    <p class="mb-2">No grades found</p>
+                                    <small class="d-block mb-3">Click "Add New Grade" to create one</small>
+                                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addClassModal">
+                                        <i class="fa fa-plus me-2"></i>Add New Grade
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -144,53 +145,50 @@
 {{-- Edit Class Modal --}}
 <div class="modal fade" id="editClassModal" tabindex="-1" aria-labelledby="editClassModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+        <div class="modal-content">
             <form id="editClassForm" method="POST" action="">
                 @csrf
-                <div class="modal-header" style="background: linear-gradient(135deg, #36a9e2 0%, #1e88c7 100%); border-radius: 12px 12px 0 0; border: none;">
-                    <h5 class="modal-title" id="editClassModalLabel" style="color: white; font-weight: 600;">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editClassModalLabel">
                         <i class="fa fa-edit me-2"></i>Edit Grade
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body" style="padding: 30px;">
-                    <div class="form-group mb-3">
-                        <label for="editName" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                            <i class="fa fa-school me-2 text-primary"></i>Class Name <span class="text-danger">*</span>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editName" class="form-label">
+                            Class Name <span class="text-danger">*</span>
                         </label>
                         <input type="text" 
                                id="editName" 
                                name="name" 
                                class="form-control" 
                                placeholder="Enter class name"
-                               style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
                                required>
                     </div>
 
-                    <div class="form-group mb-0">
-                        <label for="editNextClass" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                            <i class="fa fa-arrow-right me-2 text-primary"></i>Next Class (Optional)
+                    <div class="mb-0">
+                        <label for="editNextClass" class="form-label">
+                            Next Class (Optional)
                         </label>
                         <select id="editNextClass" 
                                 name="next_class_id" 
-                                class="form-select" 
-                                style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;">
-                            <option value="">-- Select Next Class --</option>
+                                class="form-select">
+                            <option value="">Select Next Class</option>
                             @foreach($getRecord as $class)
                                 <option value="{{ $class->id }}">{{ $class->name }}</option>
                             @endforeach
                         </select>
                         <small class="text-muted mt-1 d-block">
-                            <i class="fa fa-info-circle me-1"></i>
                             Students will automatically progress to this class upon promotion
                         </small>
                     </div>
                 </div>
-                <div class="modal-footer" style="border-top: 1px solid #e8eaed; padding: 20px 30px;">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px; padding: 10px 20px;">
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="fa fa-times me-1"></i>Close
                     </button>
-                    <button type="submit" class="btn btn-primary" style="border-radius: 8px; padding: 10px 20px;">
+                    <button type="submit" class="btn btn-primary">
                         <i class="fa fa-save me-1"></i>Save Changes
                     </button>
                 </div>
@@ -202,63 +200,60 @@
 {{-- Add Class Modal --}}
 <div class="modal fade" id="addClassModal" tabindex="-1" aria-labelledby="addClassModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+        <div class="modal-content">
             <form id="addClassForm" action="{{ url('/insertClass') }}" method="POST">
                 @csrf
-                <div class="modal-header" style="background: linear-gradient(135deg, #79c347 0%, #5fa732 100%); border-radius: 12px 12px 0 0; border: none;">
-                    <h5 class="modal-title" id="addClassModalLabel" style="color: white; font-weight: 600;">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addClassModalLabel">
                         <i class="fa fa-plus me-2"></i>Add New Grade(s)
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body" style="padding: 30px;">
+                <div class="modal-body">
                     <div id="classInputs">
-                        <div class="class-input-group mb-3 p-3" style="border: 1px solid #e0e0e0; border-radius: 8px; background: #f9f9f9;">
-                            <div class="row">
+                        <div class="class-input-group mb-3">
+                            <div class="row g-3">
                                 <div class="col-md-6">
-                                    <div class="form-group mb-3 mb-md-0">
-                                        <label class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                                            <i class="fa fa-school me-2 text-success"></i>Class Name <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="text" 
-                                               name="classes[0][name]" 
-                                               class="form-control" 
-                                               placeholder="Enter class name"
-                                               style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
-                                               required>
-                                    </div>
+                                    <label class="form-label">
+                                        Class Name <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           name="classes[0][name]" 
+                                           class="form-control" 
+                                           placeholder="Enter class name"
+                                           required>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="form-group mb-0">
-                                        <label class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                                            <i class="fa fa-arrow-right me-2 text-success"></i>Next Class (Optional)
-                                        </label>
-                                        <select name="classes[0][next_class_id]" 
-                                                class="form-select next-class-select" 
-                                                style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;">
-                                            <option value="">-- Select Next Class --</option>
-                                            @foreach($getRecord as $class)
-                                                <option value="{{ $class->id }}">{{ $class->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
+                                    <label class="form-label">
+                                        Next Class (Optional)
+                                    </label>
+                                    <select name="classes[0][next_class_id]" class="form-select next-class-select">
+                                        <option value="">Select Next Class</option>
+                                        @foreach($getRecord as $class)
+                                            <option value="{{ $class->id }}">{{ $class->name }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-outline-success btn-sm" id="addMoreInput" style="border-radius: 6px;">
-                        <i class="fa fa-plus-circle me-1"></i>Add Another Class
-                    </button>
-                    <small class="text-muted d-block mt-2">
-                        <i class="fa fa-info-circle me-1"></i>
-                        Tip: Add classes in order (e.g., Grade 1, Grade 2, Grade 3) and set their progression paths
-                    </small>
+
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-outline-success btn-sm" id="addMoreInput">
+                            <i class="fa fa-plus-circle me-1"></i>Add Another Class
+                        </button>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fa fa-info-circle me-2"></i>
+                        <small>Tip: Add classes in order (e.g., Grade 1, Grade 2, Grade 3) and set their progression paths</small>
+                    </div>
                 </div>
-                <div class="modal-footer" style="border-top: 1px solid #e8eaed; padding: 20px 30px;">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px; padding: 10px 20px;">
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="fa fa-times me-1"></i>Close
                     </button>
-                    <button type="submit" class="btn btn-success" style="border-radius: 8px; padding: 10px 20px;">
+                    <button type="submit" class="btn btn-success">
                         <i class="fa fa-save me-1"></i>Save Classes
                     </button>
                 </div>
@@ -267,27 +262,27 @@
     </div>
 </div>
 
-<!-- Promote Students Modal -->
+{{-- Promote Students Modal --}}
 <div class="modal fade" id="promoteModal" tabindex="-1" aria-labelledby="promoteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+        <div class="modal-content">
             <form action="{{ route('promotions.class') }}" method="POST">
                 @csrf
-                <div class="modal-header" style="background: linear-gradient(135deg, #f6c90e 0%, #f39c12 100%); border-radius: 12px 12px 0 0;">
-                    <h5 class="modal-title" id="promoteModalLabel" style="color: white; font-weight: 600;">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="promoteModalLabel">
                         <i class="fa fa-level-up-alt me-2"></i>Promote Students to Next Class
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-                <div class="modal-body" style="padding: 30px;">
+                <div class="modal-body">
                     <p class="text-muted mb-3">
                         This action will promote all eligible students to the next class and create invoices for the new term.
                     </p>
 
-                    <div class="form-group mb-3">
-                        <label for="academic_year" class="form-label fw-semibold">
-                            <i class="fa fa-calendar me-2 text-warning"></i>Academic Year <span class="text-danger">*</span>
+                    <div class="mb-3">
+                        <label for="academic_year" class="form-label">
+                            Academic Year <span class="text-danger">*</span>
                         </label>
                         <input type="text" 
                             name="academic_year" 
@@ -298,17 +293,17 @@
                             required>
                     </div>
 
-                    <div class="alert alert-warning d-flex align-items-center" style="border-radius: 10px;">
+                    <div class="alert alert-warning">
                         <i class="fa fa-exclamation-triangle me-2"></i>
-                        <div><strong>Note:</strong> This process cannot be undone. Please confirm before proceeding.</div>
+                        <strong>Note:</strong> This process cannot be undone. Please confirm before proceeding.
                     </div>
                 </div>
 
-                <div class="modal-footer" style="border-top: 1px solid #e8eaed; padding: 20px 30px;">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px; padding: 10px 20px;">
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="fa fa-times me-1"></i>Cancel
                     </button>
-                    <button type="submit" class="btn btn-warning text-white" style="border-radius: 8px; padding: 10px 20px;">
+                    <button type="submit" class="btn btn-warning">
                         <i class="fa fa-check me-1"></i>Confirm Promotion
                     </button>
                 </div>
@@ -317,207 +312,493 @@
     </div>
 </div>
 
-
 <style>
-/* Modal Styling */
-.modal-content {
-    border: none;
+/* Base Variables */
+:root {
+    --primary-color: #36a9e2;
+    --success-color: #79c347;
+    --success-dark: #5fa732;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-900: #111827;
+    --border-radius: 8px;
 }
 
-.modal-header {
-    padding: 20px 30px;
+/* Page Header */
+.page-header h4 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0;
 }
 
-.btn-close-white {
-    filter: brightness(0) invert(1);
+.page-header p {
+    font-size: 14px;
+    color: var(--gray-500);
 }
 
-/* Form Control Focus */
-.form-control:focus,
-.form-select:focus {
-    border-color: #79c347;
-    box-shadow: 0 0 0 0.2rem rgba(121, 195, 71, 0.15);
+/* Card */
+.table-card {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-/* Button Styles */
+.table-card .card-header {
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+    padding: 16px 20px;
+}
+
+.table-card .card-header h5 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.table-card .card-header small {
+    font-size: 13px;
+    color: var(--gray-500);
+    display: block;
+    margin-top: 2px;
+}
+
+/* Table */
+.grade-table {
+    font-size: 14px;
+}
+
+.grade-table thead {
+    background-color: var(--gray-50);
+    border-bottom: 2px solid var(--gray-200);
+}
+
+.grade-table thead th {
+    font-weight: 600;
+    color: var(--gray-700);
+    padding: 12px 16px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.grade-table tbody td {
+    padding: 16px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.grade-table tbody tr:hover {
+    background-color: var(--gray-50);
+}
+
+/* Row Number */
+.row-number {
+    color: var(--gray-500);
+    font-weight: 500;
+    font-size: 13px;
+}
+
+/* Grade Icon */
+.grade-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background-color: var(--gray-100);
+    color: var(--gray-700);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.grade-name {
+    font-weight: 500;
+    color: var(--gray-900);
+}
+
+.grade-description {
+    font-size: 12px;
+    color: var(--gray-500);
+    margin-top: 2px;
+}
+
+/* Next Class Badge */
+.next-class-badge {
+    background-color: #dbeafe;
+    color: #1e40af;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 12px;
+    display: inline-block;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.action-buttons .btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+/* Buttons */
+.btn {
+    border-radius: var(--border-radius);
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
 .btn-primary {
-    background: linear-gradient(135deg, #36a9e2 0%, #1e88c7 100%);
-    border: none;
-    transition: all 0.3s ease;
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
 }
 
 .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(54, 169, 226, 0.3);
+    background-color: #2a8cbd;
+    border-color: #2a8cbd;
 }
 
 .btn-success {
-    background: linear-gradient(135deg, #79c347 0%, #5fa732 100%);
-    border: none;
-    transition: all 0.3s ease;
+    background-color: var(--success-color);
+    border-color: var(--success-color);
 }
 
 .btn-success:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(121, 195, 71, 0.3);
+    background-color: var(--success-dark);
+    border-color: var(--success-dark);
 }
 
 .btn-danger {
-    background: linear-gradient(135deg, #ff4748 0%, #e63946 100%);
-    border: none;
-    transition: all 0.3s ease;
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
 }
 
 .btn-danger:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 71, 72, 0.3);
+    background-color: #dc2626;
+    border-color: #dc2626;
 }
 
-.btn-secondary {
-    background: #6c757d;
-    border: none;
-    transition: all 0.3s ease;
-}
-
-.btn-secondary:hover {
-    background: #5a6268;
-}
-
-.btn-outline-success {
-    border: 2px solid #79c347;
-    color: #79c347;
-    transition: all 0.3s ease;
-}
-
-.btn-outline-success:hover {
-    background: #79c347;
+.btn-warning {
+    background-color: var(--warning-color);
+    border-color: var(--warning-color);
     color: white;
 }
 
-/* Remove button styling */
-.remove-input {
-    transition: all 0.2s ease;
+.btn-warning:hover {
+    background-color: #d97706;
+    border-color: #d97706;
+    color: white;
 }
 
-.remove-input:hover {
-    transform: scale(1.1);
+.btn-secondary {
+    background-color: var(--gray-600);
+    border-color: var(--gray-600);
+}
+
+.btn-secondary:hover {
+    background-color: var(--gray-700);
+    border-color: var(--gray-700);
+}
+
+.btn-light {
+    background-color: var(--gray-100);
+    border-color: var(--gray-200);
+    color: var(--gray-700);
+}
+
+.btn-light:hover {
+    background-color: var(--gray-200);
+    border-color: var(--gray-300);
+}
+
+.btn-outline-success {
+    color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.btn-outline-success:hover {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+    color: white;
+}
+
+/* Empty State */
+.empty-state {
+    color: var(--gray-400);
+}
+
+.empty-state i {
+    opacity: 0.3;
+}
+
+.empty-state p {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--gray-600);
+}
+
+.empty-state small {
+    color: var(--gray-500);
+}
+
+/* Alerts */
+.alert {
+    border-radius: var(--border-radius);
+    border: none;
+    padding: 12px 16px;
+}
+
+.alert-success {
+    background-color: #e8f5e0;
+    color: #3d7a1f;
+}
+
+.alert-danger {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.alert-warning {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.alert-info {
+    background-color: #e0f2fe;
+    color: #075985;
+}
+
+/* Badge Override */
+.badge.bg-light {
+    background-color: var(--gray-100) !important;
+    color: var(--gray-700);
+    padding: 4px 12px;
+    font-weight: 500;
+}
+
+/* Modal */
+.modal-content {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--gray-200);
+    padding: 16px 20px;
+}
+
+.modal-header h5 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-footer {
+    border-top: 1px solid var(--gray-200);
+    padding: 16px 20px;
+}
+
+/* Form Elements */
+.form-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-700);
+    margin-bottom: 6px;
+}
+
+.form-control,
+.form-select {
+    border: 1px solid var(--gray-300);
+    border-radius: var(--border-radius);
+    padding: 8px 12px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(54, 169, 226, 0.1);
+}
+
+/* Class Input Group */
+.class-input-group {
+    position: relative;
+    padding: 16px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    background-color: var(--gray-50);
+}
+
+.remove-input {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .modal-body {
-        padding: 20px !important;
-    }
-
-    .modal-footer {
-        padding: 15px 20px !important;
-    }
-
     .grade-icon {
-        width: 32px !important;
-        height: 32px !important;
-        font-size: 12px !important;
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
     }
-
-    .btn-sm {
-        padding: 4px 10px !important;
+    
+    .action-buttons .btn-sm {
+        padding: 6px 10px;
         font-size: 12px;
     }
     
-    .class-input-group {
-        padding: 15px !important;
+    .grade-table {
+        font-size: 13px;
+    }
+
+    .grade-table thead th,
+    .grade-table tbody td {
+        padding: 10px;
+    }
+
+    .modal-body {
+        padding: 16px;
+    }
+
+    .modal-footer {
+        padding: 12px 16px;
     }
 }
 </style>
 
 <script>
-let classInputCounter = 1;
+document.addEventListener('DOMContentLoaded', function () {
+    const addMoreBtn = document.getElementById('addMoreInput');
+    let classInputCounter = 1;
 
-// Add More Input Fields
-document.getElementById('addMoreInput').addEventListener('click', function() {
-    const container = document.getElementById('classInputs');
-    const inputGroup = document.createElement('div');
-    inputGroup.classList.add('class-input-group', 'mb-3', 'p-3', 'position-relative');
-    inputGroup.style.cssText = 'border: 1px solid #e0e0e0; border-radius: 8px; background: #f9f9f9;';
-    
-    inputGroup.innerHTML = `
-        <button type="button" class="btn btn-sm btn-danger remove-input" 
-                style="position: absolute; top: 10px; right: 10px; z-index: 10; border-radius: 50%; width: 30px; height: 30px; padding: 0;">
-            <i class="fa fa-times"></i>
-        </button>
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-group mb-3 mb-md-0">
-                    <label class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                        <i class="fa fa-school me-2 text-success"></i>Class Name <span class="text-danger">*</span>
-                    </label>
-                    <input type="text" 
-                           name="classes[${classInputCounter}][name]" 
-                           class="form-control" 
-                           placeholder="Enter class name"
-                           style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
-                           required>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-group mb-0">
-                    <label class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                        <i class="fa fa-arrow-right me-2 text-success"></i>Next Class (Optional)
-                    </label>
-                    <select name="classes[${classInputCounter}][next_class_id]" 
-                            class="form-select next-class-select" 
-                            style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;">
-                        <option value="">-- Select Next Class --</option>
-                        @foreach($getRecord as $class)
-                            <option value="{{ $class->id }}">{{ $class->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    container.appendChild(inputGroup);
-    classInputCounter++;
+    if (addMoreBtn) {
+        addMoreBtn.addEventListener('click', function() {
+            const container = document.getElementById('classInputs');
+            if (!container) return;
 
-    // Add event listener to remove button
-    inputGroup.querySelector('.remove-input').addEventListener('click', function() {
-        inputGroup.remove();
-    });
-});
+            const inputGroup = document.createElement('div');
+            inputGroup.classList.add('class-input-group', 'mb-3');
 
-// Handle Edit Button Clicks
-document.querySelectorAll('.editBtn').forEach(button => {
-    button.addEventListener('click', function() {
-        const id = this.getAttribute('data-id');
-        const name = this.getAttribute('data-name');
-        const nextClassId = this.getAttribute('data-next-class-id');
-
-        // Set form action dynamically using url() helper
-        document.getElementById('editClassForm').action = '{{ url("/editClass") }}/' + id;
-
-        // Set current name
-        document.getElementById('editName').value = name;
-
-        // Set next class dropdown
-        const nextClassSelect = document.getElementById('editNextClass');
-        nextClassSelect.value = nextClassId || '';
-
-        // Remove the option for current class from next class dropdown
-        Array.from(nextClassSelect.options).forEach(option => {
-            if (option.value == id) {
-                option.disabled = true;
-                option.style.display = 'none';
+            const firstSelect = container.querySelector('.next-class-select');
+            let optionsHtml = '<option value="">Select Next Class</option>';
+            if (firstSelect) {
+                Array.from(firstSelect.options).forEach(opt => {
+                    optionsHtml += `<option value="${opt.value}">${opt.text}</option>`;
+                });
             } else {
-                option.disabled = false;
-                option.style.display = 'block';
+                @foreach($getRecord as $class)
+                    optionsHtml += `<option value="{{ $class->id }}">{{ $class->name }}</option>`;
+                @endforeach
+            }
+
+            inputGroup.innerHTML = `
+                <button type="button" class="btn btn-sm btn-danger remove-input">
+                    <i class="fa fa-times"></i>
+                </button>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            Class Name <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" 
+                               name="classes[${classInputCounter}][name]" 
+                               class="form-control" 
+                               placeholder="Enter class name"
+                               required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            Next Class (Optional)
+                        </label>
+                        <select name="classes[${classInputCounter}][next_class_id]" 
+                                class="form-select next-class-select">
+                            ${optionsHtml}
+                        </select>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(inputGroup);
+            classInputCounter++;
+
+            const removeBtn = inputGroup.querySelector('.remove-input');
+            if (removeBtn) {
+                removeBtn.addEventListener('click', function() {
+                    inputGroup.remove();
+                });
             }
         });
+    }
 
-        // Open modal using Bootstrap 5 API
-        const editModal = new bootstrap.Modal(document.getElementById('editClassModal'));
-        editModal.show();
-    });
+    const editButtons = document.querySelectorAll('.editBtn');
+    if (editButtons.length) {
+        editButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                const name = this.getAttribute('data-name');
+                const nextClassId = this.getAttribute('data-next-class-id');
+
+                const editForm = document.getElementById('editClassForm');
+                if (editForm) {
+                    editForm.action = '{{ url("/editClass") }}/' + id;
+                }
+
+                const nameInput = document.getElementById('editName');
+                if (nameInput) nameInput.value = name || '';
+
+                const nextClassSelect = document.getElementById('editNextClass');
+                if (nextClassSelect) {
+                    nextClassSelect.value = nextClassId || '';
+
+                    Array.from(nextClassSelect.options).forEach(option => {
+                        if (option.value == id) {
+                            option.disabled = true;
+                            option.style.display = 'none';
+                        } else {
+                            option.disabled = false;
+                            option.style.display = 'block';
+                        }
+                    });
+                }
+
+                const editModalEl = document.getElementById('editClassModal');
+                if (editModalEl) {
+                    const editModal = new bootstrap.Modal(editModalEl);
+                    editModal.show();
+                }
+            });
+        });
+    }
 });
 </script>
 
