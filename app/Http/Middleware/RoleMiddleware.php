@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Middleware;
 
 use Closure;
@@ -8,16 +7,22 @@ use Illuminate\Support\Facades\Auth;
 
 class RoleMiddleware
 {
-    public function handle(Request $request, Closure $next, $role)
-    {
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
+public function handle(Request $request, Closure $next, ...$roles)
+{
+    // Roles from middleware (e.g. ["admin", "accountant"])
+    $allowedRoles = array_map('strtolower', $roles);
 
-        if (Auth::user()->role !== $role) {
-            return abort(403, 'Unauthorized access.');
-        }
+    // Logged-in user role
+    $userRole = strtolower(Auth::user()->role);
 
-        return $next($request);
+    
+    if (!in_array($userRole, $allowedRoles)) {
+        abort(403, 'Unauthorized access.');
     }
+
+    return $next($request);
+}
+
+
+
 }

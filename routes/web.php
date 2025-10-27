@@ -18,7 +18,8 @@ use App\Http\Controllers\CashbookController;
 use App\Http\Controllers\PaymentChannelController;
 use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\SmsLogController;
-
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AccountantControllerController;
 
 // ✅ Public (No login)
 Route::get('/register', [RegisterController::class, 'showRegistrationForm']);
@@ -35,6 +36,9 @@ Route::middleware(['school'])->group(function () {
 
     Route::get('/statements/{student}', [StatementController::class, 'single'])->name('statements.single');
     Route::post('/statements/bulk', [StatementController::class, 'bulk'])->name('statements.bulk');
+    Route::post('/statements/bulk/balance', [StatementController::class, 'bulkBalanceStatements'])
+    ->name('balances.statements.bulk');
+
     Route::post('/balances/sms/send', [StatementController::class, 'sendBulkBalanceSms'])->name('balances.sms.send');
 
     Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
@@ -45,8 +49,8 @@ Route::middleware(['school'])->group(function () {
 
 
     // ✅ FINANCE (Admin + Accountant)
-    Route::middleware(['role:admin,accountant'])->group(function () {
-
+  Route::middleware('role:admin,accountant')->group(function () {
+        // protected routes
         Route::get('expense_categories', [ExpenseCategoryController::class,'index'])->name('expense_categories.index');
         Route::post('expense_categories', [ExpenseCategoryController::class,'store'])->name('expense_categories.store');
         Route::put('expense_categories/{id}', [ExpenseCategoryController::class,'update'])->name('expense_categories.update');
@@ -71,7 +75,36 @@ Route::middleware(['school'])->group(function () {
         Route::get('other_incomes/{id}/edit', [OtherIncomeController::class, 'edit'])->name('other_incomes.edit');
         Route::put('other_incomes/{id}', [OtherIncomeController::class, 'update'])->name('other_incomes.update');
         Route::delete('other_incomes/{id}', [OtherIncomeController::class, 'destroy'])->name('other_incomes.destroy');
+        
 
+        
+        Route::get('/class', [ClassController::class, 'listClass'])->name('classlist');
+        Route::post('/insertClass', [ClassController::class, 'insert'])->name('insertclass');
+        Route::post('/editClass/{id}', [ClassController::class, 'update'])->name('editclass');
+        Route::get('/deleteClass/{id}', [ClassController::class, 'delete'])->name('deleteclass');
+
+        Route::get('/classfee', [ClassFeeController::class, 'listClassFee'])->name('classfeelist');
+        Route::get('/addclassfee', [ClassFeeController::class, 'addclassfee'])->name('addclassfee');
+        Route::post('/addclassfee', [ClassFeeController::class, 'insertclassfee'])->name('insertclassfee');
+        Route::get('/editclassfee/{id}', [ClassFeeController::class, 'editclassfee'])->name('editclassfee');
+        Route::post('/editclassfee/{id}', [ClassFeeController::class, 'updateclassfee'])->name('updateclassfee');
+        Route::get('/deleteclassfee/{id}', [ClassFeeController::class, 'deleteclassfee'])->name('deleteclassfee');
+
+        Route::get('/extrafee', [ExtraFeeController::class, 'listExtraFee'])->name('extrafeelist');
+        Route::get('/addextrafee', [ExtraFeeController::class, 'addExtraFee'])->name('addextrafee');
+        Route::post('/addextrafee', [ExtraFeeController::class, 'insertExtraFee'])->name('insertextrafee');
+        Route::post('/editextrafee/{id}', [ExtraFeeController::class, 'editExtraFee'])->name('editextrafee');
+        Route::get('/editextrafee/{id}', [ExtraFeeController::class, 'updateExtraFee'])->name('updateextrafee');
+        Route::get('/deleteextrafee/{id}', [ExtraFeeController::class, 'deleteExtraFee'])->name('deleteextrafee');
+
+        Route::get('/assignextrafee', [ExtraFeeController::class, 'showAssignExtraFeeForm'])->name('assignextrafeeform');
+        Route::post('/assignextrafee', [ExtraFeeController::class, 'assignStudentExtraFee'])->name('assignextrafee');
+        Route::get('/listextrafeestudents', [ExtraFeeController::class, 'listExtraFeeStudent'])->name('listextrafeestudents');
+        Route::get('/assign-extra-fee/edit/{id}', [ExtraFeeController::class, 'editAssignedExtraFee'])->name('editassignedextrafee');
+        Route::post('/assign-extra-fee/edit/{id}', [ExtraFeeController::class, 'updateAssignedExtraFee'])->name('updateassignedextrafee');
+        Route::get('/assign-extra-fee/delete/{id}', [ExtraFeeController::class, 'deleteAssignedExtraFee'])->name('deleteassignedextrafee');
+
+        
         Route::get('/cashbook', [CashbookController::class, 'index'])->name('cashbook.index');
 
         Route::get('/payment_channels', [PaymentChannelController::class, 'index'])->name('payment_channels.index');
@@ -96,25 +129,6 @@ Route::middleware(['school'])->group(function () {
         Route::resource('admins', AdminController::class);       // for admins
         Route::resource('accountants', AccountantController::class);
 
-
-        Route::get('/class', [ClassController::class, 'listClass'])->name('classlist');
-        Route::post('/insertClass', [ClassController::class, 'insert'])->name('insertclass');
-        Route::post('/editClass/{id}', [ClassController::class, 'update'])->name('editclass');
-        Route::get('/deleteClass/{id}', [ClassController::class, 'delete'])->name('deleteclass');
-
-        Route::get('/classfee', [ClassFeeController::class, 'listClassFee'])->name('classfeelist');
-        Route::get('/addclassfee', [ClassFeeController::class, 'addclassfee'])->name('addclassfee');
-        Route::post('/addclassfee', [ClassFeeController::class, 'insertclassfee'])->name('insertclassfee');
-        Route::get('/editclassfee/{id}', [ClassFeeController::class, 'editclassfee'])->name('editclassfee');
-        Route::post('/editclassfee/{id}', [ClassFeeController::class, 'updateclassfee'])->name('updateclassfee');
-        Route::get('/deleteclassfee/{id}', [ClassFeeController::class, 'deleteclassfee'])->name('deleteclassfee');
-
-        Route::get('/extrafee', [ExtraFeeController::class, 'listExtraFee'])->name('extrafeelist');
-        Route::get('/addextrafee', [ExtraFeeController::class, 'addExtraFee'])->name('addextrafee');
-        Route::post('/addextrafee', [ExtraFeeController::class, 'insertExtraFee'])->name('insertextrafee');
-        Route::post('/editextrafee/{id}', [ExtraFeeController::class, 'editExtraFee'])->name('editextrafee');
-        Route::get('/editextrafee/{id}', [ExtraFeeController::class, 'updateExtraFee'])->name('updateextrafee');
-        Route::get('/deleteextrafee/{id}', [ExtraFeeController::class, 'deleteExtraFee'])->name('deleteextrafee');
 
         Route::post('/promotions/term', [PromotionController::class, 'promoteToNextTerm'])->name('promotions.term');
         Route::post('/promotions/class', [PromotionController::class, 'promoteToNextClass'])->name('promotions.class');
