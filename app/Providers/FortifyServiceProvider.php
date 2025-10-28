@@ -13,6 +13,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable;
 use Laravel\Fortify\Fortify;
+use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -21,7 +22,34 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        \Log::info('✅ FortifyServiceProvider loaded');
+
+
+$this->app->bind(LoginResponseContract::class, function () {
+
+    return new class implements LoginResponseContract {
+    public function toResponse($request)
+    {
+        $user = $request->user();
+          
+        \Log::info('Fortify LoginResponse triggered', [
+            'user' => $user?->id,
+            'two_factor_enabled' => $user?->two_factor_enabled,
+            'is_sensitive' => $user?->isSensitiveRole(),
+        ]);
+
+        // If user requires 2FA & is sensitive role, redirect to challenge
+        if ($user && $user->isSensitiveRole() && $user->two_factor_enabled) {
+            // Clear any previous 2fa flag
+            session()->forget('two_factor_passed');
+            return redirect()->route('twofactor.challenge');
+        }
+
+        // Default behaviour
+        return redirect()->intended(config('fortify.home', '/'));
+    }};
+});
+
     }
 
     /**
@@ -29,6 +57,8 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+         \Laravel\Fortify\Fortify::loginView(fn () => view('auth.login'));
+    \Laravel\Fortify\Fortify::registerView(fn () => view('auth.register'));
         Fortify::createUsersUsing(CreateNewUser::class);
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);

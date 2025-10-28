@@ -48,6 +48,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'two_factor_enabled' => 'boolean',
         ];
     }
 
@@ -67,5 +68,53 @@ public function isAccountant()
 {
     return $this->role === 'accountant';
 }
+
+
+     public function isSensitiveRole(): bool
+    {
+        return in_array($this->role, ['admin','accountant']);
+    }
+
+    // Set 2FA secret (encrypt for storage)
+    public function setTwoFactorSecret(string $secret): void
+    {
+        $this->two_factor_secret = encrypt($secret);
+        $this->save();
+    }
+
+    // Get decrypted secret
+    public function getTwoFactorSecret(): ?string
+    {
+        return $this->two_factor_secret ? decrypt($this->two_factor_secret) : null;
+    }
+
+    // Set recovery codes (store JSON encrypted)
+    public function setTwoFactorRecoveryCodes(array $codes): void
+    {
+        $this->two_factor_recovery_codes = encrypt(json_encode($codes));
+        $this->save();
+    }
+
+    public function getTwoFactorRecoveryCodes(): array
+    {
+        if (! $this->two_factor_recovery_codes) return [];
+        return json_decode(decrypt($this->two_factor_recovery_codes), true) ?? [];
+    }
+
+    public function enableTwoFactor(): void
+    {
+        $this->two_factor_enabled = true;
+        $this->two_factor_confirmed_at = now();
+        $this->save();
+    }
+
+    public function disableTwoFactor(): void
+    {
+        $this->two_factor_enabled = false;
+        $this->two_factor_secret = null;
+        $this->two_factor_recovery_codes = null;
+        $this->two_factor_confirmed_at = null;
+        $this->save();
+    }
 
 }

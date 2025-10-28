@@ -15,8 +15,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'school' => \App\Http\Middleware\EnsureUserIsAuthenticated::class,
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+            '2fa' => \App\Http\Middleware\EnsureTwoFactorPassed::class,
+
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
-    })->create();
+    })
+    ->withProviders([
+        App\Providers\FortifyServiceProvider::class,
+    ])->create();

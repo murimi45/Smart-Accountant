@@ -19,17 +19,28 @@ use App\Http\Controllers\PaymentChannelController;
 use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\SmsLogController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\AccountantControllerController;
+use App\Http\Controllers\TwoFactorController;
+use App\Http\Controllers\AccountantController;
 
 // ✅ Public (No login)
-Route::get('/register', [RegisterController::class, 'showRegistrationForm']);
-Route::post('/register', [RegisterController::class, 'register'])->name('register');
-Route::get('/login', [RegisterController::class, 'showLoginForm']);
-Route::post('/login', [RegisterController::class, 'login'])->name('login');
+// Route::get('/register', [RegisterController::class, 'showRegistrationForm']);
+// Route::post('/register', [RegisterController::class, 'register'])->name('register');
+// Route::get('/login', [RegisterController::class, 'showLoginForm']);
+// Route::post('/login', [RegisterController::class, 'login'])->name('login');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('two-factor/setup', [TwoFactorController::class, 'showSetup'])->name('twofactor.setup');
+    Route::post('two-factor/confirm', [TwoFactorController::class, 'confirmSetup'])->name('twofactor.confirm');
+    Route::post('two-factor/disable', [TwoFactorController::class, 'disable'])->name('twofactor.disable');
+});
+
+// ✅ Accessible only when 2FA is required during login
+Route::get('two-factor-challenge', [TwoFactorController::class, 'showChallenge'])->name('twofactor.challenge');
+Route::post('two-factor-challenge', [TwoFactorController::class, 'verifyChallenge'])->name('twofactor.challenge.verify');
 
 
 // ✅ All logged-in tenants
-Route::middleware(['school'])->group(function () {
+Route::middleware(['auth', 'school', '2fa'])->group(function () {
 
     // ✅ SHARED (Admin + Accountant)
     Route::get('/dashboard', [DashboardController::class, 'showDashboard'])->name('dashboard');
