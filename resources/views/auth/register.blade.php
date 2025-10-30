@@ -248,6 +248,34 @@
                                             </small>
                                         </div>
 
+                                        {{-- Confirm Password --}}
+                                         <div class="field mb-4">
+                                             <label for="password_confirmation" class="label_field">Confirm Password</label>
+                                             <div class="input-group">
+                                                 <span class="input-group-text">
+                                                     <i class="fa fa-lock"></i>
+                                                 </span>
+                                                 <input type="password" 
+                                                        id="password_confirmation" 
+                                                        name="password_confirmation" 
+                                                        class="form-control @error('password_confirmation') is-invalid @enderror" 
+                                                        placeholder="Re-enter your password"
+                                                        required />
+                                                 <button type="button" 
+                                                         class="btn btn-outline-secondary" 
+                                                         id="toggleConfirmPassword">
+                                                     <i class="fa fa-eye" id="eyeIconConfirm"></i>
+                                                 </button>
+                                             </div>
+                                             @error('password_confirmation')
+                                                 <small class="text-danger">{{ $message }}</small>
+                                             @enderror
+                                             <small class="text-muted form-hint">
+                                                 <i class="fa fa-info-circle me-1"></i>Re-enter the same password for confirmation
+                                             </small>
+                                         </div>
+
+
                                         {{-- Submit Button --}}
                                         <div class="field mb-3">
                                             <button type="submit" class="btn btn-primary w-100 submit-btn">
@@ -616,6 +644,22 @@
                 passwordInput.type = 'password';
                 eyeIcon.classList.remove('fa-eye-slash');
                 eyeIcon.classList.add('fa-eye');
+            }
+        });
+
+
+        document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
+            const confirmPasswordInput = document.getElementById('password_confirmation');
+            const eyeIconConfirm = document.getElementById('eyeIconConfirm');
+            
+            if (confirmPasswordInput.type === 'password') {
+                confirmPasswordInput.type = 'text';
+                eyeIconConfirm.classList.remove('fa-eye');
+                eyeIconConfirm.classList.add('fa-eye-slash');
+            } else {
+                confirmPasswordInput.type = 'password';
+                eyeIconConfirm.classList.remove('fa-eye-slash');
+                eyeIconConfirm.classList.add('fa-eye');
             }
         });
     </script>

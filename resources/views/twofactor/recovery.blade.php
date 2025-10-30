@@ -111,6 +111,27 @@
     </div>
 
     <style>
+
+        html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.full_container,
+.container-fluid,
+.row {
+    height: 100vh !important;
+    margin: 0;
+    padding: 0;
+}
+
+.description-side,
+.form-side {
+    min-height: 100vh;
+    height: 100%;
+}
+
         /* Base Styles */
         body.login {
             background: #ffffff;
