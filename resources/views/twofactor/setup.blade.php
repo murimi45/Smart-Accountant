@@ -8,82 +8,101 @@
                     <div class="description-content">
                         <div class="logo-section mb-5">
                             <div class="welcome-badge mb-3">
-                                <i class="fa fa-lock me-2"></i>Secure Access
+                                <i class="fa fa-shield-alt me-2"></i>Enhanced Security
                             </div>
                             <h2 class="system-title">Two-Factor Authentication</h2>
-                            <p class="system-subtitle">Enter the 6-digit code from your authenticator app to access your account.</p>
+                            <p class="system-subtitle">Add an extra layer of security to your account by enabling two-factor authentication.</p>
                         </div>
 
                         <div class="benefits-list">
                             <div class="benefit-item">
-                                <i class="fa fa-mobile-alt benefit-icon"></i>
-                                <span>Open your authenticator app (Google Authenticator, Authy, etc.)</span>
+                                <i class="fa fa-check-circle benefit-icon"></i>
+                                <span>Protect your account from unauthorized access</span>
                             </div>
                             <div class="benefit-item">
-                                <i class="fa fa-hashtag benefit-icon"></i>
-                                <span>Find the 6-digit code for {{ config('app.name') }}</span>
+                                <i class="fa fa-check-circle benefit-icon"></i>
+                                <span>Industry-standard TOTP authentication</span>
                             </div>
                             <div class="benefit-item">
-                                <i class="fa fa-keyboard benefit-icon"></i>
-                                <span>Enter the code to verify your identity</span>
+                                <i class="fa fa-check-circle benefit-icon"></i>
+                                <span>Works with Google Authenticator, Authy, and more</span>
                             </div>
                             <div class="benefit-item">
-                                <i class="fa fa-clock benefit-icon"></i>
-                                <span>Codes refresh every 30 seconds</span>
+                                <i class="fa fa-check-circle benefit-icon"></i>
+                                <span>Recovery codes for backup access</span>
                             </div>
                         </div>
 
                         <div class="security-badge mt-5">
-                            <i class="fa fa-shield-alt me-2"></i>
-                            <span>Your account is protected with 2FA</span>
+                            <i class="fa fa-lock me-2"></i>
+                            <span>Required for {{ auth()->user()->role }} accounts</span>
                         </div>
                     </div>
                 </div>
 
-                {{-- Right Side - Challenge Form --}}
+                {{-- Right Side - Setup Form --}}
                 <div class="col-lg-6 form-side">
                     <div class="login-wrapper">
                         <div class="login_section">
                             {{-- Header --}}
                             <div class="form-header mb-4">
                                 <div class="icon-badge mb-3">
-                                    <i class="fa fa-shield-alt"></i>
+                                    <i class="fa fa-mobile-alt"></i>
                                 </div>
-                                <h3 class="form-title">Verify Your Identity</h3>
-                                <p class="form-subtitle">Enter your authentication code</p>
+                                <h3 class="form-title">Enable 2FA</h3>
+                                <p class="form-subtitle">Scan the QR code with your authenticator app</p>
                             </div>
 
-                            {{-- User Info --}}
-                            <div class="user-info-box mb-4">
-                                <div class="d-flex align-items-center">
-                                    <div class="user-avatar">
-                                        <i class="fa fa-user"></i>
-                                    </div>
-                                    <div class="user-details">
-                                        <div class="user-name">{{ auth()->user()->admin_name }}</div>
-                                        <div class="user-email">{{ auth()->user()->email }}</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- Error Messages --}}
-                            @if ($errors->any())
-                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                    <i class="fa fa-exclamation-circle me-2"></i>
-                                    @foreach ($errors->all() as $error)
-                                        {{ $error }}
-                                    @endforeach
+                            {{-- Alerts --}}
+                            @if(session('info'))
+                                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                                    <i class="fa fa-info-circle me-2"></i>{{ session('info') }}
                                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                                 </div>
                             @endif
 
-                            {{-- Challenge Form --}}
+                            @if(session('warning'))
+                                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                    <i class="fa fa-exclamation-triangle me-2"></i>{{ session('warning') }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            @endif
+
+                            {{-- Instructions --}}
+                            <div class="setup-instructions mb-4">
+                                <h6 class="instructions-title">Setup Steps:</h6>
+                                <ol class="instructions-list">
+                                    <li>Install an authenticator app (Google Authenticator, Authy, etc.)</li>
+                                    <li>Scan the QR code below</li>
+                                    <li>Enter the 6-digit code to verify</li>
+                                </ol>
+                            </div>
+
+                            {{-- QR Code --}}
+                            <div class="qr-code-section mb-4">
+                                <div class="qr-code-wrapper">
+                                    {!! $qrCodeSvg !!}
+                                </div>
+                            </div>
+
+                            {{-- Manual Entry Code --}}
+                            <div class="manual-code-section mb-4">
+                                <label class="manual-code-label">Can't scan? Enter manually:</label>
+                                <div class="manual-code-box">
+                                    <code>{{ $secret }}</code>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary copy-btn" onclick="copySecret()">
+                                        <i class="fa fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {{-- Verification Form --}}
                             <div class="login_form">
-                                <form method="POST" action="{{ route('twofactor.challenge.verify') }}">
+                                <form method="POST" action="{{ route('twofactor.confirm') }}">
                                     @csrf
                                     <fieldset>
                                         <div class="field mb-3">
-                                            <label for="code" class="label_field">Authentication Code</label>
+                                            <label for="code" class="label_field">Verification Code</label>
                                             <div class="input-group">
                                                 <span class="input-group-text">
                                                     <i class="fa fa-key"></i>
@@ -96,68 +115,28 @@
                                                        class="form-control code-input @error('code') is-invalid @enderror" 
                                                        placeholder="000000"
                                                        required 
-                                                       autofocus 
-                                                       autocomplete="off" />
+                                                       autofocus />
                                             </div>
                                             @error('code')
                                                 <small class="text-danger">{{ $message }}</small>
                                             @enderror
                                         </div>
 
-                                        {{-- Trust Device Option --}}
-                                        <div class="field mb-4">
-                                            <div class="form-check">
-                                                <input type="checkbox" 
-                                                       class="form-check-input" 
-                                                       id="trust_device" 
-                                                       name="trust_device">
-                                                <label class="form-check-label" for="trust_device">
-                                                    Trust this device for 30 days
-                                                </label>
-                                            </div>
-                                            <small class="text-muted">You won't be asked for a code on this device for 30 days</small>
-                                        </div>
-
-                                        {{-- Submit Button --}}
                                         <div class="field mb-3">
                                             <button type="submit" class="btn btn-success w-100 submit-btn">
-                                                <i class="fa fa-check me-2"></i>Verify Code
+                                                <i class="fa fa-check me-2"></i>Verify and Enable 2FA
                                             </button>
                                         </div>
                                     </fieldset>
                                 </form>
                             </div>
 
-                            {{-- Recovery Code Link --}}
-                            <div class="text-center mt-4 recovery-link-section">
-                                <button type="button" class="btn btn-link text-muted" data-bs-toggle="collapse" data-bs-target="#recoveryCodeSection">
-                                    <i class="fa fa-question-circle me-1"></i>Lost your device? Use a recovery code
-                                </button>
-                                
-                                <div class="collapse mt-3" id="recoveryCodeSection">
-                                    <div class="recovery-code-box">
-                                        <p class="small text-muted mb-2">Enter one of your recovery codes instead:</p>
-                                        <form method="POST" action="{{ route('twofactor.challenge.verify') }}">
-                                            @csrf
-                                            <div class="input-group mb-2">
-                                                <input type="text" 
-                                                       name="code" 
-                                                       class="form-control" 
-                                                       placeholder="Enter recovery code"
-                                                       required />
-                                                <button type="submit" class="btn btn-secondary">
-                                                    Use Code
-                                                </button>
-                                            </div>
-                                            <small class="text-muted">Each recovery code can only be used once</small>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- Logout Option --}}
+                            {{-- Footer --}}
                             <div class="text-center mt-4">
-                                <form method="POST" action="{{ route('logout') }}">
+                                <p class="footer-text mb-2">
+                                    Logged in as <strong>{{ auth()->user()->email }}</strong>
+                                </p>
+                                <form method="POST" action="{{ route('logout') }}" style="display: inline;">
                                     @csrf
                                     <button type="submit" class="btn btn-link btn-sm text-muted">
                                         <i class="fa fa-sign-out-alt me-1"></i>Log out
@@ -347,44 +326,84 @@
             margin: 0;
         }
 
-        /* User Info Box */
-        .user-info-box {
+        /* Setup Instructions */
+        .setup-instructions {
             background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 12px;
-            padding: 15px;
+            border-left: 4px solid #79c347;
+            padding: 15px 20px;
+            border-radius: 8px;
         }
 
-        .user-avatar {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #79c347 0%, #5fa732 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-        }
-
-        .user-avatar i {
-            font-size: 24px;
-            color: white;
-        }
-
-        .user-details {
-            flex: 1;
-        }
-
-        .user-name {
+        .instructions-title {
+            font-size: 14px;
             font-weight: 600;
             color: #2c3e50;
-            font-size: 15px;
-            margin-bottom: 2px;
+            margin-bottom: 10px;
         }
 
-        .user-email {
-            color: #6c757d;
+        .instructions-list {
+            margin: 0;
+            padding-left: 20px;
             font-size: 13px;
+            color: #6c757d;
+        }
+
+        .instructions-list li {
+            margin-bottom: 6px;
+        }
+
+        /* QR Code Section */
+        .qr-code-section {
+            text-align: center;
+        }
+
+        .qr-code-wrapper {
+            display: inline-block;
+            background: white;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .qr-code-wrapper svg {
+            display: block;
+        }
+
+        /* Manual Code Section */
+        .manual-code-section {
+            text-align: center;
+        }
+
+        .manual-code-label {
+            font-size: 13px;
+            color: #6c757d;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .manual-code-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 12px 16px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .manual-code-box code {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #2c3e50;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .copy-btn {
+            padding: 4px 8px;
+            font-size: 12px;
         }
 
         /* Form Inputs */
@@ -435,32 +454,6 @@
             background: #f0f8e8;
         }
 
-        /* Checkbox */
-        .form-check {
-            display: flex;
-            align-items: center;
-        }
-
-        .form-check-input {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            margin-right: 8px;
-        }
-
-        .form-check-input:checked {
-            background-color: #79c347;
-            border-color: #79c347;
-        }
-
-        .form-check-label {
-            font-size: 14px;
-            color: #495057;
-            cursor: pointer;
-            margin: 0;
-            font-weight: 500;
-        }
-
         /* Submit Button */
         .submit-btn {
             background: linear-gradient(135deg, #79c347 0%, #5fa732 100%);
@@ -477,17 +470,11 @@
             box-shadow: 0 6px 20px rgba(121, 195, 71, 0.4);
         }
 
-        /* Recovery Code Section */
-        .recovery-link-section {
-            padding-top: 20px;
-            border-top: 1px solid #e9ecef;
-        }
-
-        .recovery-code-box {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 15px;
+        /* Footer */
+        .footer-text {
+            font-size: 13px;
+            color: #9ca3af;
+            margin: 0;
         }
 
         /* Alert */
@@ -544,11 +531,18 @@
             }
         });
 
-        // Clear input on error
-        @if ($errors->any())
-            document.getElementById('code').value = '';
-            document.getElementById('code').focus();
-        @endif
+        // Copy secret to clipboard
+        function copySecret() {
+            const secret = '{{ $secret }}';
+            navigator.clipboard.writeText(secret).then(function() {
+                const btn = document.querySelector('.copy-btn');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fa fa-check"></i>';
+                setTimeout(function() {
+                    btn.innerHTML = originalHTML;
+                }, 2000);
+            });
+        }
     </script>
 
     @include('layouts.footer')

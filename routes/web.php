@@ -21,6 +21,7 @@ use App\Http\Controllers\SmsLogController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\AccountantController;
+use Illuminate\Support\Facades\Auth;
 
 // ✅ Public (No login)
 // Route::get('/register', [RegisterController::class, 'showRegistrationForm']);
@@ -28,9 +29,14 @@ use App\Http\Controllers\AccountantController;
 // Route::get('/login', [RegisterController::class, 'showLoginForm']);
 // Route::post('/login', [RegisterController::class, 'login'])->name('login');
 
+// ✅ Accessible after login but before 2FA verification (for initial setup)
 Route::middleware(['auth'])->group(function () {
     Route::get('two-factor/setup', [TwoFactorController::class, 'showSetup'])->name('twofactor.setup');
     Route::post('two-factor/confirm', [TwoFactorController::class, 'confirmSetup'])->name('twofactor.confirm');
+});
+
+// ✅ Can only disable 2FA after passing 2FA check
+Route::middleware(['auth', '2fa'])->group(function () {
     Route::post('two-factor/disable', [TwoFactorController::class, 'disable'])->name('twofactor.disable');
 });
 
@@ -38,9 +44,9 @@ Route::middleware(['auth'])->group(function () {
 Route::get('two-factor-challenge', [TwoFactorController::class, 'showChallenge'])->name('twofactor.challenge');
 Route::post('two-factor-challenge', [TwoFactorController::class, 'verifyChallenge'])->name('twofactor.challenge.verify');
 
-
-// ✅ All logged-in tenants
+// ✅ All logged-in users who have passed 2FA (or don't need it)
 Route::middleware(['auth', 'school', '2fa'])->group(function () {
+   
 
     // ✅ SHARED (Admin + Accountant)
     Route::get('/dashboard', [DashboardController::class, 'showDashboard'])->name('dashboard');
@@ -123,6 +129,18 @@ Route::middleware(['auth', 'school', '2fa'])->group(function () {
         Route::put('/payment_channels/{id}', [PaymentChannelController::class, 'update'])->name('payment_channels.update');
         Route::get('/payment_channels/{id}/deactivate', [PaymentChannelController::class, 'deactivate'])->name('payment_channels.deactivate');
         Route::get('/payment_channels/{id}/activate', [PaymentChannelController::class, 'activate'])->name('payment_channels.activate');
+
+
+      
+
+Route::post('/logout-and-login', function () {
+    Auth::logout(); // end user session
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+
+    return redirect('/login');
+})->name('logout.and.login');
+
     });
 
 

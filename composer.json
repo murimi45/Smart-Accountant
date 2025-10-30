@@ -11,6 +11,7 @@
     "require": {
         "php": "^8.2",
         "africastalking/africastalking": "^3.0",
+        "bacon/bacon-qr-code": "^3.0",
         "barryvdh/laravel-dompdf": "^3.1",
         "laravel/fortify": "^1.31",
         "laravel/framework": "^11.31",

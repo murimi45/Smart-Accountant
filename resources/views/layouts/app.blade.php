@@ -130,6 +130,17 @@
                         </a>
                     </li>
 
+                    <li>
+                        <form id="logout-form" action="{{ route('logout.and.login') }}" method="POST" style="display: inline;">
+                            @csrf
+                            <button type="submit" class="btn btn-link text-start" style="color: #fff; text-decoration: none; padding-left: 20px;">
+                                <i class="fa fa-sign-out red_color"></i>
+                                <span>Logout & Login</span>
+                            </button>
+                        </form>
+                    </li>
+
+
                 </ul>
             </div>
         </nav>

@@ -20,37 +20,41 @@ class FortifyServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
-    public function register(): void
-    {
-        \Log::info('✅ FortifyServiceProvider loaded');
+   public function register(): void
+{
+    $this->app->singleton(LoginResponseContract::class, function () {
+        return new class implements LoginResponseContract {
+            public function toResponse($request)
+            {
+                $user = $request->user();
 
+                \Log::info('LoginResponse triggered', [
+                    'user' => $user?->id,
+                    'two_factor_enabled' => $user?->two_factor_enabled,
+                    'is_sensitive' => $user?->isSensitiveRole(),
+                ]);
 
-$this->app->bind(LoginResponseContract::class, function () {
+                // If user is sensitive role but hasn't set up 2FA yet, force setup
+                if ($user && $user->isSensitiveRole() && !$user->two_factor_enabled) {
+                    \Log::info('Redirecting to 2FA setup (first time)');
+                    session()->put('must_setup_2fa', true);
+                    return redirect()->route('twofactor.setup')
+                        ->with('info', 'Two-factor authentication is required for your role. Please complete the setup to continue.');
+                }
 
-    return new class implements LoginResponseContract {
-    public function toResponse($request)
-    {
-        $user = $request->user();
-          
-        \Log::info('Fortify LoginResponse triggered', [
-            'user' => $user?->id,
-            'two_factor_enabled' => $user?->two_factor_enabled,
-            'is_sensitive' => $user?->isSensitiveRole(),
-        ]);
+                // If user has 2FA enabled, challenge them
+                if ($user && $user->isSensitiveRole() && $user->two_factor_enabled) {
+                    \Log::info('Redirecting to 2FA challenge');
+                    session()->forget('two_factor_passed');
+                    return redirect()->route('twofactor.challenge');
+                }
 
-        // If user requires 2FA & is sensitive role, redirect to challenge
-        if ($user && $user->isSensitiveRole() && $user->two_factor_enabled) {
-            // Clear any previous 2fa flag
-            session()->forget('two_factor_passed');
-            return redirect()->route('twofactor.challenge');
-        }
-
-        // Default behaviour
-        return redirect()->intended(config('fortify.home', '/'));
-    }};
-});
-
-    }
+                // Default behaviour
+                return redirect()->intended(config('fortify.home', '/dashboard'));
+            }
+        };
+    });
+}
 
     /**
      * Bootstrap any application services.
