@@ -30,6 +30,11 @@ use Illuminate\Support\Facades\Auth;
 // Route::post('/login', [RegisterController::class, 'login'])->name('login');
 
 // ✅ Accessible after login but before 2FA verification (for initial setup)
+Route::get('/', function () {
+    return view('welcome');
+})->name('welcome');
+
+
 Route::middleware(['auth'])->group(function () {
     Route::get('two-factor/setup', [TwoFactorController::class, 'showSetup'])->name('twofactor.setup');
     Route::post('two-factor/confirm', [TwoFactorController::class, 'confirmSetup'])->name('twofactor.confirm');

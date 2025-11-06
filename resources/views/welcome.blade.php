@@ -3,10 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Accounting System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Elimu - Simple, Powerful Tools for Modern School Data Management</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
         * {
             margin: 0;
@@ -15,861 +22,1192 @@
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
-            background: #f2f3f5;
-            color: #898989;
-            font-size: 14px;
-            font-weight: 300;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #2c3e50;
+            overflow-x: hidden;
         }
 
-        .main-wrapper {
-            padding: 30px;
+        /* Navbar */
+        .navbar {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 15px 0;
+            transition: all 0.3s ease;
         }
 
-        /* Page Title */
-        .page_title {
-            margin-bottom: 30px;
+        .navbar.scrolled {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
 
-        .page_title h4 {
-            font-size: 24px;
-            color: #000;
-            font-weight: 700;
-            margin: 0;
+        .navbar-brand {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #79c347 0%, #5fa732 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        /* Card Counter Styles */
-        .card-counter {
-            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
-            padding: 25px 20px;
-            border-radius: 12px;
-            color: #fff;
-            margin-bottom: 25px;
-            text-align: center;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        .nav-link {
+            font-size: 15px;
+            font-weight: 500;
+            color: #495057;
+            margin: 0 15px;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: #79c347;
+        }
+
+        .btn-demo {
+            background: linear-gradient(135deg, #79c347 0%, #5fa732 100%);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-demo:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(121, 195, 71, 0.4);
+            color: white;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, #79c347 0%, #5fa732 100%);
+            padding: 120px 0 100px;
+            color: white;
             position: relative;
             overflow: hidden;
         }
 
-        .card-counter::before {
+        .hero-section::before {
             content: '';
             position: absolute;
             top: -50%;
-            right: -50%;
-            width: 200%;
-            height: 200%;
-            background: rgba(255,255,255,0.1);
+            right: -20%;
+            width: 80%;
+            height: 150%;
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 50%;
-            transition: all 0.5s ease;
         }
 
-        .card-counter:hover::before {
-            top: -25%;
-            right: -25%;
+        .hero-section::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -15%;
+            width: 60%;
+            height: 120%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
         }
 
-        .card-counter:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        .hero-content {
+            position: relative;
+            z-index: 1;
         }
 
-        .card-counter i {
-            font-size: 38px;
-            margin-bottom: 15px;
-            opacity: 0.9;
-        }
-
-        .card-counter .total_no {
-            font-size: 28px;
-            font-weight: 700;
-            margin: 10px 0 5px;
-        }
-
-        .card-counter .head_couter {
-            font-size: 13px;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            opacity: 0.95;
-            font-weight: 400;
-        }
-
-        .red_bg { background: linear-gradient(135deg, #ff4748 0%, #e63946 100%); }
-        .blue_bg { background: linear-gradient(135deg, #36a9e2 0%, #1e88c7 100%); }
-        .yellow_bg { background: linear-gradient(135deg, #fabb3d 0%, #f9a825 100%); }
-        .green_bg { background: linear-gradient(135deg, #79c347 0%, #5fa732 100%); }
-        .green_bg2 { background: linear-gradient(135deg, #1ed085 0%, #17a86b 100%); }
-        .purple_bg { background: linear-gradient(135deg, #8e68ef 0%, #7344e8 100%); }
-
-        /* Chart Cards */
-        .chart-card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            margin-bottom: 25px;
-            transition: all 0.3s ease;
-        }
-
-        .chart-card:hover {
-            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-        }
-
-        .chart-card h5 {
-            font-size: 18px;
-            color: #000;
-            font-weight: 600;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f2f3f5;
-        }
-
-        /* Table Card */
-        .table-card {
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            overflow: hidden;
-            margin-bottom: 25px;
-        }
-
-        .table-card .card-header {
-            background: linear-gradient(135deg, #36a9e2 0%, #1e88c7 100%);
-            color: #fff;
-            padding: 20px 25px;
-            border: none;
-        }
-
-        .table-card .card-header h5 {
-            margin: 0;
-            font-size: 18px;
-            font-weight: 600;
-            color: #fff;
-            border: none;
-            padding: 0;
-        }
-
-        .table-card .card-body {
-            padding: 0;
-        }
-
-        .custom-table {
-            margin: 0;
-        }
-
-        .custom-table thead th {
-            background: #f8f9fa;
-            color: #000;
-            font-weight: 600;
-            font-size: 13px;
-            text-transform: uppercase;
-            padding: 15px 20px;
-            border: none;
-            letter-spacing: 0.5px;
-        }
-
-        .custom-table tbody td {
-            padding: 15px 20px;
-            color: #58718a;
-            border-bottom: 1px solid #f2f3f5;
-            vertical-align: middle;
-        }
-
-        .custom-table tbody tr:hover {
-            background: #f8f9fa;
-            transition: all 0.2s ease;
-        }
-
-        .badge-status {
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-weight: 500;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .badge-paid {
-            background: #79c347;
-            color: #fff;
-        }
-
-        .badge-pending {
-            background: #fabb3d;
-            color: #fff;
-        }
-
-        .badge-overdue {
-            background: #ff4748;
-            color: #fff;
-        }
-
-        .btn-action {
-            width: 32px;
-            height: 32px;
-            padding: 0;
-            border-radius: 6px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid #ddd;
-            background: #fff;
-            color: #58718a;
-            transition: all 0.2s ease;
-            margin: 0 2px;
-        }
-
-        .btn-action:hover {
-            background: #36a9e2;
-            border-color: #36a9e2;
-            color: #fff;
-            transform: translateY(-2px);
-        }
-
-        /* Quick Actions Card */
-        .quick-actions-card {
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            padding: 25px;
-            margin-bottom: 25px;
-        }
-
-        .quick-actions-card h5 {
-            font-size: 18px;
-            color: #000;
-            font-weight: 600;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f2f3f5;
-        }
-
-        .btn-quick-action {
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: 500;
+        .hero-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 30px;
             font-size: 14px;
-            margin-bottom: 10px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
+        }
+
+        .hero-title {
+            font-size: 56px;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 25px;
+        }
+
+        .hero-subtitle {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: 40px;
+            line-height: 1.6;
+            max-width: 600px;
+        }
+
+        .hero-buttons .btn {
+            padding: 15px 35px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 10px;
+            margin-right: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary-hero {
+            background: white;
+            color: #79c347;
+            border: none;
+        }
+
+        .btn-primary-hero:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+            color: #5fa732;
+        }
+
+        .btn-outline-hero {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-outline-hero:hover {
+            background: white;
+            color: #79c347;
+            transform: translateY(-3px);
+        }
+
+        .hero-image {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-image img {
+            width: 100%;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero-placeholder {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 80px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+        }
+
+        .hero-placeholder i {
+            font-size: 80px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 20px;
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 100px 0;
+            background: #f8f9fa;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #79c347 0%, #5fa732 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-size: 42px;
+            font-weight: 800;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .section-subtitle {
+            font-size: 18px;
+            color: #6c757d;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            height: 100%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 40px rgba(121, 195, 71, 0.2);
+            border-color: #79c347;
+        }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #79c347 0%, #5fa732 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: white;
+            margin-bottom: 25px;
+        }
+
+        .feature-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .feature-description {
+            font-size: 15px;
+            color: #6c757d;
+            line-height: 1.7;
+            margin-bottom: 25px;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 30px;
+        }
+
+        .feature-list li {
+            padding: 10px 0;
+            font-size: 14px;
+            color: #495057;
+            display: flex;
+            align-items: center;
+        }
+
+        .feature-list li i {
+            color: #79c347;
+            margin-right: 12px;
+            font-size: 16px;
+        }
+
+        .btn-learn-more {
+            background: linear-gradient(135deg, #79c347 0%, #5fa732 100%);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .btn-learn-more:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(121, 195, 71, 0.4);
+            color: white;
+        }
+
+        /* Pricing Section */
+        .pricing-section {
+            padding: 100px 0;
+            background: white;
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 2px solid #e9ecef;
+            height: 100%;
+            position: relative;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .pricing-card.featured {
+            border-color: #79c347;
+            transform: scale(1.05);
+            box-shadow: 0 12px 40px rgba(121, 195, 71, 0.2);
+        }
+
+        .pricing-badge {
+            position: absolute;
+            top: -15px;
+            right: 30px;
+            background: linear-gradient(135deg, #79c347 0%, #5fa732 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .pricing-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .pricing-price {
+            font-size: 48px;
+            font-weight: 800;
+            color: #79c347;
+            margin-bottom: 5px;
+        }
+
+        .pricing-price span {
+            font-size: 18px;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .pricing-description {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 30px;
+        }
+
+        .pricing-features {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 30px;
+        }
+
+        .pricing-features li {
+            padding: 12px 0;
+            font-size: 15px;
+            color: #495057;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .pricing-features li i {
+            color: #79c347;
+            margin-right: 12px;
+            margin-top: 3px;
+            font-size: 18px;
+        }
+
+        .btn-pricing {
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
             border: none;
             transition: all 0.3s ease;
         }
 
-        .btn-quick-action i {
-            margin-right: 8px;
+        .btn-pricing-primary {
+            background: linear-gradient(135deg, #79c347 0%, #5fa732 100%);
+            color: white;
         }
 
-        .btn-quick-primary {
-            background: linear-gradient(135deg, #36a9e2 0%, #1e88c7 100%);
-            color: #fff;
-        }
-
-        .btn-quick-primary:hover {
-            background: linear-gradient(135deg, #1e88c7 0%, #1660a0 100%);
+        .btn-pricing-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(54, 169, 226, 0.3);
+            box-shadow: 0 6px 20px rgba(121, 195, 71, 0.4);
         }
 
-        .btn-quick-success {
-            background: linear-gradient(135deg, #1ed085 0%, #17a86b 100%);
-            color: #fff;
+        .btn-pricing-outline {
+            background: white;
+            color: #79c347;
+            border: 2px solid #79c347;
         }
 
-        .btn-quick-success:hover {
-            background: linear-gradient(135deg, #17a86b 0%, #128556 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(30, 208, 133, 0.3);
+        .btn-pricing-outline:hover {
+            background: #79c347;
+            color: white;
         }
 
-        .btn-quick-warning {
-            background: linear-gradient(135deg, #fabb3d 0%, #f9a825 100%);
-            color: #fff;
-        }
-
-        .btn-quick-warning:hover {
-            background: linear-gradient(135deg, #f9a825 0%, #e89c1a 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(250, 187, 61, 0.3);
-        }
-
-        .btn-quick-purple {
-            background: linear-gradient(135deg, #8e68ef 0%, #7344e8 100%);
-            color: #fff;
-        }
-
-        .btn-quick-purple:hover {
-            background: linear-gradient(135deg, #7344e8 0%, #5f2dd4 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(142, 104, 239, 0.3);
-        }
-
-        /* Notifications Card */
-        .notifications-card {
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            padding: 25px;
-            margin-bottom: 25px;
-        }
-
-        .notifications-card h5 {
-            font-size: 18px;
-            color: #000;
-            font-weight: 600;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f2f3f5;
-        }
-
-        .notification-item {
-            display: flex;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            transition: all 0.2s ease;
-            border: 1px solid #f2f3f5;
-        }
-
-        .notification-item:hover {
+        /* Testimonials Section */
+        .testimonials-section {
+            padding: 100px 0;
             background: #f8f9fa;
-            border-color: #e0e0e0;
         }
 
-        .notification-icon {
-            width: 45px;
-            height: 45px;
-            border-radius: 10px;
+        .testimonial-card {
+            background: white;
+            border-radius: 16px;
+            padding: 35px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            height: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .testimonial-stars {
+            color: #ffc107;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .testimonial-text {
+            font-size: 15px;
+            color: #495057;
+            line-height: 1.8;
+            margin-bottom: 25px;
+            font-style: italic;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+        }
+
+        .testimonial-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #79c347 0%, #5fa732 100%);
             display: flex;
             align-items: center;
             justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
             margin-right: 15px;
-            flex-shrink: 0;
         }
 
-        .notification-icon i {
+        .testimonial-info h5 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .testimonial-info p {
+            font-size: 14px;
+            color: #6c757d;
+            margin: 0;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 100px 0;
+            background: linear-gradient(135deg, #79c347 0%, #5fa732 100%);
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 80%;
+            height: 150%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+
+        .cta-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-title {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .cta-subtitle {
             font-size: 20px;
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: 40px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
-        .notification-icon.warning {
-            background: rgba(250, 187, 61, 0.15);
-            color: #fabb3d;
+        .btn-cta {
+            background: white;
+            color: #79c347;
+            padding: 18px 45px;
+            font-size: 18px;
+            font-weight: 700;
+            border-radius: 10px;
+            border: none;
+            transition: all 0.3s ease;
         }
 
-        .notification-icon.success {
-            background: rgba(121, 195, 71, 0.15);
+        .btn-cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+            color: #5fa732;
+        }
+
+        /* Footer */
+        .footer {
+            background: linear-gradient(135deg, #5fa732 0%, #4a8a28 100%);
+            color: white;
+            padding: 60px 0 30px;
+        }
+
+        .footer-brand {
+            font-size: 28px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .footer-description {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 25px;
+            line-height: 1.7;
+        }
+
+        .footer-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
+        }
+
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
             color: #79c347;
         }
 
-        .notification-icon.info {
-            background: rgba(54, 169, 226, 0.15);
-            color: #36a9e2;
+        .social-icons a {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-right: 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
         }
 
-        .notification-content h6 {
+        .social-icons a:hover {
+            background: #79c347;
+            transform: translateY(-3px);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 50px;
+            padding-top: 30px;
+            text-align: center;
+        }
+
+        .footer-bottom p {
             font-size: 14px;
-            font-weight: 600;
-            color: #000;
-            margin-bottom: 5px;
+            color: rgba(255, 255, 255, 0.6);
+            margin: 0;
         }
 
-        .notification-content p {
-            font-size: 13px;
-            color: #898989;
-            margin-bottom: 5px;
+        /* Animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
         }
 
-        .notification-content small {
-            font-size: 12px;
-            color: #b0b0b0;
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
-        @media (max-width: 768px) {
-            .main-wrapper {
-                padding: 15px;
+        /* Responsive */
+        @media (max-width: 991px) {
+            .hero-title {
+                font-size: 42px;
             }
-            
-            .card-counter {
-                margin-bottom: 15px;
+
+            .section-title {
+                font-size: 36px;
+            }
+
+            .cta-title {
+                font-size: 38px;
+            }
+
+            .pricing-card.featured {
+                transform: scale(1);
+            }
+        }
+
+        @media (max-width: 767px) {
+            .hero-section {
+                padding: 80px 0 60px;
+            }
+
+            .hero-title {
+                font-size: 34px;
+            }
+
+            .hero-subtitle {
+                font-size: 17px;
+            }
+
+            .hero-buttons .btn {
+                display: block;
+                width: 100%;
+                margin-right: 0;
+            }
+
+            .section-title {
+                font-size: 30px;
+            }
+
+            .features-section,
+            .pricing-section,
+            .testimonials-section,
+            .cta-section {
+                padding: 60px 0;
+            }
+
+            .cta-title {
+                font-size: 30px;
+            }
+
+            .cta-subtitle {
+                font-size: 17px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="main-wrapper">
-        <!-- Page Title -->
-        <div class="row column_title">
-            <div class="col-md-12">
-                <div class="page_title">
-                    <h4>Dashboard – Term 1 (2024/2025)</h4>
-                </div>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#home">
+                <i class="fas fa-graduation-cap me-2"></i>Elimu
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#home">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features">Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#pricing">Pricing</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#testimonials">Testimonials</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#contact">Contact</a>
+                    </li>
+                    <li class="nav-item ms-lg-3">
+                        <a href="#demo" class="btn btn-demo">
+                            <i class="fas fa-play-circle me-2"></i>Request Demo
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
+    </nav>
 
-        <!-- Financial Summary Cards -->
-        <div class="row">
-            <div class="col-md-6 col-lg-3">
-                <div class="card-counter blue_bg">
-                    <i class="fa fa-credit-card"></i>
-                    <p class="total_no">2,450,000</p>
-                    <p class="head_couter">Total Fees Billed</p>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-lg-3">
-                <div class="card-counter green_bg">
-                    <i class="fa fa-money-bill-wave"></i>
-                    <p class="total_no">1,875,500</p>
-                    <p class="head_couter">Total Fees Collected</p>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-lg-3">
-                <div class="card-counter red_bg">
-                    <i class="fa fa-balance-scale"></i>
-                    <p class="total_no">574,500</p>
-                    <p class="head_couter">Outstanding Balances</p>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-lg-3">
-                <div class="card-counter yellow_bg">
-                    <i class="fa fa-chart-line"></i>
-                    <p class="total_no">1,301,000</p>
-                    <p class="head_couter">Net Position</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Extra Income & Expenses Row -->
-        <div class="row">
-            <div class="col-md-6 col-lg-6">
-                <div class="card-counter purple_bg">
-                    <i class="fa fa-plus-circle"></i>
-                    <p class="total_no">320,000</p>
-                    <p class="head_couter">Other Income</p>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-lg-6">
-                <div class="card-counter green_bg2">
-                    <i class="fa fa-minus-circle"></i>
-                    <p class="total_no">894,500</p>
-                    <p class="head_couter">Total Expenses</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Charts Row -->
-        <div class="row mt-4">
-            <div class="col-md-6">
-                <div class="chart-card">
-                    <h5>Fees vs Collections</h5>
-                    <canvas id="feesPieChart" height="200"></canvas>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="chart-card">
-                    <h5>Expenses Breakdown</h5>
-                    <canvas id="expensesPieChart" height="200"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-12">
-                <div class="chart-card">
-                    <h5>Net Position Over Time</h5>
-                    <canvas id="netLineChart" height="80"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recent Payments and Quick Actions -->
-        <div class="row">
-            <div class="col-lg-8">
-                <div class="table-card">
-                    <div class="card-header">
-                        <h5><i class="fa fa-receipt me-2"></i> Recent Payments</h5>
+    <!-- Hero Section -->
+    <section class="hero-section" id="home">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 hero-content">
+                    <div class="hero-badge fade-in">
+                        <i class="fas fa-check-circle me-2"></i>Trusted by 500+ Schools Across Kenya
                     </div>
-                    <div class="card-body">
-                        <table class="table custom-table">
-                            <thead>
-                                <tr>
-                                    <th>Student ID</th>
-                                    <th>Student Name</th>
-                                    <th>Class</th>
-                                    <th>Amount</th>
-                                    <th>Date</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>STU-2024-001</strong></td>
-                                    <td>John Kamau</td>
-                                    <td>Form 4A</td>
-                                    <td><strong>45,000</strong></td>
-                                    <td>Oct 05, 2025</td>
-                                    <td><span class="badge-status badge-paid">Paid</span></td>
-                                    <td>
-                                        <button class="btn-action" title="View"><i class="fa fa-eye"></i></button>
-                                        <button class="btn-action" title="Print"><i class="fa fa-print"></i></button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>STU-2024-087</strong></td>
-                                    <td>Mary Wanjiku</td>
-                                    <td>Form 3B</td>
-                                    <td><strong>38,500</strong></td>
-                                    <td>Oct 04, 2025</td>
-                                    <td><span class="badge-status badge-paid">Paid</span></td>
-                                    <td>
-                                        <button class="btn-action" title="View"><i class="fa fa-eye"></i></button>
-                                        <button class="btn-action" title="Print"><i class="fa fa-print"></i></button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>STU-2024-143</strong></td>
-                                    <td>Peter Omondi</td>
-                                    <td>Form 2C</td>
-                                    <td><strong>32,000</strong></td>
-                                    <td>Oct 03, 2025</td>
-                                    <td><span class="badge-status badge-pending">Pending</span></td>
-                                    <td>
-                                        <button class="btn-action" title="View"><i class="fa fa-eye"></i></button>
-                                        <button class="btn-action" title="Print"><i class="fa fa-print"></i></button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>STU-2024-256</strong></td>
-                                    <td>Grace Akinyi</td>
-                                    <td>Form 1A</td>
-                                    <td><strong>28,000</strong></td>
-                                    <td>Oct 02, 2025</td>
-                                    <td><span class="badge-status badge-paid">Paid</span></td>
-                                    <td>
-                                        <button class="btn-action" title="View"><i class="fa fa-eye"></i></button>
-                                        <button class="btn-action" title="Print"><i class="fa fa-print"></i></button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>STU-2024-189</strong></td>
-                                    <td>David Mwangi</td>
-                                    <td>Form 4B</td>
-                                    <td><strong>45,000</strong></td>
-                                    <td>Oct 01, 2025</td>
-                                    <td><span class="badge-status badge-overdue">Overdue</span></td>
-                                    <td>
-                                        <button class="btn-action" title="View"><i class="fa fa-eye"></i></button>
-                                        <button class="btn-action" title="Print"><i class="fa fa-print"></i></button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>STU-2024-312</strong></td>
-                                    <td>Sarah Njeri</td>
-                                    <td>Form 3A</td>
-                                    <td><strong>38,500</strong></td>
-                                    <td>Sep 30, 2025</td>
-                                    <td><span class="badge-status badge-paid">Paid</span></td>
-                                    <td>
-                                        <button class="btn-action" title="View"><i class="fa fa-eye"></i></button>
-                                        <button class="btn-action" title="Print"><i class="fa fa-print"></i></button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <h1 class="hero-title fade-in">Simple, Powerful Tools for Modern Schools</h1>
+                    <p class="hero-subtitle fade-in">Streamline financial management and academic performance tracking with our cloud-based solutions. Save time, reduce errors, and focus on what matters most.</p>
+                    <div class="hero-buttons fade-in">
+                        <button class="btn btn-primary-hero">
+                            <i class="fas fa-rocket me-2"></i>Request Demo
+                        </button>
+                        <button class="btn btn-outline-hero">
+                            <i class="fas fa-dollar-sign me-2"></i>View Pricing
+                        </button>
                     </div>
                 </div>
-            </div>
-
-            <div class="col-lg-4">
-                <!-- Quick Actions -->
-                <div class="quick-actions-card">
-                    <h5><i class="fa fa-bolt me-2"></i> Quick Actions</h5>
-                    <button class="btn-quick-action btn-quick-primary">
-                        <i class="fa fa-plus-circle"></i> Record New Payment
-                    </button>
-                    <button class="btn-quick-action btn-quick-success">
-                        <i class="fa fa-file-invoice"></i> Generate Invoice
-                    </button>
-                    <button class="btn-quick-action btn-quick-warning">
-                        <i class="fa fa-user-plus"></i> Add Student
-                    </button>
-                    <button class="btn-quick-action btn-quick-purple">
-                        <i class="fa fa-download"></i> Export Report
-                    </button>
-                </div>
-
-                <!-- Notifications -->
-                <div class="notifications-card">
-                    <h5><i class="fa fa-bell me-2"></i> Recent Notifications</h5>
-                    
-                    <div class="notification-item">
-                        <div class="notification-icon warning">
-                            <i class="fa fa-exclamation-triangle"></i>
-                        </div>
-                        <div class="notification-content">
-                            <h6>Payment Overdue Alert</h6>
-                            <p>23 students have overdue fee payments for Term 1</p>
-                            <small><i class="fa fa-clock"></i> 2 hours ago</small>
-                        </div>
-                    </div>
-
-                    <div class="notification-item">
-                        <div class="notification-icon success">
-                            <i class="fa fa-check-circle"></i>
-                        </div>
-                        <div class="notification-content">
-                            <h6>Bulk Payment Received</h6>
-                            <p>Form 4A class fees received - KES 850,000</p>
-                            <small><i class="fa fa-clock"></i> 5 hours ago</small>
-                        </div>
-                    </div>
-
-                    <div class="notification-item">
-                        <div class="notification-icon info">
-                            <i class="fa fa-info-circle"></i>
-                        </div>
-                        <div class="notification-content">
-                            <h6>Fee Structure Updated</h6>
-                            <p>New fee schedule approved for Term 2, 2025</p>
-                            <small><i class="fa fa-clock"></i> 1 day ago</small>
-                        </div>
-                    </div>
-
-                    <div class="notification-item">
-                        <div class="notification-icon warning">
-                            <i class="fa fa-bell"></i>
-                        </div>
-                        <div class="notification-content">
-                            <h6>Reminder: End of Month</h6>
-                            <p>Monthly financial report due in 3 days</p>
-                            <small><i class="fa fa-clock"></i> 1 day ago</small>
-                        </div>
+                <div class="col-lg-6 hero-image mt-5 mt-lg-0">
+                    <div class="hero-placeholder fade-in">
+                        <i class="fas fa-school"></i>
+                        <h4 class="mt-3">Dashboard Preview</h4>
+                        <p class="mb-0">Interactive School Management Interface</p>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Features Section -->
+    <section class="features-section" id="features">
+        <div class="container">
+            <div class="section-header fade-in">
+                <span class="section-badge">Our Solutions</span>
+                <h2 class="section-title">Two Powerful Systems, One Platform</h2>
+                <p class="section-subtitle">Everything you need to manage your school's finances and academic performance efficiently</p>
+            </div>
 
+            <div class="row g-4">
+                <!-- Accounting System -->
+                <div class="col-lg-6">
+                    <div class="feature-card fade-in">
+                        <div class="feature-icon">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                        <h3 class="feature-title">Smart School Accounting System</h3>
+                        <p class="feature-description">Automate your school's financial operations and eliminate manual errors with our intelligent accounting platform.</p>
+                        
+                        <ul class="feature-list">
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                Automated fee collection and tracking
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                Real-time expense and income monitoring
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                Instant ledgers and financial reports
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                SMS payment reminders to parents
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                Cloud-based secure data storage
+                            </li>
+                        </ul>
+
+                        <a href="#pricing" class="btn-learn-more">
+                            <i class="fas fa-arrow-right me-2"></i>Learn More
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Performance System -->
+                <div class="col-lg-6">
+                    <div class="feature-card fade-in">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3 class="feature-title">Smart Performance & Report System</h3>
+                        <p class="feature-description">Transform academic data into actionable insights with automated grading, reporting, and performance analytics.</p>
+                        
+                        <ul class="feature-list">
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                Automated student performance analysis
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                Instant report card generation
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                Visual progress tracking and analytics
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                Teacher and parent dashboards
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                Grade automation and ranking
+                            </li>
+                        </ul>
+
+                        <a href="#pricing" class="btn-learn-more">
+                            <i class="fas fa-arrow-right me-2"></i>Learn More
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing-section" id="pricing">
+        <div class="container">
+            <div class="section-header fade-in">
+                <span class="section-badge">Pricing Plans</span>
+                <h2 class="section-title">Affordable Plans for Every School</h2>
+                <p class="section-subtitle">Choose the system that fits your needs, or save more with our bundle offer</p>
+            </div>
+
+            <div class="row g-4">
+                <!-- Accounting System Plan -->
+                <div class="col-lg-4">
+                    <div class="pricing-card fade-in">
+                        <h3 class="pricing-name">Accounting System</h3>
+                        <div class="pricing-price">KES 150<span>/student/term</span></div>
+                        <p class="pricing-description">Complete financial management for your school</p>
+                        
+                        <ul class="pricing-features">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                Fee collection & tracking
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                Expense management
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                Financial reports & ledgers
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                SMS payment reminders
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                Cloud storage & backup
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                Email support
+                            </li>
+                        </ul>
+
+                        <button class="btn btn-pricing btn-pricing-outline">
+                            Get Started
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bundle Plan (Featured) -->
+                <div class="col-lg-4">
+                    <div class="pricing-card featured fade-in">
+                        <span class="pricing-badge">Best Value</span>
+                        <h3 class="pricing-name">Complete Bundle</h3>
+                        <div class="pricing-price">KES 239<span>/student/term</span></div>
+                        <p class="pricing-description">Both systems at a discounted rate</p>
+                        
+                        <ul class="pricing-features">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                Everything in Accounting System
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                Everything in Performance System
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <strong>Save KES 61 per student</strong>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                Priority support
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                Free training sessions
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                Dedicated account manager
+                            </li>
+                        </ul>
+
+                        <button class="btn btn-pricing btn-pricing-primary">
+                            Get Started
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Performance System Plan -->
+                <div class="col-lg-4">
+                    <div class="pricing-card fade-in">
+                        <h3 class="pricing-name">Performance System</h3>
+                        <div class="pricing-price">KES 150<span>/student/term</span></div>
+                        <p class="pricing-description">Advanced academic tracking and reporting</p>
+                        
+                        <ul class="pricing-features">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                Performance analysis
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                Automated report cards
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                Progress visualization
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                Teacher & parent portals
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                Grade automation
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                Email support
+                            </li>
+                        </ul>
+
+                        <button class="btn btn-pricing btn-pricing-outline">
+                            Get Started
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials-section" id="testimonials">
+        <div class="container">
+            <div class="section-header fade-in">
+                <span class="section-badge">Testimonials</span>
+                <h2 class="section-title">Loved by School Administrators</h2>
+                <p class="section-subtitle">See what schools are saying about Elimu</p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="testimonial-card fade-in">
+                        <div class="testimonial-stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p class="testimonial-text">"Elimu has transformed how we manage school finances. What used to take hours now takes minutes. The automated reports are incredibly accurate and save us so much time!"</p>
+                        <div class="testimonial-author">
+                            <div class="testimonial-avatar">MK</div>
+                            <div class="testimonial-info">
+                                <h5>Mary Kamau</h5>
+                                <p>School Accountant, St. Mary's Academy</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="testimonial-card fade-in">
+                        <div class="testimonial-stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p class="testimonial-text">"The performance tracking system is a game-changer. We can now identify struggling students early and provide targeted support. Parents love the real-time updates!"</p>
+                        <div class="testimonial-author">
+                            <div class="testimonial-avatar">JO</div>
+                            <div class="testimonial-info">
+                                <h5>James Omondi</h5>
+                                <p>Principal, Greenfield High School</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="testimonial-card fade-in">
+                        <div class="testimonial-stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p class="testimonial-text">"Best investment we've made! The bundle plan gives us everything we need at an affordable price. Customer support is excellent, always quick to help when needed."</p>
+                        <div class="testimonial-author">
+                            <div class="testimonial-avatar">SA</div>
+                            <div class="testimonial-info">
+                                <h5>Sarah Achieng</h5>
+                                <p>Director, Nairobi Academy</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section" id="demo">
+        <div class="container">
+            <div class="cta-content">
+                <h2 class="cta-title fade-in">Join 500+ Schools Using Elimu Today</h2>
+                <p class="cta-subtitle fade-in">Start your free demo and see how we can transform your school's operations in just minutes</p>
+                <button class="btn btn-cta fade-in">
+                    <i class="fas fa-rocket me-2"></i>Start Free Demo
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer" id="contact">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <h3 class="footer-brand">
+                        <i class="fas fa-graduation-cap me-2"></i>Elimu
+                    </h3>
+                    <p class="footer-description">We are a Kenya-based EdTech company helping schools streamline financial and academic management through simple, powerful cloud-based solutions.</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+
+                <div class="col-lg-2 col-md-6">
+                    <h4 class="footer-title">Product</h4>
+                    <ul class="footer-links">
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#pricing">Pricing</a></li>
+                        <li><a href="#demo">Request Demo</a></li>
+                        <li><a href="#">Case Studies</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-2 col-md-6">
+                    <h4 class="footer-title">Company</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-2 col-md-6">
+                    <h4 class="footer-title">Support</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">Training</a></li>
+                        <li><a href="#">System Status</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-2 col-md-6">
+                    <h4 class="footer-title">Contact</h4>
+                    <ul class="footer-links">
+                        <li><a href="mailto:info@elimu.co.ke">info@elimu.co.ke</a></li>
+                        <li><a href="tel:+254700000000">+254 700 000 000</a></li>
+                        <li><a href="#">Nairobi, Kenya</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2024 Elimu. All rights reserved. | <a href="#" style="color: #79c347; text-decoration: none;">Privacy Policy</a> | <a href="#" style="color: #79c347; text-decoration: none;">Terms of Service</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JavaScript -->
     <script>
-        // Fees vs Collections Pie Chart
-        const feesCtx = document.getElementById('feesPieChart').getContext('2d');
-        new Chart(feesCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Collected', 'Outstanding'],
-                datasets: [{
-                    data: [1875500, 574500],
-                    backgroundColor: ['#79c347', '#ff4748'],
-                    borderWidth: 0,
-                    hoverOffset: 10
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            font: {
-                                family: 'Poppins',
-                                size: 13
-                            }
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                label += new Intl.NumberFormat('en-KE', {
-                                    style: 'currency',
-                                    currency: 'KES'
-                                }).format(context.parsed);
-                                return label;
-                            }
-                        }
-                    }
-                }
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
             }
         });
 
-        // Expenses Breakdown Pie Chart
-        const expensesCtx = document.getElementById('expensesPieChart').getContext('2d');
-        new Chart(expensesCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Salaries', 'Utilities', 'Maintenance', 'Supplies', 'Transport', 'Others'],
-                datasets: [{
-                    data: [450000, 125000, 98500, 87000, 78000, 56000],
-                    backgroundColor: ['#36a9e2', '#8e68ef', '#fabb3d', '#1ed085', '#ff4748', '#79c347'],
-                    borderWidth: 0,
-                    hoverOffset: 10
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            font: {
-                                family: 'Poppins',
-                                size: 13
-                            }
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                label += new Intl.NumberFormat('en-KE', {
-                                    style: 'currency',
-                                    currency: 'KES'
-                                }).format(context.parsed);
-                                return label;
-                            }
-                        }
-                    }
+        // Fade-in animation on scroll
+        const fadeElements = document.querySelectorAll('.fade-in');
+
+        const checkFade = () => {
+            fadeElements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const elementBottom = element.getBoundingClientRect().bottom;
+                
+                if (elementTop < window.innerHeight - 100 && elementBottom > 0) {
+                    element.classList.add('visible');
                 }
-            }
+            });
+        };
+
+        window.addEventListener('scroll', checkFade);
+        window.addEventListener('load', checkFade);
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
         });
 
-        // Net Position Line Chart
-        const netCtx = document.getElementById('netLineChart').getContext('2d');
-        new Chart(netCtx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                datasets: [{
-                    label: 'Net Position (KES)',
-                    data: [850000, 920000, 1050000, 980000, 1150000, 1200000, 1180000, 1250000, 1220000, 1301000, 1280000, 1350000],
-                    borderColor: '#36a9e2',
-                    backgroundColor: 'rgba(54, 169, 226, 0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    borderWidth: 3,
-                    pointRadius: 5,
-                    pointBackgroundColor: '#36a9e2',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointHoverRadius: 7
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top',
-                        labels: {
-                            font: {
-                                family: 'Poppins',
-                                size: 13
-                            }
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                label += new Intl.NumberFormat('en-KE', {
-                                    style: 'currency',
-                                    currency: 'KES'
-                                }).format(context.parsed.y);
-                                return label;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return 'KES ' + (value / 1000) + 'K';
-                            },
-                            font: {
-                                family: 'Poppins'
-                            }
-                        },
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
-                        }
-                    },
-                    x: {
-                        ticks: {
-                            font: {
-                                family: 'Poppins'
-                            }
-                        },
-                        grid: {
-                            display: false
-                        }
-                    }
+        // Mobile menu close on link click
+        const navLinks = document.querySelectorAll('.nav-link');
+        const navbarCollapse = document.querySelector('.navbar-collapse');
+        
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (navbarCollapse.classList.contains('show')) {
+                    const bsCollapse = new bootstrap.Collapse(navbarCollapse);
+                    bsCollapse.hide();
                 }
-            }
+            });
         });
     </script>
+
 </body>
 </html>
-
-
-<!-- 
-<!DOCTYPE html>
-<html lang="en">
-   <head>
-     
-      <meta charset="utf-8">
-      <meta http-equiv="X-UA-Compatible" content="IE=edge">
-      
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <meta name="viewport" content="initial-scale=1, maximum-scale=1">
-     
-      <title>Pluto - Responsive Bootstrap Admin Panel Templates</title>
-      <meta name="keywords" content="">
-      <meta name="description" content="">
-      <meta name="author" content="">
-      
-      <link rel="icon" href="images/fevicon.png" type="image/png" />
-      
-      <link rel="stylesheet" href="/css/bootstrap.min.css" />
-      
-      <link rel="stylesheet" href="/style.css" />
-  
-      <link rel="stylesheet" href="/css/responsive.css" />
-      
-      <link rel="stylesheet" href="/css/colors.css" />
-      
-      <link rel="stylesheet" href="/css/bootstrap-select.css" />
-     
-      <link rel="stylesheet" href="/css/perfect-scrollbar.css" />
-     
-      <link rel="stylesheet" href="/css/custom.css" />
-      <link rel="stylesheet" href="/css/customallan.css" />
-      <link rel="stylesheet" href="/css/dashboard.css">
-
-
-   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-   </head> -->
