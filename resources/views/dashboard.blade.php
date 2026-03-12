@@ -137,108 +137,63 @@
                     </h5>
                 </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table dashboard-table mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Student ID</th>
-                                    <th>Student Name</th>
-                                    <th class="d-none d-lg-table-cell">Class</th>
-                                    <th>Amount</th>
-                                    <th class="d-none d-md-table-cell">Date</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><span class="student-id">STU-001</span></td>
-                                    <td>John Kamau</td>
-                                    <td class="d-none d-lg-table-cell"><span class="badge-class">Form 4A</span></td>
-                                    <td><span class="amount-text">KSh 45,000</span></td>
-                                    <td class="d-none d-md-table-cell">Oct 05, 2025</td>
-                                    <td><span class="badge badge-success">Paid</span></td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="btn btn-sm btn-light" title="View"><i class="fa fa-eye"></i></button>
-                                            <button class="btn btn-sm btn-light d-none d-sm-inline-block" title="Print"><i class="fa fa-print"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><span class="student-id">STU-087</span></td>
-                                    <td>Mary Wanjiku</td>
-                                    <td class="d-none d-lg-table-cell"><span class="badge-class">Form 3B</span></td>
-                                    <td><span class="amount-text">KSh 38,500</span></td>
-                                    <td class="d-none d-md-table-cell">Oct 04, 2025</td>
-                                    <td><span class="badge badge-success">Paid</span></td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="btn btn-sm btn-light" title="View"><i class="fa fa-eye"></i></button>
-                                            <button class="btn btn-sm btn-light d-none d-sm-inline-block" title="Print"><i class="fa fa-print"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><span class="student-id">STU-143</span></td>
-                                    <td>Peter Omondi</td>
-                                    <td class="d-none d-lg-table-cell"><span class="badge-class">Form 2C</span></td>
-                                    <td><span class="amount-text">KSh 32,000</span></td>
-                                    <td class="d-none d-md-table-cell">Oct 03, 2025</td>
-                                    <td><span class="badge badge-warning">Pending</span></td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="btn btn-sm btn-light" title="View"><i class="fa fa-eye"></i></button>
-                                            <button class="btn btn-sm btn-light d-none d-sm-inline-block" title="Print"><i class="fa fa-print"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><span class="student-id">STU-256</span></td>
-                                    <td>Grace Akinyi</td>
-                                    <td class="d-none d-lg-table-cell"><span class="badge-class">Form 1A</span></td>
-                                    <td><span class="amount-text">KSh 28,000</span></td>
-                                    <td class="d-none d-md-table-cell">Oct 02, 2025</td>
-                                    <td><span class="badge badge-success">Paid</span></td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="btn btn-sm btn-light" title="View"><i class="fa fa-eye"></i></button>
-                                            <button class="btn btn-sm btn-light d-none d-sm-inline-block" title="Print"><i class="fa fa-print"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><span class="student-id">STU-189</span></td>
-                                    <td>David Mwangi</td>
-                                    <td class="d-none d-lg-table-cell"><span class="badge-class">Form 4B</span></td>
-                                    <td><span class="amount-text">KSh 45,000</span></td>
-                                    <td class="d-none d-md-table-cell">Oct 01, 2025</td>
-                                    <td><span class="badge badge-danger">Overdue</span></td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="btn btn-sm btn-light" title="View"><i class="fa fa-eye"></i></button>
-                                            <button class="btn btn-sm btn-light d-none d-sm-inline-block" title="Print"><i class="fa fa-print"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><span class="student-id">STU-312</span></td>
-                                    <td>Sarah Njeri</td>
-                                    <td class="d-none d-lg-table-cell"><span class="badge-class">Form 3A</span></td>
-                                    <td><span class="amount-text">KSh 38,500</span></td>
-                                    <td class="d-none d-md-table-cell">Sep 30, 2025</td>
-                                    <td><span class="badge badge-success">Paid</span></td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="btn btn-sm btn-light" title="View"><i class="fa fa-eye"></i></button>
-                                            <button class="btn btn-sm btn-light d-none d-sm-inline-block" title="Print"><i class="fa fa-print"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                    <div class="card-body p-0">
+    <div class="table-responsive">
+        <table class="table dashboard-table mb-0">
+            <thead>
+                <tr>
+                    <th>Student ID</th>
+                    <th>Student Name</th>
+                    <th class="d-none d-lg-table-cell">Class</th>
+                    <th>Amount</th>
+                    <th class="d-none d-md-table-cell">Date</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+               @forelse($recentPayments as $payment)
+<tr>
+    <td>
+        <span class="student-id">
+            {{ $payment->student?->student_id ?? 'N/A' }}
+        </span>
+    </td>
+    <td>
+        {{ $payment->student?->name ?? 'Unknown Student' }}
+    </td>
+    <td class="d-none d-lg-table-cell">
+        <span class="badge-class">
+            {{ $payment->student?->class_name ?? 'N/A' }}
+        </span>
+    </td>
+    <td>
+        <span class="amount-text">KSh {{ number_format($payment->amount) }}</span>
+    </td>
+    <td class="d-none d-md-table-cell">
+        {{ $payment->payment_date ? \Carbon\Carbon::parse($payment->payment_date)->format('M d, Y') : 'N/A' }}
+    </td>
+    <td>
+        <span class="badge 
+            {{ $payment->status === 'Paid' ? 'badge-success' : ($payment->status === 'Pending' ? 'badge-warning' : 'badge-danger') }}">
+            {{ $payment->status ?? 'Unknown' }}
+        </span>
+    </td>
+</tr>
+@empty
+<tr>
+    <td colspan="7" class="text-center">No recent payments found.</td>
+</tr>
+@endforelse
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+    
+</div>
+
             </div>
         </div>
 

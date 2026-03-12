@@ -1,21 +1,36 @@
+<?php
+
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command;
 use App\Models\User;
 use App\Models\Payment;
 use App\Models\Expense;
-use Illuminate\Console\Command;
+use App\Notifications\SummaryNotification;
 
-public function handle()
+class SendDailySummary extends Command
 {
-    $totalIncome = Payment::whereDate('created_at', today())->sum('amount');
-    $totalExpense = Expense::whereDate('created_at', today())->sum('amount');
+    // The command signature used in the terminal
+    protected $signature = 'summary:daily';
 
-    $admins = User::where('role', 'admin')->get();
+    // Description of the command
+    protected $description = 'Send daily income and expense summary to admins';
 
-    foreach ($admins as $admin) {
-        $admin->notify(new \App\Notifications\SummaryNotification([
-            'title' => 'Daily Summary',
-            'message' => 'Income: KES '.$totalIncome.' | Expense: KES '.$totalExpense.' (Today)',
-        ]));
+    // This is the handle method, which Laravel runs when the command is executed
+    public function handle()
+    {
+        $totalIncome = Payment::whereDate('created_at', today())->sum('amount');
+        $totalExpense = Expense::whereDate('created_at', today())->sum('amount');
+
+        $admins = User::where('role', 'admin')->get();
+
+        foreach ($admins as $admin) {
+            $admin->notify(new SummaryNotification([
+                'title' => 'Daily Summary',
+                'message' => 'Income: KES '.$totalIncome.' | Expense: KES '.$totalExpense.' (Today)',
+            ]));
+        }
+
+        $this->info('Summary notifications sent!');
     }
-
-    $this->info('Summary notifications sent!');
 }

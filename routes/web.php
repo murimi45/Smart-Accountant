@@ -77,6 +77,15 @@ Route::middleware(['auth', 'school', '2fa'])->group(function () {
         Route::post('expense_categories', [ExpenseCategoryController::class,'store'])->name('expense_categories.store');
         Route::put('expense_categories/{id}', [ExpenseCategoryController::class,'update'])->name('expense_categories.update');
         Route::delete('expense_categories/{id}', [ExpenseCategoryController::class,'destroy'])->name('expense_categories.destroy');
+        
+
+        Route::get('/term', [TermController::class, 'listTerm'])->name('termlist');
+        Route::get('/addterm', [TermController::class, 'addTerm'])->name('addterm');
+        Route::post('/addterm', [TermController::class, 'insertTerm'])->name('insertterm');
+        Route::post('/editterm/{id}', [TermController::class, 'editterm'])->name('editterm');
+        Route::get('/editterm/{id}', [TermController::class, 'updateterm'])->name('updateterm');
+        Route::get('/deleteterm/{id}', [TermController::class, 'delete'])->name('deleteterm');
+
 
         Route::get('expenses', [ExpenseController::class,'index'])->name('expenses.index');
         Route::get('expenses/create', [ExpenseController::class,'create'])->name('expenses.create');

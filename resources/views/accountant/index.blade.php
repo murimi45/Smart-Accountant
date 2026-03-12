@@ -89,14 +89,16 @@
                     </thead>
                     <tbody>
                         @forelse($accountants as $accountant)
+                        
                         <tr>
+                           
                             <td>
                                 <div class="d-flex align-items-center">
                                     <div class="student-avatar">
-                                        {{ strtoupper(substr($accountant->name, 0, 1)) }}
+                                        {{ strtoupper(substr($accountant->admin_name, 0, 1)) }}
                                     </div>
                                     <div class="ms-3">
-                                        <div class="student-name">{{ $accountant->name }}</div>
+                                        <div class="student-name">{{ $accountant->admin_name }}</div>
                                     </div>
                                 </div>
                             </td>

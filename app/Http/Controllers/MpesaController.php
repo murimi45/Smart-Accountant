@@ -42,7 +42,13 @@ class MpesaController extends Controller
      */
     public function confirmPayment(Request $request, InvoiceService $invoiceService)
 {
-    Log::info('M-Pesa Confirmation Request:', $request->all());
+    $rawBody = $request->getContent();
+
+// Decode to array if you need to access fields
+$data = json_decode($rawBody, true);
+
+// Log the raw payload
+Log::info('M-Pesa Confirmation Request:', ['body' => $rawBody]);
 
     $adm          = $request->input('BillRefNumber'); 
     $amount       = $request->input('TransAmount');

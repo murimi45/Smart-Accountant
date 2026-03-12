@@ -147,7 +147,9 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <div class="avatar">
+                                            
                                             {{ strtoupper(substr($student->name, 0, 1)) }}
+                                            
                                         </div>
                                         <div class="ms-3">
                                             <div class="student-name">{{ $student->name }}</div>

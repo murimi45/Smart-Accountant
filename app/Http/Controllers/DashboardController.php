@@ -31,6 +31,12 @@ class DashboardController extends Controller
             ->orderBy('start_date', 'desc')
             ->get();
 
+
+        $recentPayments = Invoice::with('student')
+        ->latest('invoice_date')
+        ->take(5)
+        ->get();
+
         // --------------------------
         // 1️⃣ TERM-BASED VIEW
         // --------------------------
@@ -61,7 +67,8 @@ class DashboardController extends Controller
                     'expensesByCategory',
                     'monthlyNet',
                     'terms',
-                    'years'
+                    'years',
+                    'recentPayments'
                 ));
             }
 
@@ -122,7 +129,8 @@ class DashboardController extends Controller
                 'expensesByCategory',
                 'monthlyNet',
                 'terms',
-                'years'
+                'years',
+                'recentPayments'
             ));
         }
 
@@ -209,7 +217,8 @@ class DashboardController extends Controller
             'expensesByCategory',
             'monthlyNet',
             'terms',
-            'years'
+            'years',
+            'recentPayments'
         ));
     }
 }

@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y \
     unzip \
     libonig-dev \
     libzip-dev \
+    supervisor \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd zip
 
@@ -35,19 +36,27 @@ WORKDIR /var/www/html
 COPY . .
 
 # ----------------------------
-# 6️⃣ Install dependencies
+# 6️⃣ Install PHP dependencies
 # ----------------------------
 RUN composer install --no-dev --optimize-autoloader
 
 # ----------------------------
-# 7️⃣ Set permissions
+# 7️⃣ Supervisor configs
+# ----------------------------
+COPY docker/supervisor/*.conf /etc/supervisor/conf.d/
+
+# ----------------------------
+# 8️⃣ Permissions
 # ----------------------------
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage
 
 # ----------------------------
-# 8️⃣ Expose PHP port
+# 9️⃣ Expose PHP-FPM port
 # ----------------------------
 EXPOSE 9000
 
-CMD ["php-fpm"]
+# ----------------------------
+# 🔟 Supervisor is the engine
+# ----------------------------
+CMD ["supervisord", "-n"]

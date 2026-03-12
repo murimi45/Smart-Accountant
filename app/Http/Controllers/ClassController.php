@@ -40,6 +40,13 @@ class ClassController extends Controller
             $name = $data['name'];
             $nextClassId = $data['next_class_id'] ?? null;
 
+            $exists = Classes::where('name', $name)->exists();
+
+            if ($exists) {
+            return redirect()->route('classlist')
+            ->withErrors(['classes.*.name' => "$name already exists."]);
+            }
+
             // Prevent self-reference
             if ($nextClassId && $name == Classes::find($nextClassId)?->name) {
                 return redirect()->route('classlist')->withErrors(['classes.*.next_class_id' => 'A class cannot be its own next class.']);

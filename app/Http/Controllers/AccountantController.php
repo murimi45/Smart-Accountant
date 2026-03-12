@@ -13,29 +13,30 @@ class AccountantController extends Controller
     {
         $accountants = User::where('role', 'accountant')
             ->where('school_id', auth()->user()->school_id)
-            ->get();
-        return view('accountants.index', compact('accountants'));
+            ->paginate(10);
+        return view('accountant.index', compact('accountants'));
     }
 
     // Show add form
     public function create()
     {
-        return view('accountants.create');
+        return view('accountant.create');
     }
 
     // Store new accountant
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'admin_name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
         ]);
 
         User::create([
-            'name' => $request->name,
+            'admin_name' => $request->admin_name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'phone' => $request->phone,
             'role' => 'accountant',
             'school_id' => auth()->user()->school_id,
         ]);
@@ -46,19 +47,20 @@ class AccountantController extends Controller
     // Show edit form
     public function edit(User $accountant)
     {
-        return view('accountants.edit', compact('accountant'));
+        return view('accountant.edit', compact('accountant'));
     }
 
     // Update accountant
     public function update(Request $request, User $accountant)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'admin_name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $accountant->id,
             'password' => 'nullable|string|min:6|confirmed',
         ]);
 
-        $accountant->name = $request->name;
+        $accountant->admin_name = $request->admin_name;
+        $accountant->phone = $request->phone;
         $accountant->email = $request->email;
 
         if ($request->password) {
@@ -67,13 +69,13 @@ class AccountantController extends Controller
 
         $accountant->save();
 
-        return redirect()->route('accountants.index')->with('success', 'Accountant updated successfully.');
+        return redirect()->route('accountant.index')->with('success', 'Accountant updated successfully.');
     }
 
     // Delete accountant
     public function destroy(User $accountant)
     {
         $accountant->delete();
-        return redirect()->route('accountants.index')->with('success', 'Accountant deleted successfully.');
+        return redirect()->route('accountant.index')->with('success', 'Accountant deleted successfully.');
     }
 }

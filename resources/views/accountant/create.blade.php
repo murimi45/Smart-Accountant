@@ -47,9 +47,9 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label">Full Name</label>
-                        <input type="text" name="name" class="form-control" 
-                               value="{{ old('name', $accountant->name ?? '') }}" required>
-                        @error('name')
+                        <input type="text" name="admin_name" class="form-control" 
+                               value="{{ old('admin_name', $accountant->admin_name ?? '') }}" required>
+                        @error('admin_name')
                             <small class="text-danger">{{ $message }}</small>
                         @enderror
                     </div>

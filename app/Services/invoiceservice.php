@@ -8,6 +8,8 @@ use App\Models\ClassFee;
 use App\Models\StudentExtraFee;
 use App\Models\InvoicePayment;
 use Auth;
+use Illuminate\Support\Facades\DB;
+use App\Jobs\SendPaymentNotification;
 use App\Notifications\IncomeRecordedNotification;
 
 class InvoiceService
@@ -96,34 +98,36 @@ class InvoiceService
 }
 
 
-      public function paymentMade(Invoice $invoice, $amount,$method)
-    {
+     public function paymentMade(Invoice $invoice, float $amount, string $method): Invoice
+{
+    return DB::transaction(function () use ($invoice, $amount, $method) {
 
-       InvoicePayment::create([
-        'invoice_id' => $invoice->id,
-        'amount' => $amount,
-        'method' => $method,
-        'payment_date' => now(),
-           ]);
-        // Increment the paid amount
+        InvoicePayment::create([
+            'invoice_id' => $invoice->id,
+            'amount' => $amount,
+            'method' => $method,
+            'payment_date' => now(),
+        ]);
+
         $invoice->increment('amount_paid', $amount);
-
-        // Update balance & status
         $invoice->update([
             'balance' => $invoice->total_amount - $invoice->amount_paid,
             'status' => $this->calculateStatus($invoice),
         ]);
-        // event(new InvoiceUpdated($invoice));
 
-         $user = Auth::user();
+        // Replace the old synchronous notify call
+        SendPaymentNotification::dispatch($invoice, $amount);
 
-         $user->notify(new IncomeRecordedNotification([
-             'title' => 'Payment Received',
-             'message' => 'You have received KES ' . number_format($amount) . 
-                 ' from ' . $invoice->student->name . ' for invoice #' . $invoice->id . '.',
-         ]));
-        return $invoice;
-    }
+        \Log::info('Invoice paid', [
+            'invoice_id' => $invoice->id,
+            'amount' => $amount,
+            'method' => $method,
+        ]);
+
+        return $invoice->fresh();
+    });
+}
+
 
     /**
      * Recalculate invoice status.
