@@ -19,6 +19,7 @@ use App\Http\Controllers\PaymentChannelController;
 use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\SmsLogController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AcademicYearController;
 use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\AccountantController;
 use Illuminate\Support\Facades\Auth;
@@ -78,6 +79,9 @@ Route::middleware(['auth', 'school', '2fa'])->group(function () {
         Route::put('expense_categories/{id}', [ExpenseCategoryController::class,'update'])->name('expense_categories.update');
         Route::delete('expense_categories/{id}', [ExpenseCategoryController::class,'destroy'])->name('expense_categories.destroy');
         
+        Route::resource('academic-years', AcademicYearController::class);
+    
+
 
         Route::get('/term', [TermController::class, 'listTerm'])->name('termlist');
         Route::get('/addterm', [TermController::class, 'addTerm'])->name('addterm');

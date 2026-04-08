@@ -9,8 +9,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('invoices', function (Blueprint $table) {
-            $table->foreignId('school_id')->after('id')->nullable()->constrained()->cascadeOnDelete();
-        });
+            
+          if (!Schema::hasColumn('invoices', 'school_id')) {
+              $table->foreignId('school_id')->nullable()->after('id');
+          }});
+    
     }
 
     public function down(): void
