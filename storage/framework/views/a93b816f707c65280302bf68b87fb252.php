@@ -54,6 +54,7 @@
                             <ul class="collapse list-unstyled <?php echo e(Request::is('class*') || Request::is('term*') ? 'show' : ''); ?>" id="levelMenu">
                                 <li><a class="<?php echo e(Request::is('class*') ? 'active' : ''); ?>" href="<?php echo e(url('/class')); ?>">Class Levels</a></li>
                                 <li><a class="<?php echo e(Request::is('term*') ? 'active' : ''); ?>" href="<?php echo e(url('/term')); ?>">Term Levels</a></li>
+                                <li><a class="<?php echo e(Request::is('streams*') ? 'active' : ''); ?>" href="<?php echo e(route('streams.index')); ?>">Streams</a></li>
                                 <li>
         <a class="<?php echo e(Request::is('academic-years*') ? 'active' : ''); ?>" href="<?php echo e(url('/academic-years')); ?>">
             Academic Years

@@ -54,6 +54,7 @@
                             <ul class="collapse list-unstyled {{ Request::is('class*') || Request::is('term*') ? 'show' : '' }}" id="levelMenu">
                                 <li><a class="{{ Request::is('class*') ? 'active' : '' }}" href="{{ url('/class') }}">Class Levels</a></li>
                                 <li><a class="{{ Request::is('term*') ? 'active' : '' }}" href="{{ url('/term') }}">Term Levels</a></li>
+                                <li><a class="{{ Request::is('streams*') ? 'active' : '' }}" href="{{ route('streams.index') }}">Streams</a></li>
                                 <li>
         <a class="{{ Request::is('academic-years*') ? 'active' : '' }}" href="{{ url('/academic-years') }}">
             Academic Years

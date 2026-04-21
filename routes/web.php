@@ -22,6 +22,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AcademicYearController;
 use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\AccountantController;
+use App\Http\Controllers\StreamController;
 use Illuminate\Support\Facades\Auth;
 
 // ✅ Public (No login)
@@ -111,7 +112,8 @@ Route::middleware(['auth', 'school', '2fa'])->group(function () {
         Route::put('other_incomes/{id}', [OtherIncomeController::class, 'update'])->name('other_incomes.update');
         Route::delete('other_incomes/{id}', [OtherIncomeController::class, 'destroy'])->name('other_incomes.destroy');
         
-
+        
+        Route::resource('streams', StreamController::class);
         
         Route::get('/class', [ClassController::class, 'listClass'])->name('classlist');
         Route::post('/insertClass', [ClassController::class, 'insert'])->name('insertclass');
