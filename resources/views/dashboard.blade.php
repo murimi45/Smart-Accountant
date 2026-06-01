@@ -37,14 +37,14 @@
                     @else
                     <div class="col-md-3">
                         <label class="form-label"><i class="fa fa-calendar-alt me-1"></i>Select Year</label>
-                        <select name="year" class="form-select" onchange="this.form.submit()">
-                            @foreach($years as $year)
-                                <option value="{{ $year }}" 
-                                    {{ isset($selectedYear) && $selectedYear == $year ? 'selected' : '' }}>
-                                    {{ $year }}
-                                </option>
-                            @endforeach
-                        </select>
+                        <select name="academic_year_id" class="form-select" onchange="this.form.submit()">
+    @foreach($academicYears as $academicYear)
+        <option value="{{ $academicYear->id }}" 
+            {{ isset($selectedYear) && $selectedYear->id == $academicYear->id ? 'selected' : '' }}>
+            {{ $academicYear->name }}
+        </option>
+    @endforeach
+</select>
                     </div>
                     @endif
                 </div>

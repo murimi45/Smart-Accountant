@@ -19,7 +19,8 @@
 
     
     <?php if($errors->any()): ?>
-        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert" style="border-left: 4px solid #dc3545; border-radius: 8px;">
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert"
+             style="border-left: 4px solid #dc3545; border-radius: 8px;">
             <div class="d-flex align-items-start">
                 <i class="fa fa-exclamation-circle me-3 mt-1" style="font-size: 20px;"></i>
                 <div class="flex-grow-1">
@@ -38,24 +39,30 @@
     
     <div class="row">
         <div class="col-12">
-            <div class="white_shd full margin_bottom_30" style="border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #f0f0f0;">
-                <div class="full graph_head" style="background: linear-gradient(135deg, #79c347 0%, #5fa732 100%); padding: 25px 30px; border-radius: 12px 12px 0 0;">
+            <div class="white_shd full margin_bottom_30"
+                 style="border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #f0f0f0;">
+
+                <div class="full graph_head"
+                     style="background: linear-gradient(135deg, #79c347 0%, #5fa732 100%); padding: 25px 30px; border-radius: 12px 12px 0 0;">
                     <div class="heading1 margin_0">
                         <h2 style="font-size: 20px; color: #fff; font-weight: 600; margin: 0; display: flex; align-items: center;">
                             <i class="fa fa-user-plus me-3" style="font-size: 24px;"></i>
                             Student Information
                         </h2>
-                        <p class="mb-0 mt-2" style="color: rgba(255,255,255,0.9); font-size: 14px;">Fill in the details below to register a new student</p>
+                        <p class="mb-0 mt-2" style="color: rgba(255,255,255,0.9); font-size: 14px;">
+                            Fill in the details below to register a new student
+                        </p>
                     </div>
                 </div>
 
                 <div class="padding_infor_info" style="padding: 35px 30px;">
-                    <form action="<?php echo e(route('insertStudents')); ?>" method="post" enctype="multipart/form-data">
+                    <form action="<?php echo e(route('insertStudents')); ?>" method="POST" enctype="multipart/form-data">
                         <?php echo csrf_field(); ?>
 
                         
                         <div class="form-section mb-4">
-                            <h5 class="section-title mb-4" style="color: #2c3e50; font-weight: 600; font-size: 16px; display: flex; align-items: center; padding-bottom: 12px; border-bottom: 2px solid #e8eaed;">
+                            <h5 class="section-title mb-4"
+                                style="color: #2c3e50; font-weight: 600; font-size: 16px; display: flex; align-items: center; padding-bottom: 12px; border-bottom: 2px solid #e8eaed;">
                                 <i class="fa fa-user me-2" style="color: #79c347;"></i>
                                 Personal Information
                             </h5>
@@ -63,13 +70,15 @@
                             <div class="row">
                                 
                                 <div class="col-md-6 mb-4">
-                                    <label for="name" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                                        <i class="fa fa-user-circle me-2 text-primary"></i>Full Name <span class="text-danger">*</span>
+                                    <label for="name" class="form-label fw-semibold"
+                                           style="font-size: 14px; color: #495057; margin-bottom: 10px;">
+                                        <i class="fa fa-user-circle me-2 text-primary"></i>
+                                        Full Name <span class="text-danger">*</span>
                                     </label>
-                                    <input type="text" 
-                                           id="name" 
-                                           name="name" 
-                                           value="<?php echo e(old('name')); ?>" 
+                                    <input type="text"
+                                           id="name"
+                                           name="name"
+                                           value="<?php echo e(old('name')); ?>"
                                            class="form-control <?php $__errorArgs = ['name'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -77,7 +86,7 @@ if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
-unset($__errorArgs, $__bag); ?>" 
+unset($__errorArgs, $__bag); ?>"
                                            placeholder="Enter full name"
                                            style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
                                            required>
@@ -95,13 +104,48 @@ unset($__errorArgs, $__bag); ?>
 
                                 
                                 <div class="col-md-6 mb-4">
-                                    <label for="phone" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                                        <i class="fa fa-phone me-2 text-success"></i>Phone Number <span class="text-danger">*</span>
+                                    <label for="guardian_name" class="form-label fw-semibold"
+                                           style="font-size: 14px; color: #495057; margin-bottom: 10px;">
+                                        <i class="fa fa-user-shield me-2 text-secondary"></i>
+                                        Guardian Name
                                     </label>
-                                    <input type="tel" 
-                                           id="phone" 
-                                           name="phone" 
-                                           value="<?php echo e(old('phone')); ?>" 
+                                    <input type="text"
+                                           id="guardian_name"
+                                           name="guardian_name"
+                                           value="<?php echo e(old('guardian_name')); ?>"
+                                           class="form-control <?php $__errorArgs = ['guardian_name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                           placeholder="Enter guardian name"
+                                           style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;">
+                                    <?php $__errorArgs = ['guardian_name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                                </div>
+
+                                
+                                <div class="col-md-6 mb-4">
+                                    <label for="phone" class="form-label fw-semibold"
+                                           style="font-size: 14px; color: #495057; margin-bottom: 10px;">
+                                        <i class="fa fa-phone me-2 text-success"></i>
+                                        Phone Number
+                                    </label>
+                                    <input type="tel"
+                                           id="phone"
+                                           name="phone"
+                                           value="<?php echo e(old('phone')); ?>"
                                            class="form-control <?php $__errorArgs = ['phone'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -109,10 +153,9 @@ if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
-unset($__errorArgs, $__bag); ?>" 
+unset($__errorArgs, $__bag); ?>"
                                            placeholder="Enter phone number"
-                                           style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
-                                           required>
+                                           style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;">
                                     <?php $__errorArgs = ['phone'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -127,13 +170,15 @@ unset($__errorArgs, $__bag); ?>
 
                                 
                                 <div class="col-md-6 mb-4">
-                                    <label for="admission" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                                        <i class="fa fa-hashtag me-2 text-warning"></i>Admission Number <span class="text-danger">*</span>
+                                    <label for="admission" class="form-label fw-semibold"
+                                           style="font-size: 14px; color: #495057; margin-bottom: 10px;">
+                                        <i class="fa fa-hashtag me-2 text-warning"></i>
+                                        Admission Number <span class="text-danger">*</span>
                                     </label>
-                                    <input type="text" 
-                                           id="admission" 
-                                           name="admission" 
-                                           value="<?php echo e(old('admission')); ?>" 
+                                    <input type="text"
+                                           id="admission"
+                                           name="admission"
+                                           value="<?php echo e(old('admission')); ?>"
                                            class="form-control <?php $__errorArgs = ['admission'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -141,7 +186,7 @@ if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
-unset($__errorArgs, $__bag); ?>" 
+unset($__errorArgs, $__bag); ?>"
                                            placeholder="Enter admission number"
                                            style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
                                            required>
@@ -159,11 +204,13 @@ unset($__errorArgs, $__bag); ?>
 
                                 
                                 <div class="col-md-6 mb-4">
-                                    <label for="gender" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                                        <i class="fa fa-venus-mars me-2 text-info"></i>Gender <span class="text-danger">*</span>
+                                    <label for="gender" class="form-label fw-semibold"
+                                           style="font-size: 14px; color: #495057; margin-bottom: 10px;">
+                                        <i class="fa fa-venus-mars me-2 text-info"></i>
+                                        Gender <span class="text-danger">*</span>
                                     </label>
-                                    <select id="gender" 
-                                            name="gender" 
+                                    <select id="gender"
+                                            name="gender"
                                             class="form-select <?php $__errorArgs = ['gender'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -171,11 +218,11 @@ if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
-unset($__errorArgs, $__bag); ?>" 
+unset($__errorArgs, $__bag); ?>"
                                             style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
                                             required>
                                         <option value="">Select Gender</option>
-                                        <option value="male" <?php echo e(old('gender') == 'male' ? 'selected' : ''); ?>>Male</option>
+                                        <option value="male"   <?php echo e(old('gender') == 'male'   ? 'selected' : ''); ?>>Male</option>
                                         <option value="female" <?php echo e(old('gender') == 'female' ? 'selected' : ''); ?>>Female</option>
                                     </select>
                                     <?php $__errorArgs = ['gender'];
@@ -194,7 +241,8 @@ unset($__errorArgs, $__bag); ?>
 
                         
                         <div class="form-section mb-4">
-                            <h5 class="section-title mb-4" style="color: #2c3e50; font-weight: 600; font-size: 16px; display: flex; align-items: center; padding-bottom: 12px; border-bottom: 2px solid #e8eaed;">
+                            <h5 class="section-title mb-4"
+                                style="color: #2c3e50; font-weight: 600; font-size: 16px; display: flex; align-items: center; padding-bottom: 12px; border-bottom: 2px solid #e8eaed;">
                                 <i class="fa fa-graduation-cap me-2" style="color: #79c347;"></i>
                                 Academic Information
                             </h5>
@@ -202,11 +250,13 @@ unset($__errorArgs, $__bag); ?>
                             <div class="row">
                                 
                                 <div class="col-md-6 mb-4">
-                                    <label for="class_id" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                                        <i class="fa fa-school me-2 text-purple"></i>Class <span class="text-danger">*</span>
+                                    <label for="class_id" class="form-label fw-semibold"
+                                           style="font-size: 14px; color: #495057; margin-bottom: 10px;">
+                                        <i class="fa fa-school me-2 text-purple"></i>
+                                        Class <span class="text-danger">*</span>
                                     </label>
-                                    <select id="class_id" 
-                                            name="class_id" 
+                                    <select id="class_id"
+                                            name="class_id"
                                             class="form-select <?php $__errorArgs = ['class_id'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -214,12 +264,13 @@ if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
-unset($__errorArgs, $__bag); ?>" 
+unset($__errorArgs, $__bag); ?>"
                                             style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
                                             required>
                                         <option value="">Select Class</option>
                                         <?php $__currentLoopData = $classes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $class): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                            <option value="<?php echo e($class->id); ?>" <?php echo e(old('class_id') == $class->id ? 'selected' : ''); ?>>
+                                            <option value="<?php echo e($class->id); ?>"
+                                                <?php echo e(old('class_id') == $class->id ? 'selected' : ''); ?>>
                                                 <?php echo e($class->name); ?>
 
                                             </option>
@@ -239,11 +290,13 @@ unset($__errorArgs, $__bag); ?>
 
                                 
                                 <div class="col-md-6 mb-4">
-                                    <label for="term_id" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                                        <i class="fa fa-calendar me-2 text-danger"></i>Term <span class="text-danger">*</span>
+                                    <label for="term_id" class="form-label fw-semibold"
+                                           style="font-size: 14px; color: #495057; margin-bottom: 10px;">
+                                        <i class="fa fa-calendar me-2 text-danger"></i>
+                                        Term <span class="text-danger">*</span>
                                     </label>
-                                    <select id="term_id" 
-                                            name="term_id" 
+                                    <select id="term_id"
+                                            name="term_id"
                                             class="form-select <?php $__errorArgs = ['term_id'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -251,13 +304,14 @@ if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
-unset($__errorArgs, $__bag); ?>" 
+unset($__errorArgs, $__bag); ?>"
                                             style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
                                             required>
                                         <option value="">Select Term</option>
                                         <?php $__currentLoopData = $terms; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $term): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                            <option value="<?php echo e($term->id); ?>" <?php echo e(old('term_id') == $term->id ? 'selected' : ''); ?>>
-                                               <?php echo e($term->name); ?> - <?php echo e($term->year); ?>
+                                            <option value="<?php echo e($term->id); ?>"
+                                                <?php echo e(old('term_id', $activeTerm?->id) == $term->id ? 'selected' : ''); ?>>
+                                                <?php echo e($term->name); ?> - <?php echo e($term->year); ?>
 
                                             </option>
                                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -272,29 +326,38 @@ $message = $__bag->first($__errorArgs[0]); ?>
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>
+                                    <?php if($activeTerm ?? null): ?>
+                                        <small class="text-muted d-block mt-1">
+                                            Preselected: <strong><?php echo e($activeTerm->name); ?></strong><?php if($activeTerm->year): ?> (<?php echo e($activeTerm->year); ?>)<?php endif; ?> — the school's current term.
+                                        </small>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
 
                         
                         <div class="form-actions mt-5 pt-4" style="border-top: 1px solid #e8eaed;">
-                            <div class="row">
-                                <div class="col-md-12 text-center">
-                                    <button type="submit" class="btn btn-success px-5 py-3 me-3" style="border-radius: 8px; font-weight: 600; font-size: 15px; min-width: 180px;">
-                                        <i class="fa fa-check-circle me-2"></i>Submit Application
-                                    </button>
-                                    <a href="<?php echo e(route('listStudents')); ?>" class="btn btn-outline-secondary px-5 py-3" style="border-radius: 8px; font-weight: 600; font-size: 15px; min-width: 180px;">
-                                        <i class="fa fa-times-circle me-2"></i>Cancel
-                                    </a>
-                                </div>
+                            <div class="col-md-12 text-center">
+                                <button type="submit"
+                                        class="btn btn-success px-5 py-3 me-3"
+                                        style="border-radius: 8px; font-weight: 600; font-size: 15px; min-width: 180px;">
+                                    <i class="fa fa-check-circle me-2"></i>Submit Application
+                                </button>
+                                <a href="<?php echo e(route('listStudents')); ?>"
+                                   class="btn btn-outline-secondary px-5 py-3"
+                                   style="border-radius: 8px; font-weight: 600; font-size: 15px; min-width: 180px;">
+                                    <i class="fa fa-times-circle me-2"></i>Cancel
+                                </a>
                             </div>
                         </div>
+
                     </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
 
 <style>
 /* Form Control Focus Effects */

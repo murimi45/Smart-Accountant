@@ -23,6 +23,9 @@ use App\Http\Controllers\AcademicYearController;
 use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\AccountantController;
 use App\Http\Controllers\StreamController;
+use App\Http\Controllers\EnrollmentController;
+use App\Http\Controllers\PaymentController;
+ use App\Http\Controllers\PromotionProgressController;
 use Illuminate\Support\Facades\Auth;
 
 // ✅ Public (No login)
@@ -179,8 +182,59 @@ Route::post('/logout-and-login', function () {
         Route::resource('accountants', AccountantController::class);
 
 
+       Route::post('/promotion/term',  [PromotionController::class, 'promoteToNextTerm'])->name('promotion.term');
+       Route::post('/promotion/class', [PromotionController::class, 'promoteToNextClass'])->name('promotion.class');
+ 
+
+       Route::get('/promotion/{promotionRun}/progress', [PromotionProgressController::class, 'show'])
+             ->name('promotion.progress');
+ 
+       Route::get('/promotion/{promotionRun}/poll', [PromotionProgressController::class, 'poll'])
+             ->name('promotion.poll');
+         
+
+        
         Route::post('/promotions/term', [PromotionController::class, 'promoteToNextTerm'])->name('promotions.term');
         Route::post('/promotions/class', [PromotionController::class, 'promoteToNextClass'])->name('promotions.class');
+
+          // ===========================
+    // ENROLLMENT MODULE
+    // ===========================
+    Route::prefix('enrollment')
+        ->name('enrollment.')
+        ->group(function () {
+
+            // Main enrollment listing screen
+            Route::get('/',
+                [EnrollmentController::class, 'index'])
+                ->name('index');
+
+            // Update a single row status from the dropdown
+            Route::post('/{enrollment}/status',
+                [EnrollmentController::class, 'updateStatus'])
+                ->name('update-status');
+
+            // Show correction data (AJAX modal)
+            Route::get('/{enrollment}/correction',
+                [EnrollmentController::class, 'showCorrection'])
+                ->name('show-correction');
+
+            // Execute correction
+            Route::post('/{enrollment}/correction',
+                [EnrollmentController::class, 'executeCorrection'])
+                ->name('execute-correction');
+
+            // Bulk status update
+            Route::post('/bulk-status',
+                [EnrollmentController::class, 'bulkUpdateStatus'])
+                ->name('bulk-status');
+        });
+
+// Route::view('/student-enrollment', 'promotion.enrollment')
+//     ->name('enrollment.index');
+//     Route::view('/student-promotion', 'promotion.promotionprogress')
+//     ->name('enrollment.index');
+
     });
 
 });

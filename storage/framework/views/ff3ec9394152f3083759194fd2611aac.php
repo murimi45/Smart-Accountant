@@ -50,7 +50,7 @@
                 </div>
 
                 <div class="padding_infor_info" style="padding: 35px 30px;">
-                    <form action="" method="post" enctype="multipart/form-data">
+                    <form action="<?php echo e(route('updateStudent', $student->id)); ?>" method="post" enctype="multipart/form-data">
                         <?php echo csrf_field(); ?>
 
                         
@@ -69,7 +69,7 @@
                                     <input type="text" 
                                            id="name" 
                                            name="name" 
-                                           value="<?php echo e(old('name', $student->name)); ?>" 
+                                           value="<?php echo e(old('name', $student->full_name)); ?>" 
                                            class="form-control <?php $__errorArgs = ['name'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -95,13 +95,44 @@ unset($__errorArgs, $__bag); ?>
 
                                 
                                 <div class="col-md-6 mb-4">
-                                    <label for="phone" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                                        <i class="fa fa-phone me-2 text-success"></i>Phone Number <span class="text-danger">*</span>
+                                    <label for="guardian_name" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
+                                        <i class="fa fa-user-shield me-2 text-secondary"></i>Guardian Name
                                     </label>
-                                    <input type="tel" 
-                                           id="phone" 
-                                           name="phone" 
-                                           value="<?php echo e(old('phone', $student->phone)); ?>" 
+                                    <input type="text"
+                                           id="guardian_name"
+                                           name="guardian_name"
+                                           value="<?php echo e(old('guardian_name', $student->guardian_name)); ?>"
+                                           class="form-control <?php $__errorArgs = ['guardian_name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                           placeholder="Enter guardian name"
+                                           style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;">
+                                    <?php $__errorArgs = ['guardian_name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                                </div>
+
+                                
+                                <div class="col-md-6 mb-4">
+                                    <label for="phone" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
+                                        <i class="fa fa-phone me-2 text-success"></i>Phone Number
+                                    </label>
+                                    <input type="tel"
+                                           id="phone"
+                                           name="phone"
+                                           value="<?php echo e(old('phone', $student->phone)); ?>"
                                            class="form-control <?php $__errorArgs = ['phone'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -109,10 +140,9 @@ if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
-unset($__errorArgs, $__bag); ?>" 
+unset($__errorArgs, $__bag); ?>"
                                            placeholder="Enter phone number"
-                                           style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
-                                           required>
+                                           style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;">
                                     <?php $__errorArgs = ['phone'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -219,7 +249,7 @@ unset($__errorArgs, $__bag); ?>"
                                             required>
                                         <option value="">Select Class</option>
                                         <?php $__currentLoopData = $classes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $class): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                            <option value="<?php echo e($class->id); ?>" <?php echo e(old('class_id', $student->class_id) == $class->id ? 'selected' : ''); ?>>
+                                            <option value="<?php echo e($class->id); ?>" <?php echo e(old('class_id', $enrollment?->class_id) == $class->id ? 'selected' : ''); ?>>
                                                 <?php echo e($class->name); ?>
 
                                             </option>
@@ -256,7 +286,7 @@ unset($__errorArgs, $__bag); ?>"
                                             required>
                                         <option value="">Select Term</option>
                                         <?php $__currentLoopData = $terms; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $term): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                            <option value="<?php echo e($term->id); ?>" <?php echo e(old('term_id', $student->term_id) == $term->id ? 'selected' : ''); ?>>
+                                            <option value="<?php echo e($term->id); ?>" <?php echo e(old('term_id', $enrollment?->term_id ?? $activeTerm?->id) == $term->id ? 'selected' : ''); ?>>
                                                <?php echo e($term->name); ?> - <?php echo e($term->year); ?>
 
                                             </option>
@@ -272,6 +302,11 @@ $message = $__bag->first($__errorArgs[0]); ?>
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>
+                                    <?php if($activeTerm): ?>
+                                        <small class="text-muted d-block mt-1">
+                                            Current school term: <strong><?php echo e($activeTerm->name); ?></strong><?php if($activeTerm->year): ?> (<?php echo e($activeTerm->year); ?>)<?php endif; ?>
+                                        </small>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>

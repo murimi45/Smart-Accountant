@@ -6,29 +6,32 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('classes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('school_id')->constrained('schools');
+            
+            $table->foreignId('school_id')
+                  ->constrained('schools')
+                  ->cascadeOnDelete();
+
             $table->string('name');
-            $table->foreignId('next_class_id')
-                ->nullable()
-                ->constrained('classes')
-                ->nullOnDelete(); 
-           
+            $table->unsignedInteger('order'); 
+            $table->boolean('is_final')->default(false);          
+            
             $table->timestamps();
+            $table->softDeletes();   
+
+           
+            $table->unique(['school_id', 'order']);
+        
+            $table->index('order');
+            $table->index('name');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('classmodels');
+        Schema::dropIfExists('classes');
     }
 };

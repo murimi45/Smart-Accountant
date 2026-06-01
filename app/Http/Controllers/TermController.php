@@ -1,122 +1,133 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\Term;
-use Auth;
 
+use App\Models\Term;
+use App\Models\AcademicYear;
 use Illuminate\Http\Request;
 
 class TermController extends Controller
 {
-    
-      public function listTerm()
+    public function listTerm()
     {
-        $data['getRecord'] = Term::where('school_id', auth()->user()->school_id)
-            ->orderBy('year', 'desc')
-            ->orderBy('start_date', 'desc')
+        $schoolId = auth()->user()->school_id;
+
+        $terms = Term::with('academicYear')
+            ->orderByDesc('start_date')
             ->get();
 
-        $termId = Term::currentId();
+        $termId      = Term::currentId();
         $currentTerm = Term::current();
-        $terms = Term::get();
-        $data['termId'] = $termId;
-        $data['currentTerm'] = $currentTerm;
-        $data['terms'] = $terms;
+        $nextTerm    = Term::nextAfter($schoolId, $currentTerm);
 
-        return view('term.list', $data);
+        return view('term.list', compact('terms', 'termId', 'currentTerm', 'nextTerm'));
     }
 
-    public function addTerm(){
-          
-        return view('term.add');
+    public function addTerm()
+    {
+        $academicYears = AcademicYear::orderByDesc('start_date')->get();
+
+        return view('term.add', compact('academicYears'));
     }
 
     public function insertTerm(Request $request)
-{
-    $schoolId = auth()->user()->school_id;
-
-    $request->validate([
-        'name'       => 'required|string|max:50',
-        'year'       => 'required|digits:4|integer',
-        'start_date' => 'required|date',
-        'end_date'   => 'nullable|date|after_or_equal:start_date',
-    ]);
-
-    // Prevent duplicate terms in same year
-    $exists = Term::where('school_id', $schoolId)
-        ->where('name', $request->name)
-        ->where('year', $request->year)
-        ->exists();
-
-    if ($exists) {
-        return redirect()->back()
-            ->withInput()
-            ->with('error', 'A term with this name and year already exists.');
-    }
-
-    // ✅ Check if this is the school's first term
-    $hasExistingTerm = Term::where('school_id', $schoolId)->exists();
-
-    // Create new term
-    $term = new Term();
-    $term->school_id  = $schoolId;
-    $term->name       = $request->name;
-    $term->year       = $request->year;
-    $term->start_date = $request->start_date;
-    $term->end_date   = $request->end_date;
-    $term->active     = $hasExistingTerm ? false : true; // First term auto-active
-    $term->save();
-
-    return redirect()->route('termlist')
-        ->with('success', $hasExistingTerm
-            ? 'Term created successfully.'
-            : 'First term created and set as active.');
-}
-
-
-
-    public function editTerm($id,Request $request){
-
-        $schoolId = auth()->user()->school_id;
-
-        $term = Term::where('id', $id)->where('school_id', $schoolId)->firstOrFail();
-
-        // ✅ Validation
+    {
         $request->validate([
-            'name'       => 'required|string|max:50',
-            'year'       => 'required|digits:4|integer',
-            'start_date' => 'required|date',
-            'end_date'   => 'nullable|date|after_or_equal:start_date',
-            'active'     => 'nullable|boolean',
+            'name'             => 'required|string|max:50',
+            'academic_year_id' => 'required|exists:academic_years,id',
+            'term_number'      => 'required|integer|min:1|max:4',
+            'start_date'       => 'required|date',
+            'end_date'         => 'nullable|date|after_or_equal:start_date',
         ]);
 
-      
-       
+        // Prevent duplicate term_number under same academic year
+        $exists = Term::where('academic_year_id', $request->academic_year_id)
+            ->where('term_number', $request->term_number)
+            ->exists();
 
-        $term->name       = $request->name;
-        $term->year       = $request->year;
-        $term->start_date = $request->start_date;
-        $term->end_date   = $request->end_date;
-        $term->active    = $request->active ?? false;
-        $term->save();
+        if ($exists) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'A term with this number already exists under the selected academic year.');
+        }
 
-        return redirect()->route('termlist')->with('success', 'Term Updated Successfully');
+        // First term for this school auto-activates
+        $hasExistingTerm = Term::exists();
+
+        Term::create([
+            'name'             => $request->name,
+            'academic_year_id' => $request->academic_year_id,
+            'term_number'      => $request->term_number,
+            'start_date'       => $request->start_date,
+            'end_date'         => $request->end_date,
+            'active'           => $hasExistingTerm ? false : true,
+        ]);
+
+        return redirect()->route('termlist')
+            ->with('success', $hasExistingTerm
+                ? 'Term created successfully.'
+                : 'First term created and set as active.');
     }
 
-    public function updateTerm($id,Request $request){
-           $schoolId = auth()->user()->school_id;
+    // Load edit form
+    public function updateTerm($id)
+    {
+        $term = Term::with('academicYear')->findOrFail($id);
+        $academicYears = AcademicYear::orderByDesc('start_date')->get();
 
-           $data['getRecord'] = Term::where('id', $id)->where('school_id', $schoolId)->firstOrFail();
-
-           return view('term.edit', $data);
-
+        return view('term.edit', compact('term', 'academicYears'));
     }
 
-     public function delete($id){
-        $classes=Term::findOrFail($id);
-        $classes->delete();
+    // Save edit
+    public function editTerm($id, Request $request)
+    {
+        $term = Term::findOrFail($id);
 
-        return redirect()->back()->with('success','Deleted Successfully');
+        $request->validate([
+            'name'             => 'required|string|max:50',
+            'academic_year_id' => 'required|exists:academic_years,id',
+            'term_number'      => 'required|integer|min:1|max:4',
+            'start_date'       => 'required|date',
+            'end_date'         => 'nullable|date|after_or_equal:start_date',
+            'active'           => 'nullable|boolean',
+        ]);
+
+        // Prevent duplicate term_number under same academic year (excluding self)
+        $exists = Term::where('academic_year_id', $request->academic_year_id)
+            ->where('term_number', $request->term_number)
+            ->where('id', '!=', $id)
+            ->exists();
+
+        if ($exists) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'A term with this number already exists under the selected academic year.');
+        }
+
+        $isActive = $request->boolean('active');
+
+        if ($isActive) {
+            Term::where('school_id', $term->school_id)
+                ->where('id', '!=', $id)
+                ->update(['active' => false]);
+        }
+
+        $term->update([
+            'name'             => $request->name,
+            'academic_year_id' => $request->academic_year_id,
+            'term_number'      => $request->term_number,
+            'start_date'       => $request->start_date,
+            'end_date'         => $request->end_date,
+            'active'           => $isActive,
+        ]);
+
+        return redirect()->route('termlist')->with('success', 'Term updated successfully.');
     }
 
+    public function delete($id)
+    {
+        Term::findOrFail($id)->delete();
+
+        return redirect()->back()->with('success', 'Term deleted successfully.');
+    }
 }

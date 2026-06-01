@@ -62,143 +62,182 @@
                             </h5>
 
                             <div class="row">
-                                
-                                <div class="col-md-6 mb-4">
-                                    <label for="name" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                                        <i class="fa fa-bookmark me-2 text-warning"></i>Term Name <span class="text-danger">*</span>
-                                    </label>
-                                    <input type="text" 
-                                           id="name" 
-                                           name="name" 
-                                           value="<?php echo e(old('name')); ?>"
-                                           class="form-control <?php $__errorArgs = ['name'];
+    
+    <div class="col-md-6 mb-4">
+        <label for="name" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
+            <i class="fa fa-bookmark me-2 text-warning"></i>Term Name <span class="text-danger">*</span>
+        </label>
+        <input type="text"
+               id="name"
+               name="name"
+               value="<?php echo e(old('name', $term->name ?? '')); ?>"
+               class="form-control <?php $__errorArgs = ['name'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
-unset($__errorArgs, $__bag); ?>" 
-                                           placeholder="e.g., Term 1, First Semester"
-                                           style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
-                                           required>
-                                    <?php $__errorArgs = ['name'];
+unset($__errorArgs, $__bag); ?>"
+               placeholder="e.g., Term 1, First Semester"
+               style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
+               required>
+        <?php $__errorArgs = ['name'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?>
-                                        <div class="invalid-feedback"><?php echo e($message); ?></div>
-                                    <?php unset($message);
+            <div class="invalid-feedback"><?php echo e($message); ?></div>
+        <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>
-                                </div>
-
-                                
-                                <div class="col-md-6 mb-4">
-                                    <label for="term_year" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                                        <i class="fa fa-calendar me-2 text-primary"></i>Academic Year <span class="text-danger">*</span>
-                                    </label>
-                                    <input type="text" 
-                                           id="term_year" 
-                                           name="year" 
-                                           value="<?php echo e(old('year')); ?>"
-                                           class="form-control <?php $__errorArgs = ['year'];
+    </div>
+   
+    <div class="col-md-6 mb-4">
+        <label for="term_number" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
+            <i class="fa fa-list-ol me-2 text-info"></i>Term Number <span class="text-danger">*</span>
+        </label>
+        <input type="number"
+               id="term_number"
+               name="term_number"
+               value="<?php echo e(old('term_number', $term->term_number ?? '')); ?>"
+               class="form-control <?php $__errorArgs = ['term_number'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
-unset($__errorArgs, $__bag); ?>" 
-                                           placeholder="e.g., 2024, 2024/2025"
-                                           style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
-                                           required>
-                                    <?php $__errorArgs = ['year'];
+unset($__errorArgs, $__bag); ?>"
+               placeholder="e.g., 1 for Term 1, 2 for Term 2"
+               style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
+               required>
+        <?php $__errorArgs = ['term_number'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?>
-                                        <div class="invalid-feedback"><?php echo e($message); ?></div>
-                                    <?php unset($message);
+            <div class="invalid-feedback"><?php echo e($message); ?></div>
+        <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>
-                                </div>
-                            </div>
-                        </div>
+    </div>
 
-                        
-                        <div class="form-section mb-4">
-                            <h5 class="section-title mb-4" style="color: #2c3e50; font-weight: 600; font-size: 16px; display: flex; align-items: center; padding-bottom: 12px; border-bottom: 2px solid #e8eaed;">
-                                <i class="fa fa-clock me-2" style="color: #fabb3d;"></i>
-                                Term Schedule
-                            </h5>
-
-                            <div class="row">
-                                
-                                <div class="col-md-6 mb-4">
-                                    <label for="start_date" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                                        <i class="fa fa-play-circle me-2 text-success"></i>Start Date <span class="text-danger">*</span>
-                                    </label>
-                                    <input type="date" 
-                                           id="start_date" 
-                                           name="start_date" 
-                                           value="<?php echo e(old('start_date')); ?>"
-                                           class="form-control <?php $__errorArgs = ['start_date'];
+    
+    <div class="col-md-12 mb-4">
+        <label for="academic_year_id" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
+            <i class="fa fa-calendar me-2 text-primary"></i>Academic Year <span class="text-danger">*</span>
+        </label>
+        <select id="academic_year_id"
+                name="academic_year_id"
+                class="form-select <?php $__errorArgs = ['academic_year_id'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
-unset($__errorArgs, $__bag); ?>" 
-                                           style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
-                                           required>
-                                    <?php $__errorArgs = ['start_date'];
+unset($__errorArgs, $__bag); ?>"
+                style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
+                required>
+            <option value="">-- Select Academic Year --</option>
+            <?php $__currentLoopData = $academicYears; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $year): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <option value="<?php echo e($year->id); ?>"
+                    <?php echo e(old('academic_year_id', $term->academic_year_id ?? '') == $year->id ? 'selected' : ''); ?>>
+                    <?php echo e($year->name); ?>
+
+                </option>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+        </select>
+        <?php $__errorArgs = ['academic_year_id'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?>
-                                        <div class="invalid-feedback"><?php echo e($message); ?></div>
-                                    <?php unset($message);
+            <div class="invalid-feedback"><?php echo e($message); ?></div>
+        <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>
-                                </div>
+    </div>
 
-                                
-                                <div class="col-md-6 mb-4">
-                                    <label for="end_date" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                                        <i class="fa fa-stop-circle me-2 text-danger"></i>End Date <span class="text-danger">*</span>
-                                    </label>
-                                    <input type="date" 
-                                           id="end_date" 
-                                           name="end_date" 
-                                           value="<?php echo e(old('end_date')); ?>"
-                                           class="form-control <?php $__errorArgs = ['end_date'];
+    
+</div>
+
+
+
+
+<div class="form-section mb-4">
+    <h5 class="section-title mb-4" style="color: #2c3e50; font-weight: 600; font-size: 16px; display: flex; align-items: center; padding-bottom: 12px; border-bottom: 2px solid #e8eaed;">
+        <i class="fa fa-clock me-2" style="color: #fabb3d;"></i>
+        Term Schedule
+    </h5>
+
+    <div class="row">
+        
+        <div class="col-md-6 mb-4">
+            <label for="start_date" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
+                <i class="fa fa-play-circle me-2 text-success"></i>Start Date <span class="text-danger">*</span>
+            </label>
+            <input type="date"
+                   id="start_date"
+                   name="start_date"
+                   value="<?php echo e(old('start_date', isset($term) ? $term->start_date : '')); ?>"
+                   class="form-control <?php $__errorArgs = ['start_date'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
-unset($__errorArgs, $__bag); ?>" 
-                                           style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
-                                           required>
-                                    <?php $__errorArgs = ['end_date'];
+unset($__errorArgs, $__bag); ?>"
+                   style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
+                   required>
+            <?php $__errorArgs = ['start_date'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?>
-                                        <div class="invalid-feedback"><?php echo e($message); ?></div>
-                                    <?php unset($message);
+                <div class="invalid-feedback"><?php echo e($message); ?></div>
+            <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>
-                                </div>
-                            </div>
-                        </div>
+        </div>
+
+        
+        <div class="col-md-6 mb-4">
+            <label for="end_date" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
+                <i class="fa fa-stop-circle me-2 text-danger"></i>End Date
+            </label>
+            <input type="date"
+                   id="end_date"
+                   name="end_date"
+                   value="<?php echo e(old('end_date', isset($term) ? $term->end_date : '')); ?>"
+                   class="form-control <?php $__errorArgs = ['end_date'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                   style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;">
+            <?php $__errorArgs = ['end_date'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                <div class="invalid-feedback"><?php echo e($message); ?></div>
+            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+        </div>
+    </div>
+</div>
 
                         
                         <!-- <div class="form-section mb-4">

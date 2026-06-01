@@ -61,7 +61,7 @@
                     <h5 class="mb-0">
                         <i class="fa fa-list me-2"></i>Grade List
                     </h5>
-                    <small class="text-muted">Manage grade levels and progression paths</small>
+                    <small class="text-muted">Manage grade levels and progression order</small>
                 </div>
                 <span class="badge bg-light text-dark"><?php echo e(count($getRecord)); ?> Grades</span>
             </div>
@@ -73,8 +73,8 @@
                     <thead>
                         <tr>
                             <th style="width: 60px;">ID</th>
-                            <th>Class Name</th>
-                            <th>Next Class</th>
+                            <th>Grade Name</th>
+                            <th style="width: 120px;">Order</th>
                             <th style="width: 200px;">Actions</th>
                         </tr>
                     </thead>
@@ -92,18 +92,11 @@
                                     </div>
                                     <div class="ms-3">
                                         <div class="grade-name"><?php echo e($value->name); ?></div>
-                                        <?php if($value->description): ?>
-                                            <div class="grade-description"><?php echo e($value->description); ?></div>
-                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <?php if($value->next_class_id): ?>
-                                    <span class="next-class-badge"><?php echo e($value->nextClass->name ?? 'N/A'); ?></span>
-                                <?php else: ?>
-                                    <span class="text-muted">None</span>
-                                <?php endif; ?>
+                                <span class="badge bg-primary fs-6">#<?php echo e($value->order); ?></span>
                             </td>
                             <td>
                                 <div class="action-buttons">
@@ -111,7 +104,7 @@
                                         class="btn btn-sm btn-light editBtn"
                                         data-id="<?php echo e($value->id); ?>"
                                         data-name="<?php echo e($value->name); ?>"
-                                        data-next-class-id="<?php echo e($value->next_class_id); ?>"
+                                        data-order="<?php echo e($value->order); ?>"
                                         title="Edit Grade">
                                         <i class="fa fa-edit"></i>
                                     </button>
@@ -151,6 +144,7 @@
         <div class="modal-content">
             <form id="editClassForm" method="POST" action="">
                 <?php echo csrf_field(); ?>
+                <input type="hidden" name="id" id="editId">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editClassModalLabel">
                         <i class="fa fa-edit me-2"></i>Edit Grade
@@ -160,31 +154,28 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="editName" class="form-label">
-                            Class Name <span class="text-danger">*</span>
+                            Grade Name <span class="text-danger">*</span>
                         </label>
                         <input type="text" 
                                id="editName" 
                                name="name" 
                                class="form-control" 
-                               placeholder="Enter class name"
+                               placeholder="Enter grade name"
                                required>
                     </div>
 
-                    <div class="mb-0">
-                        <label for="editNextClass" class="form-label">
-                            Next Class (Optional)
+                    <div class="mb-3">
+                        <label for="editOrder" class="form-label">
+                            Order <span class="text-danger">*</span>
                         </label>
-                        <select id="editNextClass" 
-                                name="next_class_id" 
-                                class="form-select">
-                            <option value="">Select Next Class</option>
-                            <?php $__currentLoopData = $getRecord; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $class): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                <option value="<?php echo e($class->id); ?>"><?php echo e($class->name); ?></option>
-                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                        </select>
-                        <small class="text-muted mt-1 d-block">
-                            Students will automatically progress to this class upon promotion
-                        </small>
+                        <input type="number" 
+                               id="editOrder" 
+                               name="order" 
+                               class="form-control" 
+                               min="1"
+                               placeholder="Enter order (e.g., 1, 2, 3)"
+                               required>
+                        <small class="text-muted">This determines the progression sequence</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -218,24 +209,24 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">
-                                        Class Name <span class="text-danger">*</span>
+                                        Grade Name <span class="text-danger">*</span>
                                     </label>
                                     <input type="text" 
                                            name="classes[0][name]" 
                                            class="form-control" 
-                                           placeholder="Enter class name"
+                                           placeholder="e.g. Grade 1 / Class 1"
                                            required>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">
-                                        Next Class (Optional)
+                                        Order <span class="text-danger">*</span>
                                     </label>
-                                    <select name="classes[0][next_class_id]" class="form-select next-class-select">
-                                        <option value="">Select Next Class</option>
-                                        <?php $__currentLoopData = $getRecord; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $class): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                            <option value="<?php echo e($class->id); ?>"><?php echo e($class->name); ?></option>
-                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                    </select>
+                                    <input type="number" 
+                                           name="classes[0][order]" 
+                                           class="form-control" 
+                                           min="1"
+                                           placeholder="e.g. 1"
+                                           required>
                                 </div>
                             </div>
                         </div>
@@ -243,13 +234,13 @@
 
                     <div class="mb-3">
                         <button type="button" class="btn btn-outline-success btn-sm" id="addMoreInput">
-                            <i class="fa fa-plus-circle me-1"></i>Add Another Class
+                            <i class="fa fa-plus-circle me-1"></i>Add Another Grade
                         </button>
                     </div>
 
                     <div class="alert alert-info">
                         <i class="fa fa-info-circle me-2"></i>
-                        <small>Tip: Add classes in order (e.g., Grade 1, Grade 2, Grade 3) and set their progression paths</small>
+                        <small>Tip: Add grades in ascending order (1 → 2 → 3). Order determines student promotion sequence.</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -257,7 +248,7 @@
                         <i class="fa fa-times me-1"></i>Close
                     </button>
                     <button type="submit" class="btn btn-success">
-                        <i class="fa fa-save me-1"></i>Save Classes
+                        <i class="fa fa-save me-1"></i>Save Grades
                     </button>
                 </div>
             </form>
@@ -273,32 +264,48 @@
                 <?php echo csrf_field(); ?>
                 <div class="modal-header">
                     <h5 class="modal-title" id="promoteModalLabel">
-                        <i class="fa fa-level-up-alt me-2"></i>Promote Students to Next Class
+                        <i class="fa fa-level-up-alt me-2"></i>Promote Students to Next Grade
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
                 <div class="modal-body">
                     <p class="text-muted mb-3">
-                        This action will promote all eligible students to the next class and create invoices for the new term.
+                        This will promote all eligible students to the next grade based on <strong>Order</strong>.
                     </p>
 
                     <div class="mb-3">
                         <label for="academic_year" class="form-label">
-                            Academic Year <span class="text-danger">*</span>
+                            Target Academic Year <span class="text-danger">*</span>
                         </label>
-                        <input type="text" 
-                            name="academic_year" 
-                            id="academic_year" 
-                            class="form-control" 
-                            value="<?php echo e(date('Y')); ?>" 
-                            placeholder="Enter academic year (e.g., 2025)" 
-                            required>
+                        <?php if(($academicYears ?? collect())->isEmpty()): ?>
+                            <p class="text-danger mb-0" style="font-size:13px;">
+                                No academic year exists after
+                                <strong><?php echo e($currentAcademicYear?->name ?? 'the current year'); ?></strong>.
+                                Create the next year and its first term first.
+                            </p>
+                        <?php else: ?>
+                            <select name="academic_year" id="academic_year" class="form-select" required>
+                                <?php $__currentLoopData = $academicYears; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ay): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($ay->name); ?>"
+                                        <?php echo e(($nextAcademicYear && $nextAcademicYear->id === $ay->id) ? 'selected' : ''); ?>>
+                                        <?php echo e($ay->name); ?>
+
+                                        <?php if($nextAcademicYear && $nextAcademicYear->id === $ay->id): ?> (next) <?php endif; ?>
+                                    </option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                            <?php if($currentAcademicYear): ?>
+                                <small class="text-muted d-block mt-1">
+                                    Current year: <strong><?php echo e($currentAcademicYear->name); ?></strong>. Only forward years are allowed.
+                                </small>
+                            <?php endif; ?>
+                        <?php endif; ?>
                     </div>
 
                     <div class="alert alert-warning">
                         <i class="fa fa-exclamation-triangle me-2"></i>
-                        <strong>Note:</strong> This process cannot be undone. Please confirm before proceeding.
+                        <strong>Note:</strong> This process cannot be undone.
                     </div>
                 </div>
 
@@ -306,7 +313,7 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="fa fa-times me-1"></i>Cancel
                     </button>
-                    <button type="submit" class="btn btn-warning">
+                    <button type="submit" class="btn btn-warning" <?php if(($academicYears ?? collect())->isEmpty()): ?> disabled <?php endif; ?>>
                         <i class="fa fa-check me-1"></i>Confirm Promotion
                     </button>
                 </div>
@@ -314,6 +321,7 @@
         </div>
     </div>
 </div>
+
 
 <style>
 /* Base Variables */
@@ -712,18 +720,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const inputGroup = document.createElement('div');
             inputGroup.classList.add('class-input-group', 'mb-3');
 
-            const firstSelect = container.querySelector('.next-class-select');
-            let optionsHtml = '<option value="">Select Next Class</option>';
-            if (firstSelect) {
-                Array.from(firstSelect.options).forEach(opt => {
-                    optionsHtml += `<option value="${opt.value}">${opt.text}</option>`;
-                });
-            } else {
-                <?php $__currentLoopData = $getRecord; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $class): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    optionsHtml += `<option value="<?php echo e($class->id); ?>"><?php echo e($class->name); ?></option>`;
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-            }
-
             inputGroup.innerHTML = `
                 <button type="button" class="btn btn-sm btn-danger remove-input">
                     <i class="fa fa-times"></i>
@@ -731,22 +727,24 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label">
-                            Class Name <span class="text-danger">*</span>
+                            Grade Name <span class="text-danger">*</span>
                         </label>
-                        <input type="text" 
-                               name="classes[${classInputCounter}][name]" 
-                               class="form-control" 
-                               placeholder="Enter class name"
+                        <input type="text"
+                               name="classes[${classInputCounter}][name]"
+                               class="form-control"
+                               placeholder="e.g. Grade 1 / Class 1"
                                required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">
-                            Next Class (Optional)
+                            Order <span class="text-danger">*</span>
                         </label>
-                        <select name="classes[${classInputCounter}][next_class_id]" 
-                                class="form-select next-class-select">
-                            ${optionsHtml}
-                        </select>
+                        <input type="number"
+                               name="classes[${classInputCounter}][order]"
+                               class="form-control"
+                               min="1"
+                               placeholder="e.g. ${classInputCounter + 1}"
+                               required>
                     </div>
                 </div>
             `;
@@ -769,7 +767,7 @@ document.addEventListener('DOMContentLoaded', function () {
             button.addEventListener('click', function() {
                 const id = this.getAttribute('data-id');
                 const name = this.getAttribute('data-name');
-                const nextClassId = this.getAttribute('data-next-class-id');
+                const order = this.getAttribute('data-order');
 
                 const editForm = document.getElementById('editClassForm');
                 if (editForm) {
@@ -779,20 +777,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 const nameInput = document.getElementById('editName');
                 if (nameInput) nameInput.value = name || '';
 
-                const nextClassSelect = document.getElementById('editNextClass');
-                if (nextClassSelect) {
-                    nextClassSelect.value = nextClassId || '';
-
-                    Array.from(nextClassSelect.options).forEach(option => {
-                        if (option.value == id) {
-                            option.disabled = true;
-                            option.style.display = 'none';
-                        } else {
-                            option.disabled = false;
-                            option.style.display = 'block';
-                        }
-                    });
-                }
+                const orderInput = document.getElementById('editOrder');
+                if (orderInput) orderInput.value = order || '';
 
                 const editModalEl = document.getElementById('editClassModal');
                 if (editModalEl) {

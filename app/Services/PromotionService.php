@@ -2,168 +2,385 @@
 
 namespace App\Services;
 
-use App\Models\{Student, Invoice, Term, PromotionRun, StudentHistory};
+use App\Models\Term;
+use App\Models\AcademicYear;
+use App\Models\Classes;
+use App\Models\PromotionRun;
+use App\Models\StudentEnrollment;
 use Illuminate\Support\Facades\DB;
-use Exception;
-
 
 class PromotionService
 {
+    private const CHUNK_SIZE = 100;
+
     /**
-     * Promote all students in a school to the next term
-     * while carrying forward balances and credits.
+     * Pre-flight check before year promotion is queued.
+     * Returns an error message, or null if configuration is valid.
      */
-    public function promoteToNextTerm($schoolId, $fromTermId, $toTermId, $userId = null)
+    public static function validateClassPromotionConfig(int $schoolId, int $fromTermId): ?string
     {
-        DB::transaction(function () use ($schoolId, $fromTermId, $toTermId, $userId) {
+        $issues = self::collectClassPromotionConfigIssues($schoolId, $fromTermId);
 
-            // ✅ Record promotion run
-            $promotionRun = PromotionRun::create([
-                'school_id' => $schoolId,
-                'from_term_id' => $fromTermId,
-                'to_term_id' => $toTermId,
-                'promoted_by' => $userId,
-                'type' => 'term_promotion',
+        if ($issues === []) {
+            return null;
+        }
+
+        return 'Cannot promote to next year: ' . implode('; ', $issues) . '.';
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | PROMOTE TO NEXT TERM
+    |--------------------------------------------------------------------------
+    */
+    public function promoteToNextTerm(
+        int $promotionRunId,
+        int $schoolId,
+        int $fromTermId,
+        int $toTermId,
+        ?int $userId = null
+    ): void {
+        try {
+            $this->chunkSourceEnrollments($fromTermId, function ($enrollments) use (
+                $schoolId,
+                $toTermId
+            ) {
+                DB::transaction(function () use ($enrollments, $schoolId, $toTermId) {
+                    foreach ($enrollments as $enrollment) {
+                        $this->promoteEnrollment(
+                            $enrollment,
+                            $schoolId,
+                            $toTermId,
+                            $enrollment->class_id,
+                            $enrollment->status
+                        );
+                    }
+                });
+            });
+
+            $this->activateTermPromotion($schoolId, $toTermId);
+            $this->generateInvoicesForPromotedTerm($toTermId);
+
+            PromotionRun::where('id', $promotionRunId)
+                ->update(['status' => 'completed']);
+
+        } catch (\Throwable $e) {
+            PromotionRun::where('id', $promotionRunId)->update([
+                'status'        => 'failed',
+                'error_message' => $e->getMessage(),
+                'active_key'    => null,
             ]);
 
-            // ✅ Fetch all active students for this school
-            $students = Student::where('school_id', $schoolId)->get();
+            throw $e;
+        }
+    }
 
-            foreach ($students as $student) {
+    /*
+    |--------------------------------------------------------------------------
+    | PROMOTE TO NEXT CLASS (YEAR PROMOTION)
+    |--------------------------------------------------------------------------
+    */
+    public function promoteToNextClass(
+        int $promotionRunId,
+        int $schoolId,
+        Term $fromTerm,
+        Term $toTerm,
+        ?int $userId = null
+    ): void {
+        if (!$toTerm) {
+            throw new \Exception('Target term not found.');
+        }
 
-                // Get the previous term invoice
-                $previousInvoice = Invoice::where('student_id', $student->id)
-                    ->where('term_id', $fromTermId)
-                    ->first();
+        try {
+            $enrolledCount  = 0;
+            $graduatedCount = 0;
+            $skipped        = [];
 
-                if (!$previousInvoice) {
-                    // Skip students without invoice in the previous term
-                    continue;
-                }
+            $this->chunkSourceEnrollments($fromTerm->id, function ($enrollments) use (
+                $schoolId,
+                $toTerm,
+                &$enrolledCount,
+                &$graduatedCount,
+                &$skipped
+            ) {
+                DB::transaction(function () use (
+                    $enrollments,
+                    $schoolId,
+                    $toTerm,
+                    &$enrolledCount,
+                    &$graduatedCount,
+                    &$skipped
+                ) {
+                    foreach ($enrollments as $enrollment) {
+                        $action = self::resolveClassPromotionAction($enrollment, $schoolId);
 
-                // Compute carried amounts
-                $balanceForward = max($previousInvoice->balance, 0);   // unpaid amount
-                $creditForward  = max(-$previousInvoice->balance, 0);  // overpayment
+                        if ($action['action'] === 'graduate') {
+                            $graduatedCount++;
+                            continue;
+                        }
 
-                // ✅ Create new invoice for the next term
-                $newInvoice = Invoice::create([
-                    'student_id' => $student->id,
-                    'term_id' => $toTermId,
-                    'total_amount' => $student->class->fee ?? 0,
-                    'balance_forward' => $balanceForward,
-                    'credit_forward' => $creditForward,
-                ]);
+                        if ($action['action'] === 'skip') {
+                            $skipped[] = $action['message'];
+                            continue;
+                        }
 
-                 $student->update([
-                'term_id' => $toTermId,
-            ]);
+                        $this->promoteEnrollment(
+                            $enrollment,
+                            $schoolId,
+                            $toTerm->id,
+                            $action['class_id'],
+                            StudentEnrollment::STATUS_ACTIVE
+                        );
 
-                // ✅ Record the promotion in student history
-                StudentHistory::create([
-                    'student_id' => $student->id,
-                    'from_class_id' => $student->class_id,
-                    'to_class_id' => $student->class_id,
-                    'from_term_id' => $fromTermId,
-                    'to_term_id' => $toTermId,
-                    'carried_balance' => $balanceForward,
-                    'carried_credit' => $creditForward,
-                ]);
+                        $enrolledCount++;
+                    }
+                });
+            });
+
+            if ($skipped !== []) {
+                throw new \Exception(self::formatClassPromotionSkips($skipped));
             }
 
+            if ($enrolledCount === 0 && $graduatedCount === 0) {
+                throw new \Exception('No students were promoted. Check class configurations.');
+            }
+
+            $this->activateYearPromotion($schoolId, $toTerm);
+            $this->generateInvoicesForPromotedTerm($toTerm->id);
+
+            PromotionRun::where('id', $promotionRunId)
+                ->update(['status' => 'completed']);
+
+        } catch (\Throwable $e) {
+            PromotionRun::where('id', $promotionRunId)->update([
+                'status'        => 'failed',
+                'error_message' => $e->getMessage(),
+                'active_key'    => null,
+            ]);
+
+            throw $e;
+        }
+    }
+
+    /**
+     * Process enrollments in chunks to limit transaction size and memory use.
+     */
+    private function chunkSourceEnrollments(int $fromTermId, callable $callback): void
+    {
+        StudentEnrollment::with(['student', 'schoolClass', 'stream'])
+            ->where('term_id', $fromTermId)
+            ->whereIn('status', [
+                StudentEnrollment::STATUS_ACTIVE,
+                StudentEnrollment::STATUS_REPEATING,
+            ])
+            ->orderBy('id')
+            ->chunkById(self::CHUNK_SIZE, function ($enrollments) use ($callback) {
+                $callback($enrollments);
+            });
+    }
+
+    private function activateTermPromotion(int $schoolId, int $toTermId): void
+    {
+        DB::transaction(function () use ($schoolId, $toTermId) {
             Term::where('school_id', $schoolId)->update(['active' => false]);
             Term::where('id', $toTermId)->update(['active' => true]);
         });
     }
 
+    private function activateYearPromotion(int $schoolId, Term $toTerm): void
+    {
+        DB::transaction(function () use ($schoolId, $toTerm) {
+            Term::where('school_id', $schoolId)->update(['active' => false]);
+            Term::where('id', $toTerm->id)->update(['active' => true]);
+
+            AcademicYear::where('school_id', $schoolId)->update(['is_current' => false]);
+            AcademicYear::where('id', $toTerm->academic_year_id)->update(['is_current' => true]);
+        });
+    }
+
     /**
-     * Promote students to the next class at the end of the academic year.
+     * Create invoices after all enrollments exist (deferred from EnrollmentObserver during bulk promote).
      */
+    private function generateInvoicesForPromotedTerm(int $toTermId): void
+    {
+        $invoiceService = app(InvoiceService::class);
 
+        StudentEnrollment::with('student')
+            ->where('term_id', $toTermId)
+            ->whereNotNull('promoted_from_enrollment_id')
+            ->whereIn('status', [
+                StudentEnrollment::STATUS_ACTIVE,
+                StudentEnrollment::STATUS_REPEATING,
+            ])
+            ->orderBy('id')
+            ->chunkById(self::CHUNK_SIZE, function ($enrollments) use ($invoiceService) {
+                foreach ($enrollments as $enrollment) {
+                    if (!$enrollment->student) {
+                        continue;
+                    }
 
-public function promoteToNextClass($schoolId, $fromTerm, $toTerm, $userId = null)
-{
-    DB::transaction(function () use ($schoolId, $fromTerm, $toTerm, $userId) {
-        
-        // Verify the target term exists
-        if (!$toTerm) {
-            throw new \Exception('Target term not found.');
-        }
+                    $invoiceService->createOrUpdateInvoice(
+                        $enrollment->student,
+                        $enrollment->term_id,
+                        $enrollment->id
+                    );
+                }
+            });
+    }
 
-        // Log the class promotion run
-        PromotionRun::create([
-            'school_id' => $schoolId,
-            'from_term_id' => $fromTerm->id,
-            'to_term_id' => $toTerm->id,
-            'promoted_by' => $userId,
-            'type' => 'class_promotion',
-        ]);
+    /*
+    |--------------------------------------------------------------------------
+    | Idempotent enrollment create — one promoted row per source enrollment
+    |--------------------------------------------------------------------------
+    */
+    private function promoteEnrollment(
+        StudentEnrollment $source,
+        int $schoolId,
+        int $toTermId,
+        int $classId,
+        string $status
+    ): StudentEnrollment {
+        return StudentEnrollment::withoutEvents(function () use (
+            $source,
+            $schoolId,
+            $toTermId,
+            $classId,
+            $status
+        ) {
+            return StudentEnrollment::firstOrCreate(
+                ['promoted_from_enrollment_id' => $source->id],
+                [
+                    'school_id'  => $schoolId,
+                    'student_id' => $source->student_id,
+                    'class_id'   => $classId,
+                    'stream_id'  => $source->stream_id,
+                    'term_id'    => $toTermId,
+                    'status'     => $status,
+                ]
+            );
+        });
+    }
 
-        // Get all students in this school
-        $students = Student::where('school_id', $schoolId)->get();
-        $promotedCount = 0;
+    /**
+     * @return list<string>
+     */
+    private static function collectClassPromotionConfigIssues(int $schoolId, int $fromTermId): array
+    {
+        $issues = [];
 
-        foreach ($students as $student) {
-            $currentClass = $student->class;
+        $enrollments = StudentEnrollment::with(['student', 'schoolClass'])
+            ->where('term_id', $fromTermId)
+            ->where('status', StudentEnrollment::STATUS_ACTIVE)
+            ->get();
 
-            if (!$currentClass || !$currentClass->next_class_id) {
-                continue; // Skip if no next class defined
+        $classesMissingNext = [];
+
+        foreach ($enrollments as $enrollment) {
+            $class = $enrollment->schoolClass;
+
+            if (!$class) {
+                $issues[] = self::studentLabel($enrollment) . ' has no class assigned';
+                continue;
             }
 
-            // Get latest invoice for the from term
-            $previousInvoice = Invoice::where('student_id', $student->id)
-                ->where('term_id', $fromTerm->id)
-                ->latest('id')
-                ->first();
-
-            $balanceForward = 0;
-            $creditForward = 0;
-
-            if ($previousInvoice) {
-                $balanceForward = max($previousInvoice->balance, 0);
-                $creditForward = max(-$previousInvoice->balance, 0);
+            if ($class->is_final) {
+                continue;
             }
 
-            // Move student to the next class and term
-            $student->update([
-                'class_id' => $currentClass->next_class_id,
-                'term_id' => $toTerm->id,
-            ]);
-
-            // Create new invoice for next year's first term
-            $nextClass = $student->fresh()->class;
-            Invoice::create([
-                'student_id' => $student->id,
-                'term_id' => $toTerm->id,
-                'total_amount' => $nextClass->fee ?? 0,
-                'balance_forward' => $balanceForward,
-                'credit_forward' => $creditForward,
-                'balance' => ($nextClass->fee ?? 0) + $balanceForward - $creditForward,
-            ]);
-
-            // Record promotion history
-            StudentHistory::create([
-                'student_id' => $student->id,
-                'from_class_id' => $currentClass->id,
-                'to_class_id' => $currentClass->next_class_id,
-                'from_term_id' => $fromTerm->id,
-                'to_term_id' => $toTerm->id,
-                'carried_balance' => $balanceForward,
-                'carried_credit' => $creditForward,
-            ]);
-
-            $promotedCount++;
+            if (!self::hasNextClass($schoolId, $class->order)) {
+                $classesMissingNext[$class->name] = true;
+            }
         }
 
-        // Switch term activation
-        // Switch term activation
-Term::where('school_id', $schoolId)->update(['active' => false]);
-Term::where('id', $toTerm->id)->update(['active' => true]);
-
-
-        if ($promotedCount === 0) {
-            throw new \Exception('No students were promoted. Check class configurations.');
+        foreach (array_keys($classesMissingNext) as $className) {
+            $issues[] = "no next class configured after \"{$className}\"";
         }
-    });
-}
-/*******  ad54016e-78e6-4af2-9c25-3a7d6dfd9219  *******/
+
+        return $issues;
+    }
+
+    /**
+     * @return array{action: 'promote'|'graduate'|'skip', class_id?: int, message?: string}
+     */
+    private static function resolveClassPromotionAction(
+        StudentEnrollment $enrollment,
+        int $schoolId
+    ): array {
+        $class = $enrollment->schoolClass;
+
+        if (!$class) {
+            return [
+                'action'  => 'skip',
+                'message' => self::studentLabel($enrollment) . ' has no class assigned',
+            ];
+        }
+
+        if ($enrollment->status === StudentEnrollment::STATUS_REPEATING) {
+            return [
+                'action'   => 'promote',
+                'class_id' => $class->id,
+            ];
+        }
+
+        if ($class->is_final) {
+            return ['action' => 'graduate'];
+        }
+
+        $nextClass = Classes::where('school_id', $schoolId)
+            ->where('order', $class->order + 1)
+            ->first();
+
+        if (!$nextClass) {
+            return [
+                'action'  => 'skip',
+                'message' => self::studentLabel($enrollment)
+                    . " in \"{$class->name}\" — no next class configured",
+            ];
+        }
+
+        return [
+            'action'   => 'promote',
+            'class_id' => $nextClass->id,
+        ];
+    }
+
+    private static function hasNextClass(int $schoolId, int $order): bool
+    {
+        return Classes::where('school_id', $schoolId)
+            ->where('order', $order + 1)
+            ->exists();
+    }
+
+    private static function studentLabel(StudentEnrollment $enrollment): string
+    {
+        $student = $enrollment->student;
+
+        if ($student?->full_name) {
+            $label = $student->full_name;
+            if ($student->admission) {
+                $label .= " ({$student->admission})";
+            }
+
+            return $label;
+        }
+
+        return 'Student #' . $enrollment->student_id;
+    }
+
+    /**
+     * @param list<string> $skipped
+     */
+    private static function formatClassPromotionSkips(array $skipped): string
+    {
+        $unique = array_values(array_unique($skipped));
+        $shown  = array_slice($unique, 0, 5);
+        $message = 'Year promotion stopped — unresolved students: ' . implode('; ', $shown);
+
+        $remaining = count($unique) - count($shown);
+        if ($remaining > 0) {
+            $message .= " (and {$remaining} more)";
+        }
+
+        return $message . '. Fix class order in Classes, then retry.';
+    }
 }

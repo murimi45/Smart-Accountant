@@ -11,16 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('promotion_runs', function (Blueprint $table) {
+       Schema::create('promotion_runs', function (Blueprint $table) {
             $table->id();
-            $table->decimal('school_id');
-            $table->decimal('from_term_id');
-            $table->decimal('to_term_id');
-            $table->decimal('promoted_by')->nullable();
+            $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('from_term_id')->constrained('terms');
+            $table->foreignId('to_term_id')->constrained('terms');
+            $table->foreignId('promoted_by')->nullable()->constrained('users')->nullOnDelete();
+             $table->enum('status', ['pending', 'running', 'completed', 'failed'])
+             ->default('pending');
+            $table->text('error_message')->nullable();
             $table->enum('type', ['term_promotion', 'class_promotion']);
+            $table->string('active_key', 64)->nullable();
+            $table->unique('active_key');
             $table->timestamps();
 
-            // Indexes and foreign keys
             $table->index(['school_id', 'from_term_id', 'to_term_id']);
         });
     }

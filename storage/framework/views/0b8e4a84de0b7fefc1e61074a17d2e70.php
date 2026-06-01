@@ -41,31 +41,7 @@
         <div class="card-body">
             <form method="GET" action="<?php echo e(route('listStudents')); ?>" class="filter-form">
                 <div class="row g-3 align-items-end">
-                    <div class="col-md-3">
-                        <label class="form-label"><i class="fa fa-school me-1"></i>Class</label>
-                        <select name="class_id" class="form-select">
-                            <option value="">All Classes</option>
-                            <?php $__currentLoopData = $classes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $class): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                <option value="<?php echo e($class->id); ?>" <?php echo e(request('class_id') == $class->id ? 'selected' : ''); ?>>
-                                    <?php echo e($class->name); ?>
-
-                                </option>
-                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                        </select>
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label"><i class="fa fa-calendar me-1"></i>Term</label>
-                        <select name="term_id" class="form-select">
-                            <option value="">All Terms</option>
-                            <?php $__currentLoopData = $terms; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $term): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                <option value="<?php echo e($term->id); ?>" <?php echo e(request('term_id') == $term->id ? 'selected' : ''); ?>>
-                                    <?php echo e($term->name); ?>
-
-                                </option>
-                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                        </select>
-                    </div>
+                   
 
                     <div class="col-md-2">
                         <label class="form-label"><i class="fa fa-hashtag me-1"></i>Admission No</label>
@@ -73,8 +49,8 @@
                     </div>
 
                     <div class="col-md-2">
-                        <label class="form-label"><i class="fa fa-user me-1"></i>Name</label>
-                        <input type="text" name="name" class="form-control" placeholder="Enter name" value="<?php echo e(request('name')); ?>">
+                        <label class="form-label"><i class="fa fa-user me-1"></i>Full Name</label>
+                        <input type="text" name="full_name" class="form-control" placeholder="Enter name" value="<?php echo e(request('full_name')); ?>">
                     </div>
 
                     <div class="col-md-2">
@@ -107,86 +83,91 @@
             <div class="table-responsive">
                 <table class="table student-table mb-0">
                     <thead>
-                        <tr>
-                            <th>Full Name</th>
-                            <th>Phone No</th>
-                            <th>Admission No</th>
-                            <th>Gender</th>
-                            <th>Class</th>
-                            <th>Term</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php $__empty_1 = true; $__currentLoopData = $getRecord; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $value): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="student-avatar">
-                                        <?php echo e(strtoupper(substr($value->name, 0, 1))); ?>
+    <tr>
+        <th>Full Name</th>
+        <th>Guardian Name</th>
+        <th>Phone No</th>
+        <th>Admission No</th>
+        <th>Gender</th>
+        <th>Action</th>
+    </tr>
+</thead>
+<tbody>
+    <?php $__empty_1 = true; $__currentLoopData = $getRecord; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $value): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+    <tr>
+        
+        <td>
+            <div class="d-flex align-items-center">
+                <div class="student-avatar">
+                    <?php echo e(strtoupper(substr($value->full_name, 0, 1))); ?>
 
-                                    </div>
-                                    <div class="ms-3">
-                                        <div class="student-name"><?php echo e($value->name); ?></div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="phone-text"><?php echo e($value->phone ?: 'N/A'); ?></span>
-                            </td>
-                            <td>
-                                <span class="admission-badge"><?php echo e($value->admission); ?></span>
-                            </td>
-                            <td>
-                                <?php if(strtolower($value->gender) == 'male'): ?>
-                                    <span class="gender-badge gender-male">
-                                        <i class="fa fa-mars me-1"></i>Male
-                                    </span>
-                                <?php elseif(strtolower($value->gender) == 'female'): ?>
-                                    <span class="gender-badge gender-female">
-                                        <i class="fa fa-venus me-1"></i>Female
-                                    </span>
-                                <?php else: ?>
-                                    <span class="badge-method"><?php echo e($value->gender); ?></span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <span class="class-text"><?php echo e($value->class->name ?? 'N/A'); ?></span>
-                            </td>
-                            <td>
-                                <span class="term-text"><?php echo e($value->term->name ?? 'N/A'); ?></span>
-                            </td>
-                            <td>
-                                <div class="action-buttons">
-                                    <a href="<?php echo e(url('/editstudent/' . $value->id)); ?>" 
-                                       class="btn btn-sm btn-light" 
-                                       title="Edit Student">
-                                        <i class="fa fa-edit"></i>
-                                    </a>
-                                    <a href="<?php echo e(url('/deletestudent/' . $value->id)); ?>" 
-                                       class="btn btn-sm btn-danger" 
-                                       onclick="return confirm('Are you sure you want to delete this student?')" 
-                                       title="Delete Student">
-                                        <i class="fa fa-trash"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                        <tr>
-                            <td colspan="7" class="text-center py-5">
-                                <div class="empty-state">
-                                    <i class="fa fa-inbox fa-3x mb-3"></i>
-                                    <p class="mb-2">No students found</p>
-                                    <small class="d-block mb-3">Try adjusting your search filters</small>
-                                    <a href="<?php echo e(route('addStudents')); ?>" class="btn btn-primary">
-                                        <i class="fa fa-plus me-2"></i>Add New Student
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        <?php endif; ?>
-                    </tbody>
+                </div>
+                <div class="ms-3">
+                    <div class="student-name"><?php echo e($value->full_name); ?></div>
+                </div>
+            </div>
+        </td>
+
+        
+        <td>
+            <span class="phone-text"><?php echo e($value->guardian_name ?: 'N/A'); ?></span>
+        </td>
+
+        
+        <td>
+            <span class="phone-text"><?php echo e($value->phone ?: 'N/A'); ?></span>
+        </td>
+
+        
+        <td>
+            <span class="admission-badge"><?php echo e($value->admission); ?></span>
+        </td>
+
+        
+        <td>
+            <?php if(strtolower($value->gender) == 'male'): ?>
+                <span class="gender-badge gender-male">
+                    <i class="fa fa-mars me-1"></i>Male
+                </span>
+            <?php elseif(strtolower($value->gender) == 'female'): ?>
+                <span class="gender-badge gender-female">
+                    <i class="fa fa-venus me-1"></i>Female
+                </span>
+            <?php endif; ?>
+        </td>
+
+        
+        <td>
+            <div class="action-buttons">
+                <a href="<?php echo e(url('/editstudent/' . $value->id)); ?>"
+                   class="btn btn-sm btn-light"
+                   title="Edit Student">
+                    <i class="fa fa-edit"></i>
+                </a>
+                <a href="<?php echo e(url('/deletestudent/' . $value->id)); ?>"
+                   class="btn btn-sm btn-danger"
+                   onclick="return confirm('Are you sure you want to delete this student?')"
+                   title="Delete Student">
+                    <i class="fa fa-trash"></i>
+                </a>
+            </div>
+        </td>
+    </tr>
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+    <tr>
+        <td colspan="6" class="text-center py-5">
+            <div class="empty-state">
+                <i class="fa fa-inbox fa-3x mb-3"></i>
+                <p class="mb-2">No students found</p>
+                <small class="d-block mb-3">Try adjusting your search filters</small>
+                <a href="<?php echo e(route('addStudents')); ?>" class="btn btn-primary">
+                    <i class="fa fa-plus me-2"></i>Add New Student
+                </a>
+            </div>
+        </td>
+    </tr>
+    <?php endif; ?>
+</tbody>
                 </table>
             </div>
         </div>

@@ -70,6 +70,15 @@
                                 <span>Students</span>
                             </a>
                         </li>
+
+
+
+                        <li>
+                            <a href="{{ url('/enrollment') }}" class="{{ Request::is('enrollment*') ? 'active' : '' }}">
+                                <i class="fa fa-users orange_color"></i>
+                                <span>Student Enrollment</span>
+                            </a>
+                        </li>
                     @endif
 
                     <!-- Fees (Shared) -->

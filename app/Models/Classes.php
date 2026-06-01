@@ -1,12 +1,11 @@
-<?php 
+<?php
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Scopes\SchoolScope;
-use Auth;
 
 class Classes extends Model
 {
@@ -14,20 +13,48 @@ class Classes extends Model
 
     protected $table = 'classes';
 
+    /**
+     * The attributes that are mass assignable.
+     */
+    protected $fillable = [
+        'name',
+        'order',
+        'school_id',
+        
+    ];
+
+    /**
+     * The attributes that should be cast.
+     */
+    protected $casts = [
+        'order' => 'integer',
+    ];
+
+    
     protected static function booted()
     {
-        static::addGlobalScope(new SchoolScope);
+        static::addGlobalScope(new SchoolScope());
     }
 
+   
     public static function getRecord()
     {
-        return self::all(); // or customize this query if needed
+        return self::orderBy('order')
+                   ->orderBy('name')
+                   ->get();
     }
 
+    /**
+     * Get single class by ID (respects SchoolScope)
+     */
     public static function getSingle($id)
     {
         return self::find($id);
     }
+
+    // ==============================
+    // Relationships
+    // ==============================
 
     public function students()
     {
@@ -40,19 +67,33 @@ class Classes extends Model
     }
 
     /**
-     * Self-referencing relationships
+     * Next Class Relationship (Kept for backward compatibility)
+     * You can remove this entirely later if not needed anymore.
      */
-
-    // Points to the next class
     public function nextClass()
     {
         return $this->belongsTo(Classes::class, 'next_class_id');
     }
 
-    // Returns all classes that reference this class as their next
+    /**
+     * Previous Classes (classes pointing to this as next)
+     */
     public function previousClasses()
     {
         return $this->hasMany(Classes::class, 'next_class_id');
     }
-}
 
+    // ==============================
+    // Scopes & Helpers
+    // ==============================
+
+    /**
+     * Scope to get next class by order (useful for promotion logic)
+     */
+    public function scopeNextByOrder($query)
+    {
+        return $query->where('order', '>', $this->order)
+                     ->orderBy('order')
+                     ->first();
+    }
+}

@@ -25,6 +25,16 @@
         </div>
     @endif
 
+    @if ($currentTerm && !request('term_id'))
+        <div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
+            <i class="fa fa-info-circle me-2"></i>
+            Showing <strong>current term</strong> invoices only ({{ $currentTerm->name }}@if($currentTerm->year) — {{ $currentTerm->year }}@endif).
+            Prior-term balances appear here as <strong>Balance B/F</strong> after promotion.
+            Select another term in the filter to view historical invoices.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     {{-- Filters Card --}}
     <div class="card filter-card mb-3">
         <div class="card-body">
@@ -45,10 +55,11 @@
                     <div class="col-md-3">
                         <label class="form-label"><i class="fa fa-calendar me-1"></i>Term</label>
                         <select name="term_id" class="form-select">
-                            <option value="">All Terms</option>
+                            <option value="">Current term (default)</option>
                             @foreach($terms as $term)
-                                <option value="{{ $term->id }}" {{ request('term_id') == $term->id ? 'selected' : '' }}>
+                                <option value="{{ $term->id }}" {{ (request('term_id') ?: ($currentTerm->id ?? '')) == $term->id ? 'selected' : '' }}>
                                     {{ $term->name }} - {{ $term->year }}
+                                    @if($currentTerm && $term->id === $currentTerm->id) (current) @endif
                                 </option>
                             @endforeach
                         </select>
@@ -90,7 +101,7 @@
                 <form action="{{ route('balances.statements.bulk') }}" method="POST" class="d-inline">
                     @csrf
                     <input type="hidden" name="class_id" value="{{ request('class_id') }}">
-                    <input type="hidden" name="term_id" value="{{ request('term_id') }}">
+                    <input type="hidden" name="term_id" value="{{ request('term_id') ?: ($currentTerm->id ?? '') }}">
                     <button type="submit" class="btn btn-outline-primary btn-action">
                         <i class="fa fa-file-pdf me-1"></i>Balance Statements
                     </button>
@@ -99,7 +110,7 @@
                 <form action="{{ route('balances.sms.send') }}" method="POST" class="d-inline">
                     @csrf
                     <input type="hidden" name="class_id" value="{{ request('class_id') }}">
-                    <input type="hidden" name="term_id" value="{{ request('term_id') }}">
+                    <input type="hidden" name="term_id" value="{{ request('term_id') ?: ($currentTerm->id ?? '') }}">
                     <button type="submit" class="btn btn-outline-primary btn-action">
                         <i class="fa fa-sms me-1"></i>Send SMS
                     </button>
@@ -136,8 +147,15 @@
                         @forelse($invoices as $i => $invoice)
                             @php
                                 $student = $invoice->student;
+                                $className = $invoice->enrollment?->schoolClass?->name;
+                                if ($className && $invoice->enrollment?->stream?->name) {
+                                    $className .= ' ' . $invoice->enrollment->stream->name;
+                                }
                                 $paid = $invoice->amount_paid;
                                 $balance = $invoice->balance;
+                                $canPay = $invoice->isCollectible()
+                                    && $currentTerm
+                                    && (int) $invoice->term_id === (int) $currentTerm->id;
                                 $rowId = "details-row-{$i}";
                                 $paymentRowId = "payment-row-{$i}";
                             @endphp
@@ -148,17 +166,17 @@
                                     <div class="d-flex align-items-center">
                                         <div class="avatar">
                                             
-                                            {{ strtoupper(substr($student->name, 0, 1)) }}
+                                            {{ strtoupper(substr($student?->full_name ?? '?', 0, 1)) }}
                                             
                                         </div>
                                         <div class="ms-3">
-                                            <div class="student-name">{{ $student->name }}</div>
-                                            <div class="student-id">{{ $student->admission }}</div>
+                                            <div class="student-name">{{ $student?->full_name ?? '—' }}</div>
+                                            <div class="student-id">{{ $student?->admission ?? '—' }}</div>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge-class">{{ $student->class->name ?? '-' }}</span>
+                                    <span class="badge-class">{{ $className ?? '—' }}</span>
                                 </td>
                                 <td>
                                     <span class="amount-text">KSh {{ number_format($invoice->total_amount, 2) }}</span>
@@ -167,7 +185,9 @@
                                     <span class="amount-text text-success">KSh {{ number_format($paid, 2) }}</span>
                                 </td>
                                 <td>
-                                    @if($balance > 0)
+                                    @if($invoice->status === 'transferred')
+                                        <span class="badge bg-secondary">Transferred</span>
+                                    @elseif($balance > 0)
                                         <span class="badge badge-danger">
                                             KSh {{ number_format($balance, 2) }}
                                         </span>
@@ -187,6 +207,7 @@
                                             <i class="fa fa-eye"></i>
                                             <span class="btn-text">Details</span>
                                         </button>
+                                        @if($canPay)
                                         <button type="button"
                                                 class="btn btn-sm btn-success toggle-row"
                                                 data-target="{{ $paymentRowId }}"
@@ -195,6 +216,7 @@
                                             <i class="fa fa-plus"></i>
                                             <span class="btn-text">Payment</span>
                                         </button>
+                                        @endif
                                         <a href="{{ route('statements.single', $invoice->student->id) }}" 
                                            class="btn btn-sm btn-light" 
                                            title="Print Statement">
@@ -287,7 +309,8 @@
                                 </td>
                             </tr>
 
-                            {{-- Payment Form Row --}}
+                            {{-- Payment Form Row (current term only) --}}
+                            @if($canPay)
                             <tr class="payment-form-row d-none" id="{{ $paymentRowId }}">
                                 <td colspan="6" class="payment-cell">
                                     <div class="payment-content">
@@ -324,6 +347,7 @@
                                     </div>
                                 </td>
                             </tr>
+                            @endif
                         @empty
                             <tr>
                                 <td colspan="6" class="text-center py-5">

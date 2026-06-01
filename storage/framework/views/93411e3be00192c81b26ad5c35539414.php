@@ -37,15 +37,15 @@
                     <?php else: ?>
                     <div class="col-md-3">
                         <label class="form-label"><i class="fa fa-calendar-alt me-1"></i>Select Year</label>
-                        <select name="year" class="form-select" onchange="this.form.submit()">
-                            <?php $__currentLoopData = $years; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $year): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                <option value="<?php echo e($year); ?>" 
-                                    <?php echo e(isset($selectedYear) && $selectedYear == $year ? 'selected' : ''); ?>>
-                                    <?php echo e($year); ?>
+                        <select name="academic_year_id" class="form-select" onchange="this.form.submit()">
+    <?php $__currentLoopData = $academicYears; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $academicYear): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <option value="<?php echo e($academicYear->id); ?>" 
+            <?php echo e(isset($selectedYear) && $selectedYear->id == $academicYear->id ? 'selected' : ''); ?>>
+            <?php echo e($academicYear->name); ?>
 
-                                </option>
-                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                        </select>
+        </option>
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+</select>
                     </div>
                     <?php endif; ?>
                 </div>

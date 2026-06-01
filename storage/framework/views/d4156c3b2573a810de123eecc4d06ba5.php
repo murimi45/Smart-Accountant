@@ -73,19 +73,22 @@
                                 <i class="fa fa-calendar-plus me-1"></i>To Term
                                 <span class="text-danger">*</span>
                             </label>
-                            <select name="to_term_id" class="form-select" required>
-                                <option value="">Select Next Term</option>
-                                <?php $__currentLoopData = $terms; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $term): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                    <?php if($term->id != $currentTerm->id): ?>
-                                        <option value="<?php echo e($term->id); ?>"><?php echo e($term->name); ?> (<?php echo e($term->year); ?>)</option>
-                                    <?php endif; ?>
-                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            <select name="to_term_id" class="form-select" required
+                                <?php if(!$nextTerm): ?> disabled <?php endif; ?>>
+                                <?php if($nextTerm): ?>
+                                    <option value="<?php echo e($nextTerm->id); ?>" selected>
+                                        <?php echo e($nextTerm->name); ?> (<?php echo e($nextTerm->year); ?>)
+                                    </option>
+                                <?php else: ?>
+                                    <option value="">No next term — create the next term first</option>
+                                <?php endif; ?>
                             </select>
-                            <small class="text-muted">Select the term to promote students to</small>
+                            <small class="text-muted">Next term in sequence after <?php echo e($currentTerm->name); ?></small>
                         </div>
 
                         <div class="col-md-2">
-                            <button type="submit" class="btn btn-success w-100">
+                            <button type="submit" class="btn btn-success w-100"
+                                <?php if(!$nextTerm): ?> disabled <?php endif; ?>>
                                 <i class="fa fa-rocket me-2"></i>Promote
                             </button>
                         </div>
@@ -107,7 +110,7 @@
                 <h5 class="mb-0">
                     <i class="fa fa-calendar-alt me-2"></i>Term List
                 </h5>
-                <span class="badge bg-light text-dark"><?php echo e(count($getRecord)); ?> Terms</span>
+                <span class="badge bg-light text-dark"><?php echo e(count($terms)); ?> Terms</span>
             </div>
         </div>
 
@@ -126,7 +129,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php $__empty_1 = true; $__currentLoopData = $getRecord; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $value): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                        <?php $__empty_1 = true; $__currentLoopData = $terms; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $value): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                             <tr>
                                 <td>
                                     <span class="row-number">#<?php echo e($value->id); ?></span>
@@ -143,7 +146,7 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="year-badge"><?php echo e($value->year); ?></span>
+                                    <span class="year-badge"><?php echo e($value->academicYear->name); ?></span>
                                 </td>
                                 <td>
                                     <span class="date-text">

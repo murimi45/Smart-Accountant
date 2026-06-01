@@ -70,6 +70,15 @@
                                 <span>Students</span>
                             </a>
                         </li>
+
+
+
+                        <li>
+                            <a href="<?php echo e(url('/enrollment')); ?>" class="<?php echo e(Request::is('enrollment*') ? 'active' : ''); ?>">
+                                <i class="fa fa-users orange_color"></i>
+                                <span>Student Enrollment</span>
+                            </a>
+                        </li>
                     <?php endif; ?>
 
                     <!-- Fees (Shared) -->

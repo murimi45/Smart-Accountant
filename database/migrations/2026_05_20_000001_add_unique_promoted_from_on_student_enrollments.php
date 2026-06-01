@@ -6,24 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::table('classes', function (Blueprint $table) {
-            
-         $table->softDeletes();
+        Schema::table('student_enrollments', function (Blueprint $table) {
+            $table->unique('promoted_from_enrollment_id');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::table('classes', function (Blueprint $table) {
-            //
+        Schema::table('student_enrollments', function (Blueprint $table) {
+            $table->dropUnique(['promoted_from_enrollment_id']);
         });
     }
 };

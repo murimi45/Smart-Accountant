@@ -50,7 +50,7 @@
                 </div>
 
                 <div class="padding_infor_info" style="padding: 35px 30px;">
-                    <form action="" method="post" enctype="multipart/form-data">
+                    <form action="{{ route('updateStudent', $student->id) }}" method="post" enctype="multipart/form-data">
                         @csrf
 
                         {{-- Personal Information Section --}}
@@ -69,7 +69,7 @@
                                     <input type="text" 
                                            id="name" 
                                            name="name" 
-                                           value="{{ old('name', $student->name) }}" 
+                                           value="{{ old('name', $student->full_name) }}" 
                                            class="form-control @error('name') is-invalid @enderror" 
                                            placeholder="Enter full name"
                                            style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
@@ -79,19 +79,35 @@
                                     @enderror
                                 </div>
 
+                                {{-- Guardian Name --}}
+                                <div class="col-md-6 mb-4">
+                                    <label for="guardian_name" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
+                                        <i class="fa fa-user-shield me-2 text-secondary"></i>Guardian Name
+                                    </label>
+                                    <input type="text"
+                                           id="guardian_name"
+                                           name="guardian_name"
+                                           value="{{ old('guardian_name', $student->guardian_name) }}"
+                                           class="form-control @error('guardian_name') is-invalid @enderror"
+                                           placeholder="Enter guardian name"
+                                           style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;">
+                                    @error('guardian_name')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
                                 {{-- Phone Number --}}
                                 <div class="col-md-6 mb-4">
                                     <label for="phone" class="form-label fw-semibold" style="font-size: 14px; color: #495057; margin-bottom: 10px;">
-                                        <i class="fa fa-phone me-2 text-success"></i>Phone Number <span class="text-danger">*</span>
+                                        <i class="fa fa-phone me-2 text-success"></i>Phone Number
                                     </label>
-                                    <input type="tel" 
-                                           id="phone" 
-                                           name="phone" 
-                                           value="{{ old('phone', $student->phone) }}" 
-                                           class="form-control @error('phone') is-invalid @enderror" 
+                                    <input type="tel"
+                                           id="phone"
+                                           name="phone"
+                                           value="{{ old('phone', $student->phone) }}"
+                                           class="form-control @error('phone') is-invalid @enderror"
                                            placeholder="Enter phone number"
-                                           style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;"
-                                           required>
+                                           style="border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px 16px; font-size: 14px;">
                                     @error('phone')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -156,7 +172,7 @@
                                             required>
                                         <option value="">Select Class</option>
                                         @foreach($classes as $class)
-                                            <option value="{{ $class->id }}" {{ old('class_id', $student->class_id) == $class->id ? 'selected' : '' }}>
+                                            <option value="{{ $class->id }}" {{ old('class_id', $enrollment?->class_id) == $class->id ? 'selected' : '' }}>
                                                 {{ $class->name }}
                                             </option>
                                         @endforeach
@@ -178,7 +194,7 @@
                                             required>
                                         <option value="">Select Term</option>
                                         @foreach($terms as $term)
-                                            <option value="{{ $term->id }}" {{ old('term_id', $student->term_id) == $term->id ? 'selected' : '' }}>
+                                            <option value="{{ $term->id }}" {{ old('term_id', $enrollment?->term_id ?? $activeTerm?->id) == $term->id ? 'selected' : '' }}>
                                                {{ $term->name }} - {{ $term->year }}
                                             </option>
                                         @endforeach
@@ -186,6 +202,11 @@
                                     @error('term_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
+                                    @if($activeTerm)
+                                        <small class="text-muted d-block mt-1">
+                                            Current school term: <strong>{{ $activeTerm->name }}</strong>@if($activeTerm->year) ({{ $activeTerm->year }})@endif
+                                        </small>
+                                    @endif
                                 </div>
                             </div>
                         </div>

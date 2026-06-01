@@ -27,6 +27,16 @@
         </div>
     <?php endif; ?>
 
+    <?php if($currentTerm && !request('term_id')): ?>
+        <div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
+            <i class="fa fa-info-circle me-2"></i>
+            Showing <strong>current term</strong> invoices only (<?php echo e($currentTerm->name); ?><?php if($currentTerm->year): ?> — <?php echo e($currentTerm->year); ?><?php endif; ?>).
+            Prior-term balances appear here as <strong>Balance B/F</strong> after promotion.
+            Select another term in the filter to view historical invoices.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
     
     <div class="card filter-card mb-3">
         <div class="card-body">
@@ -48,11 +58,12 @@
                     <div class="col-md-3">
                         <label class="form-label"><i class="fa fa-calendar me-1"></i>Term</label>
                         <select name="term_id" class="form-select">
-                            <option value="">All Terms</option>
+                            <option value="">Current term (default)</option>
                             <?php $__currentLoopData = $terms; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $term): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                <option value="<?php echo e($term->id); ?>" <?php echo e(request('term_id') == $term->id ? 'selected' : ''); ?>>
+                                <option value="<?php echo e($term->id); ?>" <?php echo e((request('term_id') ?: ($currentTerm->id ?? '')) == $term->id ? 'selected' : ''); ?>>
                                     <?php echo e($term->name); ?> - <?php echo e($term->year); ?>
 
+                                    <?php if($currentTerm && $term->id === $currentTerm->id): ?> (current) <?php endif; ?>
                                 </option>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
@@ -94,7 +105,7 @@
                 <form action="<?php echo e(route('balances.statements.bulk')); ?>" method="POST" class="d-inline">
                     <?php echo csrf_field(); ?>
                     <input type="hidden" name="class_id" value="<?php echo e(request('class_id')); ?>">
-                    <input type="hidden" name="term_id" value="<?php echo e(request('term_id')); ?>">
+                    <input type="hidden" name="term_id" value="<?php echo e(request('term_id') ?: ($currentTerm->id ?? '')); ?>">
                     <button type="submit" class="btn btn-outline-primary btn-action">
                         <i class="fa fa-file-pdf me-1"></i>Balance Statements
                     </button>
@@ -103,7 +114,7 @@
                 <form action="<?php echo e(route('balances.sms.send')); ?>" method="POST" class="d-inline">
                     <?php echo csrf_field(); ?>
                     <input type="hidden" name="class_id" value="<?php echo e(request('class_id')); ?>">
-                    <input type="hidden" name="term_id" value="<?php echo e(request('term_id')); ?>">
+                    <input type="hidden" name="term_id" value="<?php echo e(request('term_id') ?: ($currentTerm->id ?? '')); ?>">
                     <button type="submit" class="btn btn-outline-primary btn-action">
                         <i class="fa fa-sms me-1"></i>Send SMS
                     </button>
@@ -140,8 +151,15 @@
                         <?php $__empty_1 = true; $__currentLoopData = $invoices; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $invoice): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                             <?php
                                 $student = $invoice->student;
+                                $className = $invoice->enrollment?->schoolClass?->name;
+                                if ($className && $invoice->enrollment?->stream?->name) {
+                                    $className .= ' ' . $invoice->enrollment->stream->name;
+                                }
                                 $paid = $invoice->amount_paid;
                                 $balance = $invoice->balance;
+                                $canPay = $invoice->isCollectible()
+                                    && $currentTerm
+                                    && (int) $invoice->term_id === (int) $currentTerm->id;
                                 $rowId = "details-row-{$i}";
                                 $paymentRowId = "payment-row-{$i}";
                             ?>
@@ -152,18 +170,18 @@
                                     <div class="d-flex align-items-center">
                                         <div class="avatar">
                                             
-                                            <?php echo e(strtoupper(substr($student->name, 0, 1))); ?>
+                                            <?php echo e(strtoupper(substr($student?->full_name ?? '?', 0, 1))); ?>
 
                                             
                                         </div>
                                         <div class="ms-3">
-                                            <div class="student-name"><?php echo e($student->name); ?></div>
-                                            <div class="student-id"><?php echo e($student->admission); ?></div>
+                                            <div class="student-name"><?php echo e($student?->full_name ?? '—'); ?></div>
+                                            <div class="student-id"><?php echo e($student?->admission ?? '—'); ?></div>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge-class"><?php echo e($student->class->name ?? '-'); ?></span>
+                                    <span class="badge-class"><?php echo e($className ?? '—'); ?></span>
                                 </td>
                                 <td>
                                     <span class="amount-text">KSh <?php echo e(number_format($invoice->total_amount, 2)); ?></span>
@@ -172,7 +190,9 @@
                                     <span class="amount-text text-success">KSh <?php echo e(number_format($paid, 2)); ?></span>
                                 </td>
                                 <td>
-                                    <?php if($balance > 0): ?>
+                                    <?php if($invoice->status === 'transferred'): ?>
+                                        <span class="badge bg-secondary">Transferred</span>
+                                    <?php elseif($balance > 0): ?>
                                         <span class="badge badge-danger">
                                             KSh <?php echo e(number_format($balance, 2)); ?>
 
@@ -193,6 +213,7 @@
                                             <i class="fa fa-eye"></i>
                                             <span class="btn-text">Details</span>
                                         </button>
+                                        <?php if($canPay): ?>
                                         <button type="button"
                                                 class="btn btn-sm btn-success toggle-row"
                                                 data-target="<?php echo e($paymentRowId); ?>"
@@ -201,6 +222,7 @@
                                             <i class="fa fa-plus"></i>
                                             <span class="btn-text">Payment</span>
                                         </button>
+                                        <?php endif; ?>
                                         <a href="<?php echo e(route('statements.single', $invoice->student->id)); ?>" 
                                            class="btn btn-sm btn-light" 
                                            title="Print Statement">
@@ -295,6 +317,7 @@
                             </tr>
 
                             
+                            <?php if($canPay): ?>
                             <tr class="payment-form-row d-none" id="<?php echo e($paymentRowId); ?>">
                                 <td colspan="6" class="payment-cell">
                                     <div class="payment-content">
@@ -331,6 +354,7 @@
                                     </div>
                                 </td>
                             </tr>
+                            <?php endif; ?>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr>
                                 <td colspan="6" class="text-center py-5">

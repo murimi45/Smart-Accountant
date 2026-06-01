@@ -18,7 +18,7 @@ class ClassFeeController extends Controller
 
     public function addClassFee(){
         $data['classes']=Classes::all();
-        $data['terms']=Term::all();
+        $data['terms']=Term::with('academicYear')->orderByDesc('start_date')->get();
         return view('classfee.add', $data);
     }
 
@@ -32,11 +32,16 @@ class ClassFeeController extends Controller
             'term_id'=>'required|exists:terms,id',
             'status'=>'required|string|in:active,inactive'       
         ]);
-        // Get year from term
-        $term=Term::findOrFail($validated['term_id']);
-        $validated['year']=$term->year;
-        $validated['school_id']=$schoolId;
+        $term = Term::with('academicYear')->findOrFail($validated['term_id']);
 
+        if (blank($term->year)) {
+            return redirect()->back()->withErrors([
+                'term_id' => 'The selected term has no academic year. Please assign one on the term first.',
+            ])->withInput();
+        }
+
+        $validated['year'] = $term->year;
+        $validated['school_id'] = $schoolId;
 
          $exists = ClassFee::where('school_id', $schoolId)
         ->where('class_id', $validated['class_id'])
@@ -58,7 +63,7 @@ class ClassFeeController extends Controller
 
     public function editClassFee($id){
            $classfee=ClassFee::findOrFail($id);
-           $terms=Term::all();
+           $terms=Term::with('academicYear')->orderByDesc('start_date')->get();
            $classes=Classes::all();
 
            return view('classfee.edit', compact('classfee','terms','classes'));
@@ -76,11 +81,16 @@ class ClassFeeController extends Controller
             'term_id'=>'required|exists:terms,id',
             'status'=>'required|string|in:active,inactive' ]);
 
-        // Get year from term
-        $term=Term::findOrFail($validated['term_id']);
-        $validated['year']=$term->year;
+        $term = Term::with('academicYear')->findOrFail($validated['term_id']);
 
-        $validated['school_id']=$schoolId;
+        if (blank($term->year)) {
+            return redirect()->back()->withErrors([
+                'term_id' => 'The selected term has no academic year. Please assign one on the term first.',
+            ])->withInput();
+        }
+
+        $validated['year'] = $term->year;
+        $validated['school_id'] = $schoolId;
 
         $classfee->update($validated);
 

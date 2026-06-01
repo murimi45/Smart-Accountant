@@ -59,7 +59,7 @@
                     <h5 class="mb-0">
                         <i class="fa fa-list me-2"></i>Grade List
                     </h5>
-                    <small class="text-muted">Manage grade levels and progression paths</small>
+                    <small class="text-muted">Manage grade levels and progression order</small>
                 </div>
                 <span class="badge bg-light text-dark">{{ count($getRecord) }} Grades</span>
             </div>
@@ -71,8 +71,8 @@
                     <thead>
                         <tr>
                             <th style="width: 60px;">ID</th>
-                            <th>Class Name</th>
-                            <th>Next Class</th>
+                            <th>Grade Name</th>
+                            <th style="width: 120px;">Order</th>
                             <th style="width: 200px;">Actions</th>
                         </tr>
                     </thead>
@@ -89,18 +89,11 @@
                                     </div>
                                     <div class="ms-3">
                                         <div class="grade-name">{{ $value->name }}</div>
-                                        @if($value->description)
-                                            <div class="grade-description">{{ $value->description }}</div>
-                                        @endif
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                @if($value->next_class_id)
-                                    <span class="next-class-badge">{{ $value->nextClass->name ?? 'N/A' }}</span>
-                                @else
-                                    <span class="text-muted">None</span>
-                                @endif
+                                <span class="badge bg-primary fs-6">#{{ $value->order }}</span>
                             </td>
                             <td>
                                 <div class="action-buttons">
@@ -108,7 +101,7 @@
                                         class="btn btn-sm btn-light editBtn"
                                         data-id="{{ $value->id }}"
                                         data-name="{{ $value->name }}"
-                                        data-next-class-id="{{ $value->next_class_id }}"
+                                        data-order="{{ $value->order }}"
                                         title="Edit Grade">
                                         <i class="fa fa-edit"></i>
                                     </button>
@@ -142,12 +135,13 @@
     </div>
 </div>
 
-{{-- Edit Class Modal --}}
+{{-- Edit Grade Modal --}}
 <div class="modal fade" id="editClassModal" tabindex="-1" aria-labelledby="editClassModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <form id="editClassForm" method="POST" action="">
                 @csrf
+                <input type="hidden" name="id" id="editId">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editClassModalLabel">
                         <i class="fa fa-edit me-2"></i>Edit Grade
@@ -157,31 +151,28 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="editName" class="form-label">
-                            Class Name <span class="text-danger">*</span>
+                            Grade Name <span class="text-danger">*</span>
                         </label>
                         <input type="text" 
                                id="editName" 
                                name="name" 
                                class="form-control" 
-                               placeholder="Enter class name"
+                               placeholder="Enter grade name"
                                required>
                     </div>
 
-                    <div class="mb-0">
-                        <label for="editNextClass" class="form-label">
-                            Next Class (Optional)
+                    <div class="mb-3">
+                        <label for="editOrder" class="form-label">
+                            Order <span class="text-danger">*</span>
                         </label>
-                        <select id="editNextClass" 
-                                name="next_class_id" 
-                                class="form-select">
-                            <option value="">Select Next Class</option>
-                            @foreach($getRecord as $class)
-                                <option value="{{ $class->id }}">{{ $class->name }}</option>
-                            @endforeach
-                        </select>
-                        <small class="text-muted mt-1 d-block">
-                            Students will automatically progress to this class upon promotion
-                        </small>
+                        <input type="number" 
+                               id="editOrder" 
+                               name="order" 
+                               class="form-control" 
+                               min="1"
+                               placeholder="Enter order (e.g., 1, 2, 3)"
+                               required>
+                        <small class="text-muted">This determines the progression sequence</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -197,7 +188,7 @@
     </div>
 </div>
 
-{{-- Add Class Modal --}}
+{{-- Add New Grade(s) Modal --}}
 <div class="modal fade" id="addClassModal" tabindex="-1" aria-labelledby="addClassModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -215,24 +206,24 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">
-                                        Class Name <span class="text-danger">*</span>
+                                        Grade Name <span class="text-danger">*</span>
                                     </label>
                                     <input type="text" 
                                            name="classes[0][name]" 
                                            class="form-control" 
-                                           placeholder="Enter class name"
+                                           placeholder="e.g. Grade 1 / Class 1"
                                            required>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">
-                                        Next Class (Optional)
+                                        Order <span class="text-danger">*</span>
                                     </label>
-                                    <select name="classes[0][next_class_id]" class="form-select next-class-select">
-                                        <option value="">Select Next Class</option>
-                                        @foreach($getRecord as $class)
-                                            <option value="{{ $class->id }}">{{ $class->name }}</option>
-                                        @endforeach
-                                    </select>
+                                    <input type="number" 
+                                           name="classes[0][order]" 
+                                           class="form-control" 
+                                           min="1"
+                                           placeholder="e.g. 1"
+                                           required>
                                 </div>
                             </div>
                         </div>
@@ -240,13 +231,13 @@
 
                     <div class="mb-3">
                         <button type="button" class="btn btn-outline-success btn-sm" id="addMoreInput">
-                            <i class="fa fa-plus-circle me-1"></i>Add Another Class
+                            <i class="fa fa-plus-circle me-1"></i>Add Another Grade
                         </button>
                     </div>
 
                     <div class="alert alert-info">
                         <i class="fa fa-info-circle me-2"></i>
-                        <small>Tip: Add classes in order (e.g., Grade 1, Grade 2, Grade 3) and set their progression paths</small>
+                        <small>Tip: Add grades in ascending order (1 → 2 → 3). Order determines student promotion sequence.</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -254,7 +245,7 @@
                         <i class="fa fa-times me-1"></i>Close
                     </button>
                     <button type="submit" class="btn btn-success">
-                        <i class="fa fa-save me-1"></i>Save Classes
+                        <i class="fa fa-save me-1"></i>Save Grades
                     </button>
                 </div>
             </form>
@@ -262,7 +253,7 @@
     </div>
 </div>
 
-{{-- Promote Students Modal --}}
+{{-- Promote Students Modal (Unchanged) --}}
 <div class="modal fade" id="promoteModal" tabindex="-1" aria-labelledby="promoteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -270,32 +261,47 @@
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title" id="promoteModalLabel">
-                        <i class="fa fa-level-up-alt me-2"></i>Promote Students to Next Class
+                        <i class="fa fa-level-up-alt me-2"></i>Promote Students to Next Grade
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
                 <div class="modal-body">
                     <p class="text-muted mb-3">
-                        This action will promote all eligible students to the next class and create invoices for the new term.
+                        This will promote all eligible students to the next grade based on <strong>Order</strong>.
                     </p>
 
                     <div class="mb-3">
                         <label for="academic_year" class="form-label">
-                            Academic Year <span class="text-danger">*</span>
+                            Target Academic Year <span class="text-danger">*</span>
                         </label>
-                        <input type="text" 
-                            name="academic_year" 
-                            id="academic_year" 
-                            class="form-control" 
-                            value="{{ date('Y') }}" 
-                            placeholder="Enter academic year (e.g., 2025)" 
-                            required>
+                        @if(($academicYears ?? collect())->isEmpty())
+                            <p class="text-danger mb-0" style="font-size:13px;">
+                                No academic year exists after
+                                <strong>{{ $currentAcademicYear?->name ?? 'the current year' }}</strong>.
+                                Create the next year and its first term first.
+                            </p>
+                        @else
+                            <select name="academic_year" id="academic_year" class="form-select" required>
+                                @foreach($academicYears as $ay)
+                                    <option value="{{ $ay->name }}"
+                                        {{ ($nextAcademicYear && $nextAcademicYear->id === $ay->id) ? 'selected' : '' }}>
+                                        {{ $ay->name }}
+                                        @if($nextAcademicYear && $nextAcademicYear->id === $ay->id) (next) @endif
+                                    </option>
+                                @endforeach
+                            </select>
+                            @if($currentAcademicYear)
+                                <small class="text-muted d-block mt-1">
+                                    Current year: <strong>{{ $currentAcademicYear->name }}</strong>. Only forward years are allowed.
+                                </small>
+                            @endif
+                        @endif
                     </div>
 
                     <div class="alert alert-warning">
                         <i class="fa fa-exclamation-triangle me-2"></i>
-                        <strong>Note:</strong> This process cannot be undone. Please confirm before proceeding.
+                        <strong>Note:</strong> This process cannot be undone.
                     </div>
                 </div>
 
@@ -303,7 +309,7 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="fa fa-times me-1"></i>Cancel
                     </button>
-                    <button type="submit" class="btn btn-warning">
+                    <button type="submit" class="btn btn-warning" @if(($academicYears ?? collect())->isEmpty()) disabled @endif>
                         <i class="fa fa-check me-1"></i>Confirm Promotion
                     </button>
                 </div>
@@ -311,6 +317,7 @@
         </div>
     </div>
 </div>
+
 
 <style>
 /* Base Variables */
@@ -709,18 +716,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const inputGroup = document.createElement('div');
             inputGroup.classList.add('class-input-group', 'mb-3');
 
-            const firstSelect = container.querySelector('.next-class-select');
-            let optionsHtml = '<option value="">Select Next Class</option>';
-            if (firstSelect) {
-                Array.from(firstSelect.options).forEach(opt => {
-                    optionsHtml += `<option value="${opt.value}">${opt.text}</option>`;
-                });
-            } else {
-                @foreach($getRecord as $class)
-                    optionsHtml += `<option value="{{ $class->id }}">{{ $class->name }}</option>`;
-                @endforeach
-            }
-
             inputGroup.innerHTML = `
                 <button type="button" class="btn btn-sm btn-danger remove-input">
                     <i class="fa fa-times"></i>
@@ -728,22 +723,24 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label">
-                            Class Name <span class="text-danger">*</span>
+                            Grade Name <span class="text-danger">*</span>
                         </label>
-                        <input type="text" 
-                               name="classes[${classInputCounter}][name]" 
-                               class="form-control" 
-                               placeholder="Enter class name"
+                        <input type="text"
+                               name="classes[${classInputCounter}][name]"
+                               class="form-control"
+                               placeholder="e.g. Grade 1 / Class 1"
                                required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">
-                            Next Class (Optional)
+                            Order <span class="text-danger">*</span>
                         </label>
-                        <select name="classes[${classInputCounter}][next_class_id]" 
-                                class="form-select next-class-select">
-                            ${optionsHtml}
-                        </select>
+                        <input type="number"
+                               name="classes[${classInputCounter}][order]"
+                               class="form-control"
+                               min="1"
+                               placeholder="e.g. ${classInputCounter + 1}"
+                               required>
                     </div>
                 </div>
             `;
@@ -766,7 +763,7 @@ document.addEventListener('DOMContentLoaded', function () {
             button.addEventListener('click', function() {
                 const id = this.getAttribute('data-id');
                 const name = this.getAttribute('data-name');
-                const nextClassId = this.getAttribute('data-next-class-id');
+                const order = this.getAttribute('data-order');
 
                 const editForm = document.getElementById('editClassForm');
                 if (editForm) {
@@ -776,20 +773,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 const nameInput = document.getElementById('editName');
                 if (nameInput) nameInput.value = name || '';
 
-                const nextClassSelect = document.getElementById('editNextClass');
-                if (nextClassSelect) {
-                    nextClassSelect.value = nextClassId || '';
-
-                    Array.from(nextClassSelect.options).forEach(option => {
-                        if (option.value == id) {
-                            option.disabled = true;
-                            option.style.display = 'none';
-                        } else {
-                            option.disabled = false;
-                            option.style.display = 'block';
-                        }
-                    });
-                }
+                const orderInput = document.getElementById('editOrder');
+                if (orderInput) orderInput.value = order || '';
 
                 const editModalEl = document.getElementById('editClassModal');
                 if (editModalEl) {

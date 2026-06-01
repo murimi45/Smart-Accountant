@@ -71,19 +71,22 @@
                                 <i class="fa fa-calendar-plus me-1"></i>To Term
                                 <span class="text-danger">*</span>
                             </label>
-                            <select name="to_term_id" class="form-select" required>
-                                <option value="">Select Next Term</option>
-                                @foreach ($terms as $term)
-                                    @if ($term->id != $currentTerm->id)
-                                        <option value="{{ $term->id }}">{{ $term->name }} ({{ $term->year }})</option>
-                                    @endif
-                                @endforeach
+                            <select name="to_term_id" class="form-select" required
+                                @if(!$nextTerm) disabled @endif>
+                                @if($nextTerm)
+                                    <option value="{{ $nextTerm->id }}" selected>
+                                        {{ $nextTerm->name }} ({{ $nextTerm->year }})
+                                    </option>
+                                @else
+                                    <option value="">No next term — create the next term first</option>
+                                @endif
                             </select>
-                            <small class="text-muted">Select the term to promote students to</small>
+                            <small class="text-muted">Next term in sequence after {{ $currentTerm->name }}</small>
                         </div>
 
                         <div class="col-md-2">
-                            <button type="submit" class="btn btn-success w-100">
+                            <button type="submit" class="btn btn-success w-100"
+                                @if(!$nextTerm) disabled @endif>
                                 <i class="fa fa-rocket me-2"></i>Promote
                             </button>
                         </div>
@@ -105,7 +108,7 @@
                 <h5 class="mb-0">
                     <i class="fa fa-calendar-alt me-2"></i>Term List
                 </h5>
-                <span class="badge bg-light text-dark">{{ count($getRecord) }} Terms</span>
+                <span class="badge bg-light text-dark">{{ count($terms) }} Terms</span>
             </div>
         </div>
 
@@ -124,7 +127,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($getRecord as $value)
+                        @forelse($terms as $value)
                             <tr>
                                 <td>
                                     <span class="row-number">#{{ $value->id }}</span>
@@ -140,7 +143,7 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="year-badge">{{ $value->year }}</span>
+                                    <span class="year-badge">{{ $value->academicYear->name }}</span>
                                 </td>
                                 <td>
                                     <span class="date-text">
