@@ -35,7 +35,7 @@ use Illuminate\Support\Facades\Auth;
 // Route::post('/login', [RegisterController::class, 'login'])->name('login');
 
 // ✅ Accessible after login but before 2FA verification (for initial setup)
-Route::get('/', function () {
+Route::get('/g', function () {
     return view('welcome');
 })->name('welcome');
 
