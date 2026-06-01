@@ -42,7 +42,13 @@ class MpesaController extends Controller
      */
     public function confirmPayment(Request $request, InvoiceService $invoiceService)
 {
-    Log::info('M-Pesa Confirmation Request:', $request->all());
+    $rawBody = $request->getContent();
+
+// Decode to array if you need to access fields
+$data = json_decode($rawBody, true);
+
+// Log the raw payload
+Log::info('M-Pesa Confirmation Request:', ['body' => $rawBody]);
 
     $adm          = $request->input('BillRefNumber'); 
     $amount       = $request->input('TransAmount');
@@ -99,20 +105,26 @@ class MpesaController extends Controller
         ]);
     }
 
-    // ✅ Find invoice for student + term
     $invoice = Invoice::where('student_id', $student->id)
         ->where('term_id', $currentTerm->id)
+        ->collectible()
         ->first();
 
     if (! $invoice) {
         return response()->json([
             "ResultCode" => 1,
-            "ResultDesc" => "No invoice found for student in current term"
+            "ResultDesc" => "No payable invoice found for student in current term"
         ]);
     }
 
-    // ✅ Apply payment
-    $invoiceService->paymentMade($invoice, $amount, 'mpesa');
+    try {
+        $invoiceService->paymentMade($invoice, $amount, 'mpesa');
+    } catch (\InvalidArgumentException $e) {
+        return response()->json([
+            "ResultCode" => 1,
+            "ResultDesc" => $e->getMessage(),
+        ]);
+    }
 
     Transaction::create([
         'school_id'   => $channel->school_id,

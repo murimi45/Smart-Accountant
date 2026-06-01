@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('invoice_payments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('invoice_id')->constrained()->onDelete('cascade');
+            $table->foreignId('invoice_id')->constrained();
             $table->decimal('amount', 10, 2);
             $table->string('method')->nullable(); // e.g. Mpesa, Bank, Cash
             $table->date('payment_date')->default(now());

@@ -9,5 +9,8 @@ Route::get('/ping', function () {
 
 use App\Http\Controllers\MpesaController;
 
-Route::post('/mpesa/validate', [MpesaController::class, 'validatePayment']);
-Route::post('/mpesa/confirm', [MpesaController::class, 'confirmPayment']);
+Route::post('/payment/validate', [MpesaController::class, 'validatePayment']);
+Route::post('/payment/confirm', [MpesaController::class, 'confirmPayment']);
+
+
+Route::post('/sms/delivery-report', [\App\Http\Controllers\SmsDeliveryController::class, 'receive']);

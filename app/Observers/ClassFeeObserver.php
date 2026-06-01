@@ -1,46 +1,57 @@
 <?php
 
 namespace App\Observers;
-use App\Services\InvoiceService;
+
 use App\Models\ClassFee;
+use App\Models\StudentEnrollment;
+use App\Services\InvoiceService;
 
 class ClassFeeObserver
 {
-    public function created(ClassFee $classFee)
+    public function updated(ClassFee $classFee): void
     {
-        foreach ($classFee->class->students as $student) {
-            app(InvoiceService::class)
-                ->createOrUpdateInvoice($student, $classFee->term_id);
+        $this->syncInvoicesForClassFee($classFee);
+    }
+
+    public function created(ClassFee $classFee): void
+    {
+        $this->syncInvoicesForClassFee($classFee);
+    }
+
+    private function syncInvoicesForClassFee(ClassFee $classFee): void
+    {
+        $enrollments = StudentEnrollment::where('class_id', $classFee->class_id)
+            ->where('term_id', $classFee->term_id)
+            ->whereIn('status', [
+                StudentEnrollment::STATUS_ACTIVE,
+                StudentEnrollment::STATUS_REPEATING,
+            ])
+            ->with('student')
+            ->get();
+
+        foreach ($enrollments as $enrollment) {
+            if (!$enrollment->student) {
+                continue;
+            }
+
+            app(InvoiceService::class)->createOrUpdateInvoice(
+                $enrollment->student,
+                $classFee->term_id,
+                $enrollment->id
+            );
         }
     }
 
-    public function updated(ClassFee $classFee)
-    {
-        foreach ($classFee->class->students as $student) {
-            app(InvoiceService::class)
-                ->createOrUpdateInvoice($student, $classFee->term_id);
-        }
-    }
-
-    /**
-     * Handle the ClassFee "deleted" event.
-     */
     public function deleted(ClassFee $classFee): void
     {
         //
     }
 
-    /**
-     * Handle the ClassFee "restored" event.
-     */
     public function restored(ClassFee $classFee): void
     {
         //
     }
 
-    /**
-     * Handle the ClassFee "force deleted" event.
-     */
     public function forceDeleted(ClassFee $classFee): void
     {
         //

@@ -12,9 +12,22 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-            $middleware->alias([
-                'school' => \App\Http\Middleware\EnsureUserIsAuthenticated::class,]);
+        $middleware->alias([
+            'school' => \App\Http\Middleware\EnsureUserIsAuthenticated::class,
+            'role' => \App\Http\Middleware\RoleMiddleware::class,
+            '2fa' => \App\Http\Middleware\EnsureTwoFactorPassed::class,
+
+        ]);
     })
+    ->withMiddleware(function (Middleware $middleware) {
+    $middleware->validateCsrfTokens(except: [
+        'payment/confirm',
+        'payment/validate',
+    ]);
+})
     ->withExceptions(function (Exceptions $exceptions) {
         //
-    })->create();
+    })
+    ->withProviders([
+        App\Providers\FortifyServiceProvider::class,
+    ])->create();

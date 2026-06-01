@@ -3,8 +3,6 @@
 namespace App\Providers;
 use App\Models\Student; 
 use App\Models\Expense;
-use App\Observers\ExpenseObserver;
-use App\Observers\StudentObserver;
 use App\Models\ClassFee; 
 use App\Observers\ClassFeeObserver;
 use App\Models\StudentExtraFee; 
@@ -14,6 +12,10 @@ use App\Models\OtherIncome;
 use App\Observers\OtherIncomeObserver;
 use App\Models\InvoicePayment;
 use App\Observers\InvoicePaymentObserver;
+use App\Observers\ExpenseObserver;
+use App\Observers\StudentObserver;
+use App\Models\StudentEnrollment;
+use App\Observers\EnrollmentObserver;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -37,5 +39,6 @@ class AppServiceProvider extends ServiceProvider
         Expense::observe(ExpenseObserver::class);
         OtherIncome::observe(OtherIncomeObserver::class);
         InvoicePayment::observe(InvoicePaymentObserver::class);
+        StudentEnrollment::observe(EnrollmentObserver::class);
     }
 }

@@ -5,6 +5,8 @@ use App\Models\Expense;
 use App\Models\Term;
 use App\Models\ExpenseCategory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Notifications\ExpenseRecordedNotification;
 
 class ExpenseController extends Controller
 {
@@ -53,27 +55,41 @@ class ExpenseController extends Controller
     }
 
 
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'expense_category_id' => 'nullable|exists:expense_categories,id',
-            'description' => 'nullable|string',
-            'amount' => 'required|numeric|min:0.01',
-            'payment_method' => 'nullable|string',
-            'expense_date' => 'nullable|date',
-            'term_id'=>'required|exists:terms,id',
-            
-        ]);
-        $term=Term::findOrFail($data['term_id']);
-        $data['year']=$term->year;
-        $data['school_id'] = auth()->user()->school_id;
-        $data['created_by'] = auth()->id();
+   public function store(Request $request)
+{
+    $data = $request->validate([
+        'expense_category_id' => 'nullable|exists:expense_categories,id',
+        'description' => 'nullable|string',
+        'amount' => 'required|numeric|min:0.01',
+        'payment_method' => 'nullable|string',
+        'expense_date' => 'nullable|date',
+        'term_id' => 'required|exists:terms,id',
+    ]);
 
-        // ExpenseObserver will create the original cashbook entry
-        $expense = Expense::create($data);
+    $term = Term::findOrFail($data['term_id']);
+    $data['year'] = $term->year;
+    $data['school_id'] = auth()->user()->school_id;
+    $data['created_by'] = auth()->id();
 
-        return redirect()->route('expenses.index')->with('success', 'Expense recorded.');
-    }
+    // ✅ Create expense (your original logic)
+    $expense = Expense::create($data);
+
+    // ✅ Send dashboard notification (new logic)
+    $user = Auth::user();
+    $user->notify(new ExpenseRecordedNotification([
+        'title' => 'Expense Recorded',
+        'message' => 'An expense of KES ' 
+                        . number_format($expense->amount) 
+                        . ' for ' 
+                        . ($expense->category->name ?? 'General Expense') 
+                        . ' has been recorded.',
+    ]));
+
+    return redirect()
+        ->route('expenses.index')
+        ->with('success', 'Expense recorded.');
+}
+
 
     public function update(Request $request, Expense $expense)
     {

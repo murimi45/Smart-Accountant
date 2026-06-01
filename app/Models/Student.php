@@ -12,13 +12,14 @@ class Student extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable=['school_id',
-        'name',
-        'phone',
-        'admission',
-        'gender',
-        'class_id',
-        'term_id',];
+    protected $fillable = [
+    'school_id',
+    'full_name',
+    'guardian_name',
+    'phone',
+    'admission',
+    'gender',
+         ];
 
     protected static function booted()
     {
@@ -35,19 +36,13 @@ class Student extends Model
 
     public static function getRecord($request){
 
-        return self::when($request->class_id, fn($q)=>
-                      $q->where('class_id',$request->class_id))
-
-                      ->when($request->term_id, fn($q)=>
-                      $q->where('term_id',$request->class_id))
-
-                      ->when($request->admission, fn($q)=>
+        return self::when($request->admission, fn($q)=>
                       $q->where('admission','like','%'.$request->admission.'%'))
 
-                      ->when($request->name, fn($q)=>
-                      $q->where('name','like','%'.$request->name.'%'))
+                      ->when($request->full_name, fn($q)=>
+                      $q->where('full_name','like','%'.$request->full_name.'%'));
 
-                      ->get();
+                      
 
 
     }
@@ -67,6 +62,18 @@ class Student extends Model
     {
         return $this->hasMany(Invoice::class);
     }
+
+     public function enrollments()
+        {
+            return $this->hasMany(StudentEnrollment::class);
+        }
+    
+
+    public function currentEnrollment()
+{
+    return $this->hasOne(StudentEnrollment::class)->latest();
+}
+
 
    
 
