@@ -17,6 +17,8 @@ class ExtraFeeController extends Controller
 {
     public function listExtraFee(){
 
+        $this->authorize('viewAny', ExtraFee::class);
+
         $extraFees= ExtraFee::with('creator')->get();
         return view('extrafee.list', compact('extraFees'));
         
@@ -27,8 +29,10 @@ class ExtraFeeController extends Controller
         
     }
 
-    public function addExtraFee()
-      {     
+     public function addExtraFee()
+      {
+            $this->authorize('create', ExtraFee::class);
+
             $data['terms']=Term::all();
             return view('extrafee.add',$data);
      }
@@ -36,6 +40,8 @@ class ExtraFeeController extends Controller
 
      
     public function insertExtraFee(Request $request){
+        $this->authorize('create', ExtraFee::class);
+
         $schoolId=auth()->user()->school_id;
         $userId=auth()->id();
 
@@ -65,6 +71,7 @@ class ExtraFeeController extends Controller
         {
             
            $extrafee = ExtraFee::forSchool()->findOrFail($id);
+           $this->authorize('update', $extrafee);
            
            $terms = Term::with('academicYear')->orderByDesc('start_date')->get();
            return view('extrafee.edit', compact('extrafee','terms'));
@@ -74,6 +81,7 @@ class ExtraFeeController extends Controller
     public function editExtraFee(Request $request,$id){
 
         $extrafee = ExtraFee::forSchool()->findOrFail($id);
+        $this->authorize('update', $extrafee);
         $schoolId = auth()->user()->school_id;
 
         $validated= $request->validate([
@@ -96,7 +104,8 @@ class ExtraFeeController extends Controller
 
          public function deleteExtraFee($id)
       {
-              $extraFee = ExtraFee::forSchool()->findOrFail($id); 
+              $extraFee = ExtraFee::forSchool()->findOrFail($id);
+              $this->authorize('delete', $extraFee);
               $extraFee->delete();
               return redirect()->back()->with('success', 'Extra Fee deleted successfully.');
     }
@@ -117,6 +126,7 @@ public function assignStudentExtraFee(Request $request)
     ]);
 
     $extraFee = ExtraFee::forSchool()->findOrFail($request->extra_fee_id);
+    $this->authorize('update', $extraFee);
     $schoolId = auth()->user()->school_id;
 
     // collect student fee records for bulk insert/update

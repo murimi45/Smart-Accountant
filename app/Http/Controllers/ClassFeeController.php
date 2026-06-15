@@ -12,6 +12,8 @@ class ClassFeeController extends Controller
 {
     public function listClassFee()
     {
+        $this->authorize('viewAny', ClassFee::class);
+
         $classFees = ClassFee::orderByDesc('created_at')->get();
 
         return view('classfee.list', compact('classFees'));
@@ -19,6 +21,8 @@ class ClassFeeController extends Controller
 
     public function addClassFee()
     {
+        $this->authorize('create', ClassFee::class);
+
         $data['classes'] = Classes::orderBy('order')->get();
         $data['terms'] = Term::with('academicYear')->orderByDesc('start_date')->get();
 
@@ -27,6 +31,8 @@ class ClassFeeController extends Controller
 
     public function insertClassFee(Request $request)
     {
+        $this->authorize('create', ClassFee::class);
+
         $schoolId = auth()->user()->school_id;
         $validated = $request->validate([
             'amount' => 'nullable|string|max:20',
@@ -68,6 +74,8 @@ class ClassFeeController extends Controller
     public function editClassFee($id)
     {
         $classfee = ClassFee::forSchool()->findOrFail($id);
+        $this->authorize('update', $classfee);
+
         $terms = Term::with('academicYear')->orderByDesc('start_date')->get();
         $classes = Classes::orderBy('order')->get();
 
@@ -78,6 +86,7 @@ class ClassFeeController extends Controller
     {
         $schoolId = auth()->user()->school_id;
         $classfee = ClassFee::forSchool($schoolId)->findOrFail($id);
+        $this->authorize('update', $classfee);
 
         $validated = $request->validate([
             'amount' => 'nullable|string|max:20',
@@ -119,7 +128,9 @@ class ClassFeeController extends Controller
 
     public function deleteClassFee($id)
     {
-        ClassFee::forSchool()->findOrFail($id)->delete();
+        $classfee = ClassFee::forSchool()->findOrFail($id);
+        $this->authorize('delete', $classfee);
+        $classfee->delete();
 
         return redirect()->back()->with('success', 'Class Fee deleted successfully.');
     }

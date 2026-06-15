@@ -9,6 +9,8 @@ class IncomeCategoryController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', IncomeCategory::class);
+
         $categories = IncomeCategory::orderBy('name')->get();
 
         return view('income.incomecategories', compact('categories'));
@@ -16,6 +18,8 @@ class IncomeCategoryController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create', IncomeCategory::class);
+
         $request->validate([
             'name' => ['required', 'string', 'max:255', TenantRules::unique('income_categories', 'name')],
             'description' => 'nullable|string',
@@ -34,6 +38,7 @@ class IncomeCategoryController extends Controller
     public function update(Request $request, $id)
     {
         $category = IncomeCategory::forSchool()->findOrFail($id);
+        $this->authorize('update', $category);
 
         $request->validate([
             'name' => ['required', 'string', 'max:255', TenantRules::unique('income_categories', 'name', $category->id)],
@@ -52,7 +57,9 @@ class IncomeCategoryController extends Controller
 
     public function destroy($id)
     {
-        IncomeCategory::forSchool()->findOrFail($id)->delete();
+        $category = IncomeCategory::forSchool()->findOrFail($id);
+        $this->authorize('delete', $category);
+        $category->delete();
 
         return redirect()->route('income_categories.index')
             ->with('success', 'Income category deleted successfully.');

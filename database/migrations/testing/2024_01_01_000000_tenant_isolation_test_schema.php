@@ -23,7 +23,7 @@ return new class extends Migration
 
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('school_id')->constrained('schools')->cascadeOnDelete();
+            $table->foreignId('school_id')->nullable()->constrained('schools')->cascadeOnDelete();
             $table->string('admin_name')->nullable();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();

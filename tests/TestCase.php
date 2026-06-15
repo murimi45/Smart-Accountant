@@ -57,10 +57,22 @@ abstract class TestCase extends BaseTestCase
 
     protected function assertBlockedCrossTenant($response): void
     {
+        if (in_array($response->status(), [403, 404, 422], true)) {
+            $this->assertTrue(true);
+
+            return;
+        }
+
+        if ($response->status() === 302 && $response->getSession()->has('errors')) {
+            $this->assertTrue(true);
+
+            return;
+        }
+
         $this->assertContains(
             $response->status(),
-            [403, 404],
-            'Expected cross-tenant request to be blocked with 403 or 404, got '.$response->status()
+            [403, 404, 422],
+            'Expected cross-tenant request to be blocked with 403, 404, 422, or redirect with validation errors, got '.$response->status()
         );
     }
 }

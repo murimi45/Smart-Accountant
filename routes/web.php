@@ -55,7 +55,7 @@ Route::get('two-factor-challenge', [TwoFactorController::class, 'showChallenge']
 Route::post('two-factor-challenge', [TwoFactorController::class, 'verifyChallenge'])->name('twofactor.challenge.verify');
 
 // ✅ All logged-in users who have passed 2FA (or don't need it)
-Route::middleware(['auth', 'school', '2fa'])->group(function () {
+Route::middleware(['auth', 'school', 'tenant', '2fa'])->group(function () {
    
 
     // ✅ SHARED (Admin + Accountant)

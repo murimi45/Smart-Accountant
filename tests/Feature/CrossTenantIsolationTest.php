@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\PromotionRun;
 use App\Models\StudentEnrollment;
+use App\Models\User;
 use Tests\Support\TenantFixtureBuilder;
 use Tests\TestCase;
 
@@ -183,5 +185,94 @@ class CrossTenantIsolationTest extends TestCase
 
         // May redirect with success or business-rule error — not 403/404.
         $this->assertNotContains($response->status(), [403, 404]);
+    }
+
+    public function test_cross_tenant_promotion_term_start_is_blocked(): void
+    {
+        $termB = $this->fixtures['tenantB']['term'];
+        $toTermB = $this->fixtures['tenantB']['toTerm'];
+
+        $beforeCount = PromotionRun::where('school_id', $this->fixtures['schoolA']->id)->count();
+
+        $response = $this->actingAs($this->fixtures['adminA'])
+            ->from(route('enrollment.index'))
+            ->post(route('promotion.term'), [
+                'from_term_id' => $termB->id,
+                'to_term_id'   => $toTermB->id,
+            ]);
+
+        $this->assertBlockedCrossTenant($response);
+        $this->assertSame(
+            $beforeCount,
+            PromotionRun::where('school_id', $this->fixtures['schoolA']->id)->count()
+        );
+    }
+
+    public function test_cross_tenant_expense_category_update_is_blocked(): void
+    {
+        $categoryB = $this->fixtures['tenantB']['expenseCategory'];
+
+        $response = $this->actingAs($this->fixtures['adminA'])
+            ->put(route('expense_categories.update', $categoryB->id), [
+                'name'        => 'Hijacked',
+                'description' => 'Cross-tenant attempt',
+            ]);
+
+        $this->assertBlockedCrossTenant($response);
+        $this->assertDatabaseHas('expense_categories', [
+            'id'   => $categoryB->id,
+            'name' => 'Supplies',
+        ]);
+    }
+
+    public function test_cross_tenant_income_category_update_is_blocked(): void
+    {
+        $categoryB = $this->fixtures['tenantB']['incomeCategory'];
+
+        $response = $this->actingAs($this->fixtures['adminA'])
+            ->put(route('income_categories.update', $categoryB->id), [
+                'name'        => 'Hijacked',
+                'description' => 'Cross-tenant attempt',
+            ]);
+
+        $this->assertBlockedCrossTenant($response);
+        $this->assertDatabaseHas('income_categories', [
+            'id'   => $categoryB->id,
+            'name' => 'Donations',
+        ]);
+    }
+
+    public function test_cross_tenant_payment_channel_update_is_blocked(): void
+    {
+        $channelB = $this->fixtures['tenantB']['paymentChannel'];
+
+        $response = $this->actingAs($this->fixtures['adminA'])
+            ->put(route('payment_channels.update', $channelB->id), [
+                'type'            => 'paybill',
+                'identifier'      => 'HIJACKED',
+                'account_pattern' => null,
+            ]);
+
+        $this->assertBlockedCrossTenant($response);
+        $this->assertDatabaseHas('payment_channels', [
+            'id'         => $channelB->id,
+            'identifier' => 'PB'.$this->fixtures['schoolB']->id,
+        ]);
+    }
+
+    public function test_user_without_school_id_cannot_access_tenant_routes(): void
+    {
+        $platform = User::unguarded(fn () => User::create([
+            'school_id'          => null,
+            'admin_name'         => 'Platform',
+            'email'              => 'platform@probe.test',
+            'password'           => bcrypt('password'),
+            'role'               => User::ROLE_PLATFORM,
+            'two_factor_enabled' => false,
+        ]));
+
+        $response = $this->actingAs($platform)->get(route('dashboard'));
+
+        $response->assertForbidden();
     }
 }

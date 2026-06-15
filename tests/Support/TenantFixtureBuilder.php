@@ -4,8 +4,11 @@ namespace Tests\Support;
 
 use App\Models\AcademicYear;
 use App\Models\Classes;
+use App\Models\ExpenseCategory;
 use App\Models\ExtraFee;
+use App\Models\IncomeCategory;
 use App\Models\Invoice;
+use App\Models\PaymentChannel;
 use App\Models\PromotionRun;
 use App\Models\Schools;
 use App\Models\Stream;
@@ -80,7 +83,11 @@ class TenantFixtureBuilder
      *   invoice: Invoice,
      *   extraFee: ExtraFee,
      *   assignment: StudentExtraFee,
+     *   toTerm: Term,
      *   promotionRun: PromotionRun,
+     *   expenseCategory: ExpenseCategory,
+     *   incomeCategory: IncomeCategory,
+     *   paymentChannel: PaymentChannel,
      *   staffUser: User,
      * }
      */
@@ -175,6 +182,22 @@ class TenantFixtureBuilder
                 'type'         => 'term_promotion',
             ]);
 
+            $expenseCategory = ExpenseCategory::createForSchool($school->id, [
+                'name'        => 'Supplies',
+                'description' => 'Office supplies',
+            ]);
+
+            $incomeCategory = IncomeCategory::createForSchool($school->id, [
+                'name'        => 'Donations',
+                'description' => 'General donations',
+            ]);
+
+            $paymentChannel = PaymentChannel::createForSchool($school->id, [
+                'type'       => 'paybill',
+                'identifier' => 'PB'.$school->id,
+                'is_active'  => true,
+            ]);
+
             $staffUser = User::unguarded(function () use ($school) {
                 return User::create([
                     'school_id'          => $school->id,
@@ -189,6 +212,7 @@ class TenantFixtureBuilder
             return compact(
                 'year',
                 'term',
+                'toTerm',
                 'class',
                 'stream',
                 'student',
@@ -197,6 +221,9 @@ class TenantFixtureBuilder
                 'extraFee',
                 'assignment',
                 'promotionRun',
+                'expenseCategory',
+                'incomeCategory',
+                'paymentChannel',
                 'staffUser',
             );
         });

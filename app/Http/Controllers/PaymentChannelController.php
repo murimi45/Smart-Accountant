@@ -9,12 +9,16 @@ class PaymentChannelController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', PaymentChannel::class);
+
         $channels = PaymentChannel::where('school_id', auth()->user()->school_id)->get();
         return view('payment_channels.index', compact('channels'));
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create', PaymentChannel::class);
+
         $request->validate([
             'type' => 'required|in:paybill,till,send_money',
             'identifier' => ['required', Rule::unique('payment_channels', 'identifier')],
@@ -33,6 +37,9 @@ class PaymentChannelController extends Controller
 
     public function update(Request $request, $id)
     {
+        $channel = PaymentChannel::where('school_id', auth()->user()->school_id)->findOrFail($id);
+        $this->authorize('update', $channel);
+
         $request->validate([
             'type' => 'required|in:paybill,till,send_money',
             'identifier' => [
@@ -43,13 +50,10 @@ class PaymentChannelController extends Controller
             'school_id' => 'prohibited',
         ]);
 
-        $channel = PaymentChannel::where('school_id', auth()->user()->school_id)->findOrFail($id);
-
         $channel->update([
             'type' => $request->type,
             'identifier' => $request->identifier,
             'account_pattern' => $request->account_pattern,
-            
         ]);
 
         return redirect()->back()->with('success', 'Payment channel updated successfully.');
@@ -58,6 +62,7 @@ class PaymentChannelController extends Controller
     public function deactivate($id)
     {
         $channel = PaymentChannel::where('school_id', auth()->user()->school_id)->findOrFail($id);
+        $this->authorize('update', $channel);
         $channel->update(['is_active' => 0]);
         return redirect()->back()->with('success', 'Payment channel deactivated.');
     }
@@ -65,6 +70,7 @@ class PaymentChannelController extends Controller
     public function activate($id)
     {
         $channel = PaymentChannel::where('school_id', auth()->user()->school_id)->findOrFail($id);
+        $this->authorize('update', $channel);
         $channel->update(['is_active' => 1]);
         return redirect()->back()->with('success', 'Payment channel activated.');
     }

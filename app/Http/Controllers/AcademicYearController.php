@@ -10,6 +10,8 @@ class AcademicYearController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', AcademicYear::class);
+
         $years = AcademicYear::orderByDesc('start_date')->get();
 
         return view('academic_years.index', compact('years'));
@@ -17,6 +19,8 @@ class AcademicYearController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create', AcademicYear::class);
+
         $schoolId = Auth::user()->school_id;
 
         $request->validate([
@@ -44,6 +48,8 @@ class AcademicYearController extends Controller
 
     public function update(Request $request, AcademicYear $academicYear)
     {
+        $this->authorize('update', $academicYear);
+
         $schoolId = Auth::user()->school_id;
         AcademicYear::forSchool($schoolId)->findOrFail($academicYear->id);
 
@@ -74,6 +80,8 @@ class AcademicYearController extends Controller
 
     public function destroy(AcademicYear $academicYear)
     {
+        $this->authorize('delete', $academicYear);
+
         AcademicYear::forSchool()->findOrFail($academicYear->id);
 
         if ($academicYear->is_current) {

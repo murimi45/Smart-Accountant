@@ -22,6 +22,8 @@ class PromotionController extends Controller
     */
     public function promoteToNextTerm(Request $request)
     {
+        $this->authorize('create', PromotionRun::class);
+
         $request->validate([
             "from_term_id" => ["required", TenantRules::terms()],
             "to_term_id" => ["required", TenantRules::terms()],
@@ -120,6 +122,8 @@ class PromotionController extends Controller
     */
     public function promoteToNextClass(Request $request)
     {
+        $this->authorize('create', PromotionRun::class);
+
         $request->validate([
             "academic_year" => "required|string|max:50",
         ]);

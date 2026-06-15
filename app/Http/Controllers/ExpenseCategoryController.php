@@ -10,6 +10,8 @@ class ExpenseCategoryController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', ExpenseCategory::class);
+
         $categories = ExpenseCategory::latest()->paginate(10);
 
         return view('expenses.categories
@@ -23,6 +25,8 @@ class ExpenseCategoryController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create', ExpenseCategory::class);
+
         $request->validate([
             'name' => ['required', 'string', 'max:255', TenantRules::unique('expense_categories', 'name')],
             'description' => 'nullable|string',
@@ -38,13 +42,15 @@ class ExpenseCategoryController extends Controller
     public function edit(ExpenseCategory $expenseCategory)
     {
         ExpenseCategory::forSchool()->findOrFail($expenseCategory->id);
+        $this->authorize('update', $expenseCategory);
 
         return view('expense_categories.edit', compact('expenseCategory'));
     }
 
-    public function update(Request $request, ExpenseCategory $expenseCategory)
+    public function update(Request $request, $id)
     {
-        ExpenseCategory::forSchool()->findOrFail($expenseCategory->id);
+        $expenseCategory = ExpenseCategory::forSchool()->findOrFail($id);
+        $this->authorize('update', $expenseCategory);
 
         $request->validate([
             'name' => [
@@ -63,9 +69,10 @@ class ExpenseCategoryController extends Controller
             ->with('success', 'Expense category updated successfully.');
     }
 
-    public function destroy(ExpenseCategory $expenseCategory)
+    public function destroy($id)
     {
-        ExpenseCategory::forSchool()->findOrFail($expenseCategory->id);
+        $expenseCategory = ExpenseCategory::forSchool()->findOrFail($id);
+        $this->authorize('delete', $expenseCategory);
 
         $expenseCategory->delete();
 

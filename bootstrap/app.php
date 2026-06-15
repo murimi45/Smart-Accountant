@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'school' => \App\Http\Middleware\EnsureUserIsAuthenticated::class,
+            'tenant' => \App\Http\Middleware\EnsureUserHasSchool::class,
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             '2fa' => \App\Http\Middleware\EnsureTwoFactorPassed::class,
 

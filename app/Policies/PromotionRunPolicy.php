@@ -10,6 +10,11 @@ class PromotionRunPolicy
 {
     use ChecksSchoolAccess;
 
+    public function create(User $user): bool
+    {
+        return $this->isAdmin($user);
+    }
+
     public function view(User $user, PromotionRun $run): bool
     {
         return $this->isAdmin($user)
