@@ -190,6 +190,34 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        Schema::create('expense_categories', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+            $table->string('name');
+            $table->text('description')->nullable();
+            $table->timestamps();
+            $table->unique(['school_id', 'name']);
+        });
+
+        Schema::create('income_categories', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+            $table->string('name');
+            $table->text('description')->nullable();
+            $table->timestamps();
+            $table->unique(['school_id', 'name']);
+        });
+
+        Schema::create('payment_channels', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+            $table->string('type');
+            $table->string('identifier');
+            $table->string('account_pattern')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
+
         Schema::create('notifications', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('type');
@@ -203,6 +231,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('notifications');
+        Schema::dropIfExists('payment_channels');
+        Schema::dropIfExists('income_categories');
+        Schema::dropIfExists('expense_categories');
         Schema::dropIfExists('promotion_runs');
         Schema::dropIfExists('extra_fee_assignments');
         Schema::dropIfExists('extra_fees');
