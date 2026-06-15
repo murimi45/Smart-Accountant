@@ -439,7 +439,7 @@
                             <p class="text-danger mb-2" style="font-size:13px;">
                                 No academic year exists after
                                 <strong>{{ $currentAcademicYear?->name ?? 'the current year' }}</strong>.
-                                Create the next year and its first term before promoting.
+                                Create the next year with Term 1, Term 2, and Term 3 before promoting.
                             </p>
                         @else
                             <select name="academic_year" class="form-select" required>
@@ -465,7 +465,7 @@
                     </div>
                     <div class="alert-warning-box mt-2">
                         <i class="fa fa-exclamation-triangle me-2"></i>
-                        Ensure the first term for the target year has been created before proceeding.
+                        Ensure Term 1, Term 2, and Term 3 exist for the target academic year before proceeding.
                     </div>
                 </div>
                 <div class="modal-footer">

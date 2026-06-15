@@ -21,6 +21,7 @@ class PromotionProgressController extends Controller
         $run = PromotionRun::where('school_id', $schoolId)
             ->with(['fromTerm', 'toTerm', 'promotedBy'])
             ->findOrFail($promotionRunId);
+        $this->authorize('view', $run);
 
         $classes = Classes::where('school_id', $schoolId)
             ->orderBy('order')
@@ -42,6 +43,7 @@ class PromotionProgressController extends Controller
 
         $run = PromotionRun::where('school_id', $schoolId)
             ->findOrFail($promotionRunId);
+        $this->authorize('view', $run);
 
         // --- Job not picked up yet ---
         if ($run->status === 'pending') {

@@ -1,0 +1,399 @@
+Multitenancy hardening master checklist
+Tenant key: school_id
+Goal: Every read/write is scoped to the logged-in user’s school (or explicit school_id in jobs/webhooks).
+
+Phase 0 — Foundation (do this first)
+These changes make everything else easier and safer.
+
+#	Area	Current gap	Target
+0.1
+school middleware
+Aliased to EnsureUserIsAuthenticated (login only)
+Real middleware: user logged in, school_id present, optional subscription/active check
+0.2
+Tenant helper
+Ad hoc auth()->user()->school_id everywhere
+Central helper/trait e.g. tenantId(), forSchool($query)
+0.3
+Base tenant model
+Scopes duplicated inconsistently
+e.g. BelongsToSchool trait: SchoolScope + auto-set school_id on creating
+0.4
+Scoped lookup helper
+findOrFail($id) everywhere
+e.g. Model::forCurrentSchool()->findOrFail($id) used in all controllers
+0.5
+Scoped validation
+exists:classes,id is global
+Custom rule or Rule::exists(...)->where('school_id', $schoolId)
+0.6
+Route model binding
+Implicit binding bypasses scope on unscoped models
+Custom binding or policies on all {id} routes
+0.7
+Documentation
+Implicit rules
+TENANCY.md: every new table needs school_id, scope, tests
+Exit criteria: Middleware blocks users without school_id; one standard pattern documented for controllers.
+
+Phase 1 — Model layer (global scopes + create hooks)
+Register SchoolScope (or equivalent) on every tenant-owned table.
+
+Already scoped (verify + auto school_id on create)
+Student
+Term
+Classes
+ClassFee
+ExtraFee
+AcademicYear
+Invoice (custom scope — align with trait)
+Must add scope + creating hook
+Model	Has school_id?	Priority
+StudentEnrollment
+Yes
+Critical — imports scope but never registers it
+StudentExtraFee
+Yes
+Critical
+PromotionRun
+Yes
+High
+Expense
+Yes
+High
+ExpenseCategory
+Yes
+High
+OtherIncome
+Yes
+High
+IncomeCategory
+Yes
+High
+CashbookEntry
+Yes
+High
+PaymentChannel
+Yes
+Medium (some controllers already manual)
+Transaction
+Yes
+Medium
+SmsLog
+No column
+High — add school_id migration + scope
+StudentHistory
+No column
+Medium — add or scope via student
+InvoiceItem
+Via invoice
+Medium — scope via whereHas invoice or denormalize school_id
+InvoicePayment
+Via invoice
+Medium
+Indirect tenant models (scope via relationship or query)
+Model	Isolation strategy
+Stream
+No school_id — always query via whereHas('class', fn => school) or add school_id
+User
+No global scope (login needs cross-lookup) — policy + manual scope on admin/accountant CRUD
+Schools
+Platform table — not tenant-scoped
+Exit criteria: Model::all() while logged in never returns another school’s rows for tenant tables.
+
+Phase 2 — Critical IDOR fixes (highest risk)
+Fix these before polishing the rest.
+
+2.1 Enrollment module (EnrollmentController)
+index — add where('school_id', $schoolId); validate term_id / class_id belong to school
+updateStatus — scope enrollment lookup
+showCorrection / executeCorrection — scope enrollment lookup
+bulkUpdateStatus — scope each enrollment by school
+Validation: correct_class_id, correct_stream_id scoped to tenant
+2.2 User management
+AdminController — edit / update / destroy use User $admin with no school_id check → cross-tenant user edit/delete
+AccountantController — same issue on edit / update / destroy
+2.3 Streams (StreamController)
+index — Stream::latest()->get() returns all schools’ streams
+update / destroy — route binding not tenant-checked
+store — exists:classes,id not tenant-scoped
+EnrollmentController uses Stream::where('school_id', ...) but streams table has no school_id — fix query to use class relationship
+2.4 Extra fees (ExtraFeeController)
+StudentExtraFee::findOrFail($id) — unscoped (edit/delete assigned fees)
+listExtraFeeStudent — query may lack school filter on assignments
+2.5 Expenses (ExpenseController)
+Expense::findOrFail($id) — model unscoped
+ExpensePolicy checks created_by only, not school_id
+2.6 Income (IncomeCategoryController, OtherIncomeController)
+Mixed: some actions use where('school_id'), others findOrFail($id) only
+OtherIncomeController — manual $model->school_id !== auth... on one path only
+2.7 Promotion
+PromotionController — mostly good (explicit school_id)
+PromotionRun — add model scope; keep controller checks as defense in depth
+Exit criteria: Cross-tenant ID probe on enrollment, user, stream, extra fee, expense returns 404/403.
+
+Phase 3 — Controller-by-controller audit
+Work through every controller; pattern: list/create scoped, show/update/delete forSchool()->findOrFail, store sets school_id, filters validate FKs.
+
+Controller	Notes
+EnrollmentController
+Phase 2
+PromotionController
+Good; verify term/year FKs
+PromotionProgressController
+Good
+StudentController
+Student scoped; verify term_id on create
+TermController
+Scoped model; verify
+AcademicYearController
+Scoped; verify
+ClassController
+Scoped; verify
+ClassFeeController
+Scoped; verify duplicate checks
+ExtraFeeController
+Phase 2
+InvoiceController
+Invoice scoped; verify term_id filter
+StatementController
+Student binding scoped; bulk invoices use Invoice scope
+DashboardController
+Mostly manual; verify term_id / year params
+ExpenseController
+Phase 2 + policy
+ExpenseCategoryController
+Manual list; unscoped destroy?
+OtherIncomeController
+Partial
+IncomeCategoryController
+Partial
+CashbookController
+Manual where school_id — OK if consistent
+PaymentChannelController
+Good pattern — use as template
+StreamController
+Phase 2
+AdminController
+Phase 2
+AccountantController
+Phase 2
+SmsLogController
+SmsLog::latest() — all tenants
+RegisterController
+School creation / user assignment
+MpesaController
+API — see Phase 6
+SmsDeliveryController
+API webhook
+TwoFactorController
+User-scoped only
+Exit criteria: Checklist row per controller marked done with grep for unscoped findOrFail.
+
+Phase 4 — Validation & mass assignment
+#	Item
+4.1
+Replace all exists:table,id for tenant tables with school-scoped rules
+4.2
+unique: rules include school_id where needed (admission already per school?)
+4.3
+Request $fillable never accepts school_id from client — always set server-side
+4.4
+Bulk/array inputs (students[], statuses[]) — verify each ID belongs to school
+Tables needing scoped FK validation: classes, terms, streams, students, extra_fees, enrollments, invoices, expense_categories, income_categories, payment_channels, users (same school only).
+
+Phase 5 — Services, jobs, observers
+Component	Risk
+RunPromotion
+Uses explicit IDs — OK if job payload trusted; validate run school_id matches worker context
+SendSmsJob
+Loads SmsLog by ID only — no tenant check
+SendPaymentNotification
+Verify invoice/student school
+PromotionService
+Uses $schoolId param — OK
+InvoiceService
+Queue context: no auth → scopes off; uses enrollment chain — verify school_id on writes
+EnrollmentObserver
+Invoice creation — ensure enrollment has correct school_id
+ExtraFeeAssignmentObserver
+Batch flag — verify school on assignment
+ExpenseObserver
+Cashbook entries — school_id on create
+InvoicePaymentObserver
+Uses $student->school_id — OK
+All observers
+Audit creating hooks set school_id when auth missing
+Job rule: Every job carries schoolId; service methods require it; never rely on Auth in workers.
+
+Phase 6 — Public / API endpoints (no session)
+Endpoint	Issue
+MpesaController
+Student::where('admission', $adm) — admission may duplicate across schools
+MpesaController
+Payment channel → school — verify channel resolves correct tenant
+SmsDeliveryController
+Verify callback can’t update other schools’ logs
+CSRF exceptions
+payment/confirm, payment/validate — ensure strong server-side tenant resolution
+Fixes: Unique (school_id, admission); M-Pesa paybill/shortcode maps to school_id; never lookup student globally by admission alone.
+
+Phase 7 — Authorization (policies)
+Currently only ExpensePolicy exists, and it doesn’t check school_id.
+
+Add policies (or gates) for:
+
+StudentEnrollment
+Student
+Invoice
+PromotionRun
+StudentExtraFee
+User (admin/accountant same school)
+Stream (via class)
+Expense, OtherIncome
+Term, Classes (defense in depth)
+Pattern: $user->school_id === $model->school_id (+ role check).
+
+Wire: $this->authorize() in controllers; route middleware can: where useful.
+
+Phase 8 — Database constraints (defense in depth)
+Constraint	Purpose
+unique(school_id, admission) on students
+Stop duplicate admissions across tenants incorrectly; help M-Pesa
+FK school_id on all tenant tables
+Already mostly present
+Composite uniques per tenant
+e.g. extra fee assignments (you have partial migration)
+Add school_id to sms_logs
+Required for SMS isolation
+Indexes on (school_id, …)
+Performance under scope
+Audit: any table with school_id nullable that shouldn’t be.
+
+Phase 9 — Queries & reporting edge cases
+Area	Check
+Dashboard
+Term::find($termId), AcademicYear::find($id) — params tamperable
+Enrollment filter
+term_id in query string
+Invoice list
+term_id, class_id filters
+Statement bulk
+Invoice scope when auth present
+Raw / subqueries
+EnrollmentController class order subquery — ensure no leak
+withoutGlobalScopes()
+Grep codebase — each use must include explicit school_id
+Soft deletes
+Scoped queries include trashed only within tenant
+Phase 10 — Automated tests (prove isolation)
+Minimum test suite:
+
+Test	Assert
+Cross-tenant enrollment GET/POST
+403/404
+Cross-tenant invoice payment
+Blocked
+Cross-tenant user admin edit
+Blocked
+Cross-tenant stream delete
+Blocked
+Cross-tenant extra fee assignment
+Blocked
+Enrollment index with other school’s term_id
+Empty or 404
+Promotion run poll other school’s run id
+404
+Scoped validation rejects other school’s class_id
+422
+Factory pattern: School A, School B, same numeric IDs different tenants.
+
+Exit criteria: CI fails if any cross-tenant test regresses.
+
+Phase 11 — Ops & future-proofing
+#	Item
+11.1
+Log/report cross-tenant attempts (optional security log)
+11.2
+Cache keys prefixed with school_id if you add caching
+11.3
+File storage paths include school_id if uploads added
+11.4
+Seeders/factories always set school_id
+11.5
+Code review checklist for new features
+11.6
+Super-admin / platform role (if ever needed) — explicit withoutGlobalScopes + audit
+Recommended step-by-step order (what we do together)
+Step	Phase	Focus	Why first
+1
+0.1–0.3
+Real tenant middleware + BelongsToSchool trait
+Foundation
+2
+1
+StudentEnrollment + StudentExtraFee scopes
+Biggest leak
+3
+2.1
+EnrollmentController full fix + scoped validation
+Critical IDOR
+4
+2.2
+AdminController + AccountantController
+User takeover risk
+5
+2.3
+StreamController + stream queries via class
+Data leak in UI
+6
+1 + 2.4–2.6
+Remaining models + ExtraFee/Expense/Income controllers
+Broad coverage
+7
+6
+M-Pesa + admission uniqueness
+Public attack surface
+8
+1
+SmsLog migration + SmsLogController
+Logs leak all tenants
+9
+5
+Queue jobs carry schoolId
+Worker context
+10
+7
+Policies for top resources
+Standardize
+11
+8
+DB unique constraints
+DB-enforced safety
+12
+10
+Cross-tenant feature tests
+Regression net
+13
+3
+Remaining controller sweep
+Nothing left
+14
+11
+Ops/docs
+Long-term
+What is already in decent shape (don’t re-break)
+PaymentChannelController — explicit where('school_id')->findOrFail
+PromotionController / PromotionProgressController — explicit school on runs
+Core scoped models: Student, Term, Classes, Invoice (when auth present)
+Most create paths set school_id from auth
+Extra fee assignment table has multitenancy unique migration (partial)
+Summary
+No single layer is enough. You need:
+
+Middleware (who is the tenant)
+Global scopes (default query filter)
+Controller/policy checks (IDOR on {id} routes)
+Scoped validation (FK tampering)
+Job context (no auth in queue)
+API tenant resolution (M-

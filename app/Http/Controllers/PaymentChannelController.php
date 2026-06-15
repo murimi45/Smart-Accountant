@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\PaymentChannel;
+use Illuminate\Validation\Rule;
 class PaymentChannelController extends Controller
 {
     public function index()
@@ -16,16 +17,15 @@ class PaymentChannelController extends Controller
     {
         $request->validate([
             'type' => 'required|in:paybill,till,send_money',
-            'identifier' => 'required',
+            'identifier' => ['required', Rule::unique('payment_channels', 'identifier')],
             'account_pattern' => 'nullable',
+            'school_id' => 'prohibited',
         ]);
 
         PaymentChannel::create([
-            'school_id' => auth()->user()->school_id,
             'type' => $request->type,
             'identifier' => $request->identifier,
             'account_pattern' => $request->account_pattern,
-            
         ]);
 
         return redirect()->back()->with('success', 'Payment channel added successfully.');
@@ -35,9 +35,12 @@ class PaymentChannelController extends Controller
     {
         $request->validate([
             'type' => 'required|in:paybill,till,send_money',
-            'identifier' => 'required',
+            'identifier' => [
+                'required',
+                Rule::unique('payment_channels', 'identifier')->ignore($id),
+            ],
             'account_pattern' => 'nullable',
-            
+            'school_id' => 'prohibited',
         ]);
 
         $channel = PaymentChannel::where('school_id', auth()->user()->school_id)->findOrFail($id);

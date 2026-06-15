@@ -25,24 +25,32 @@ class AdminController extends Controller
             'email'=>'required|email|unique:users,email',
             'password'=>'required|string|min:6|confirmed',
             'role' => 'required|in:admin,Accountant',
+            'school_id' => 'prohibited',
         ]);
 
-        User::create([
+        $user = new User([
             'admin_name'=>$request->admin_name,
             'email'=>$request->email,
             'password'=>Hash::make($request->password),
-            
             'role' => $request->role,
-            'school_id'=>auth()->user()->school_id
         ]);
+        $user->school_id = auth()->user()->school_id;
+        $user->save();
 
         return redirect()->route('admins.index')->with('success','User added successfully');
     }
 
-    public function edit(User $admin){ return view('admins.create', compact('admin')); }
+    public function edit(User $admin)
+    {
+        $this->authorize('update', $admin);
+
+        return view('admins.create', compact('admin'));
+    }
 
     public function update(Request $request, User $admin)
     {
+        $this->authorize('update', $admin);
+
         $request->validate([
             'admin_name'=>'required|string|max:255',
             'email'=>'required|email|unique:users,email,'.$admin->id,
@@ -61,8 +69,9 @@ class AdminController extends Controller
 
     public function destroy(User $admin)
     {
+        $this->authorize('delete', $admin);
+
         $admin->delete();
         return redirect()->route('admins.index')->with('success','User deleted successfully');
     }
 }
-

@@ -6,6 +6,7 @@ use App\Models\Invoice;
 use App\Models\Classes;
 use App\Models\Term;
 use App\Services\InvoiceService;
+use App\Support\TenantFilters;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
 
@@ -13,7 +14,7 @@ class InvoiceController extends Controller
 {
     public function index(Request $request)
     {
-        $schoolId = auth()->user()->school_id;
+        $schoolId = TenantFilters::validate($request);
         $currentTerm = InvoiceService::currentTermForSchool($schoolId);
 
         $query = Invoice::with([
@@ -24,6 +25,7 @@ class InvoiceController extends Controller
                 'items',
                 'payments',
             ])
+            ->where('school_id', $schoolId)
             ->excludeVoided();
 
         if ($request->filled('term_id')) {
@@ -40,9 +42,10 @@ class InvoiceController extends Controller
         }
 
         if ($request->filled('class_id')) {
-            $query->whereHas('enrollment', function ($q) use ($request) {
-                $q->where('class_id', $request->class_id);
-            });
+            $query->whereHas('enrollment', TenantFilters::enrollmentClassFilter(
+                $schoolId,
+                (int) $request->class_id
+            ));
         }
 
         // Search by student name or admission — student.full_name (not name)
@@ -54,14 +57,16 @@ class InvoiceController extends Controller
         }
 
         $invoices = $query->latest()->paginate(25)->withQueryString();
-        $classes  = Classes::orderBy('order')->get();
-        $terms    = Term::with('academicYear')->orderByDesc('start_date')->get();
+        $classes  = Classes::where('school_id', $schoolId)->orderBy('order')->get();
+        $terms    = Term::where('school_id', $schoolId)->with('academicYear')->orderByDesc('start_date')->get();
 
         return view('invoices.showinvoice', compact('invoices', 'classes', 'terms', 'currentTerm'));
     }
 
     public function storePayment(Request $request, Invoice $invoice)
     {
+        $this->authorize('recordPayment', $invoice);
+
         $request->validate([
             'amount' => 'required|numeric|min:1',
             'method' => 'required|string|max:50',

@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Middleware;
 
+use App\Support\CrossTenantSecurityLog;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,6 +18,7 @@ public function handle(Request $request, Closure $next, ...$roles)
 
     
     if (!in_array($userRole, $allowedRoles)) {
+        CrossTenantSecurityLog::roleDenied(implode(',', $allowedRoles));
         abort(403, 'Unauthorized access.');
     }
 

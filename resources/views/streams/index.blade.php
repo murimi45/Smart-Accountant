@@ -97,7 +97,7 @@
                                     <button 
                                         class="btn btn-sm btn-light editStreamBtn"
                                         data-id="{{ $stream->id }}"
-                                        data-grade-id="{{ $stream->grade_id }}"
+                                        data-class-id="{{ $stream->class_id }}"
                                         data-name="{{ $stream->name }}"
                                         title="Edit Stream">
                                         <i class="fa fa-edit"></i>
@@ -197,7 +197,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="edit_grade_id" class="form-label">Grade <span class="text-danger">*</span></label>
+                        <label for="edit_class_id" class="form-label">Grade <span class="text-danger">*</span></label>
                         <select name="class_id" id="edit_class_id" class="form-select" required>
                             <option value="">Select Class</option>
                             @foreach($classes as $class)
@@ -401,12 +401,11 @@ document.addEventListener('DOMContentLoaded', function () {
     editButtons.forEach(button => {
         button.addEventListener('click', function() {
             const id = this.getAttribute('data-id');
-            const gradeId = this.getAttribute('data-grade-id');
+            const classId = this.getAttribute('data-class-id');
             const name = this.getAttribute('data-name');
 
             document.getElementById('editStreamForm').action = `{{ url('streams') }}/${id}`;
-
-            document.getElementById('edit_grade_id').value = gradeId;
+            document.getElementById('edit_class_id').value = classId || '';
             document.getElementById('edit_name').value = name || '';
 
             const editModal = new bootstrap.Modal(document.getElementById('editStreamModal'));

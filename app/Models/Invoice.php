@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Builder;
+use App\Models\Concerns\BelongsToSchool;
 
 class Invoice extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToSchool;
 
     public const STATUS_UNPAID = 'unpaid';
     public const STATUS_PARTIALLY_PAID = 'partially_paid';
@@ -100,20 +101,14 @@ class Invoice extends Model
     */
     protected static function booted()
     {
-        // Auto-assign school_id on create
-        static::creating(function ($invoice) {
-            if (auth()->check() && auth()->user()->school_id) {
-                $invoice->school_id = auth()->user()->school_id;
-            } elseif ($invoice->student) {
-                $invoice->school_id = $invoice->student->school_id;
+        static::creating(function (self $invoice) {
+            if ($invoice->school_id || ! $invoice->student_id) {
+                return;
             }
-        });
 
-        // School isolation scope
-        static::addGlobalScope('school', function (Builder $builder) {
-            if (auth()->check() && auth()->user()->school_id) {
-                $builder->where('invoices.school_id', auth()->user()->school_id);
-            }
+            $invoice->school_id = Student::withoutGlobalScopes()
+                ->whereKey($invoice->student_id)
+                ->value('school_id');
         });
     }
 }

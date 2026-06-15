@@ -20,7 +20,13 @@ class ClassFeeObserver
 
     private function syncInvoicesForClassFee(ClassFee $classFee): void
     {
-        $enrollments = StudentEnrollment::where('class_id', $classFee->class_id)
+        if (! $classFee->school_id) {
+            return;
+        }
+
+        $enrollments = StudentEnrollment::withoutGlobalScopes()
+            ->where('school_id', $classFee->school_id)
+            ->where('class_id', $classFee->class_id)
             ->where('term_id', $classFee->term_id)
             ->whereIn('status', [
                 StudentEnrollment::STATUS_ACTIVE,
@@ -30,30 +36,16 @@ class ClassFeeObserver
             ->get();
 
         foreach ($enrollments as $enrollment) {
-            if (!$enrollment->student) {
+            if (! $enrollment->student) {
                 continue;
             }
 
             app(InvoiceService::class)->createOrUpdateInvoice(
+                (int) $classFee->school_id,
                 $enrollment->student,
                 $classFee->term_id,
                 $enrollment->id
             );
         }
-    }
-
-    public function deleted(ClassFee $classFee): void
-    {
-        //
-    }
-
-    public function restored(ClassFee $classFee): void
-    {
-        //
-    }
-
-    public function forceDeleted(ClassFee $classFee): void
-    {
-        //
     }
 }

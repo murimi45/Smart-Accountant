@@ -154,6 +154,8 @@
                                             @foreach($students as $student)
                                                 @php
                                                     $assigned = $assignedExtraFees->get($student->id);
+                                                    $enrollment = $student->enrollments->first();
+                                                    $className = $enrollment?->schoolClass?->name ?? '—';
                                                 @endphp
                                                 <tr class="student-row">
                                                     <td>
@@ -168,9 +170,9 @@
                                                     <td>
                                                         <div class="d-flex align-items-center">
                                                             <div class="user-avatar me-2" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #36a9e2 0%, #1e88c7 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;">
-                                                                {{ strtoupper(substr($student->name, 0, 1)) }}
+                                                                {{ strtoupper(substr($student->full_name, 0, 1)) }}
                                                             </div>
-                                                            <strong>{{ $student->name }}</strong>
+                                                            <strong>{{ $student->full_name }}</strong>
                                                         </div>
                                                     </td>
                                                     <td>
@@ -178,7 +180,7 @@
                                                             {{ $student->admission }}
                                                         </span>
                                                     </td>
-                                                    <td>{{ $student->class->name }}</td>
+                                                    <td>{{ $className }}</td>
                                                     <td class="quantity-col">
                                                         <input type="number" 
                                                                class="form-control quantity-input" 

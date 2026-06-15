@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Term;
 use App\Models\AcademicYear;
+use App\Support\TenantRules;
 use Illuminate\Http\Request;
 
 class TermController extends Controller
@@ -32,16 +33,21 @@ class TermController extends Controller
 
     public function insertTerm(Request $request)
     {
+        $this->authorize('create', Term::class);
+
+        $schoolId = auth()->user()->school_id;
+
         $request->validate([
             'name'             => 'required|string|max:50',
-            'academic_year_id' => 'required|exists:academic_years,id',
+            'academic_year_id' => ['required', TenantRules::academicYears()],
             'term_number'      => 'required|integer|min:1|max:4',
             'start_date'       => 'required|date',
             'end_date'         => 'nullable|date|after_or_equal:start_date',
+            'school_id'        => TenantRules::prohibitedSchoolId(),
         ]);
 
-        // Prevent duplicate term_number under same academic year
-        $exists = Term::where('academic_year_id', $request->academic_year_id)
+        $exists = Term::forSchool($schoolId)
+            ->where('academic_year_id', $request->academic_year_id)
             ->where('term_number', $request->term_number)
             ->exists();
 
@@ -51,8 +57,7 @@ class TermController extends Controller
                 ->with('error', 'A term with this number already exists under the selected academic year.');
         }
 
-        // First term for this school auto-activates
-        $hasExistingTerm = Term::exists();
+        $hasExistingTerm = Term::forSchool($schoolId)->exists();
 
         Term::create([
             'name'             => $request->name,
@@ -69,31 +74,33 @@ class TermController extends Controller
                 : 'First term created and set as active.');
     }
 
-    // Load edit form
     public function updateTerm($id)
     {
-        $term = Term::with('academicYear')->findOrFail($id);
+        $term = Term::forSchool()->findOrFail($id);
+        $this->authorize('update', $term);
         $academicYears = AcademicYear::orderByDesc('start_date')->get();
 
         return view('term.edit', compact('term', 'academicYears'));
     }
 
-    // Save edit
     public function editTerm($id, Request $request)
     {
-        $term = Term::findOrFail($id);
+        $schoolId = auth()->user()->school_id;
+        $term = Term::forSchool($schoolId)->findOrFail($id);
+        $this->authorize('update', $term);
 
         $request->validate([
             'name'             => 'required|string|max:50',
-            'academic_year_id' => 'required|exists:academic_years,id',
+            'academic_year_id' => ['required', TenantRules::academicYears()],
             'term_number'      => 'required|integer|min:1|max:4',
             'start_date'       => 'required|date',
             'end_date'         => 'nullable|date|after_or_equal:start_date',
             'active'           => 'nullable|boolean',
+            'school_id'        => TenantRules::prohibitedSchoolId(),
         ]);
 
-        // Prevent duplicate term_number under same academic year (excluding self)
-        $exists = Term::where('academic_year_id', $request->academic_year_id)
+        $exists = Term::forSchool($schoolId)
+            ->where('academic_year_id', $request->academic_year_id)
             ->where('term_number', $request->term_number)
             ->where('id', '!=', $id)
             ->exists();
@@ -107,7 +114,7 @@ class TermController extends Controller
         $isActive = $request->boolean('active');
 
         if ($isActive) {
-            Term::where('school_id', $term->school_id)
+            Term::forSchool($schoolId)
                 ->where('id', '!=', $id)
                 ->update(['active' => false]);
         }
@@ -126,7 +133,9 @@ class TermController extends Controller
 
     public function delete($id)
     {
-        Term::findOrFail($id)->delete();
+        $term = Term::forSchool()->findOrFail($id);
+        $this->authorize('delete', $term);
+        $term->delete();
 
         return redirect()->back()->with('success', 'Term deleted successfully.');
     }

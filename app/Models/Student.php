@@ -5,12 +5,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Scopes\SchoolScope;
+use App\Models\Concerns\BelongsToSchool;
 
 
 class Student extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, BelongsToSchool;
 
     protected $fillable = [
     'school_id',
@@ -20,11 +20,6 @@ class Student extends Model
     'admission',
     'gender',
          ];
-
-    protected static function booted()
-    {
-        static::addGlobalScope(new SchoolScope);
-    }
 
     // public static function getRecord(){
     //     return self::all();

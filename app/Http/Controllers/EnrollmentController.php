@@ -8,6 +8,9 @@ use App\Models\Student;
 use App\Models\StudentEnrollment;
 use App\Models\Invoice;
 use App\Models\AcademicYear;
+use App\Support\TenantBulkIds;
+use App\Support\TenantRules;
+use App\Support\TenantFilters;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -39,8 +42,14 @@ class EnrollmentController extends Controller
             ? Term::nextInYear($schoolId, $activeTerm)
             : null;
 
-        // Term being viewed — admin can switch via filter, defaults to active
-        $termId = $request->filled('term_id') ? $request->term_id : $activeTerm?->id;
+        if ($request->filled('term_id') || $request->filled('class_id')) {
+            TenantFilters::validate($request, array_filter([
+                $request->filled('term_id') ? 'term_id' : null,
+                $request->filled('class_id') ? 'class_id' : null,
+            ]));
+        }
+
+        $termId = $request->filled('term_id') ? (int) $request->term_id : $activeTerm?->id;
 
         // 2. Build the enrollment query using scopes
         $query = StudentEnrollment::with([
@@ -50,7 +59,7 @@ class EnrollmentController extends Controller
                 'term',                             // term name
                 'invoice',                          // linked invoice (enrollment_id FK)
             ])
-            
+            ->where('school_id', $schoolId)
             ->forTerm($termId)
             ->visible()                             // excludes cancelled (audit-only)
             ->search($request->search)
@@ -63,6 +72,7 @@ class EnrollmentController extends Controller
                 // Sort by class level so Class 1 appears before Class 8
                 Classes::select('order')
                     ->whereColumn('classes.id', 'student_enrollments.class_id')
+                    ->where('classes.school_id', $schoolId)
                     ->limit(1)
             )
             ->orderBy('student_id')     // secondary sort: consistent ordering within class
@@ -71,7 +81,8 @@ class EnrollmentController extends Controller
 
         // 4. School-wide counts for the header stats bar
         //    Always counts the whole school regardless of filters active
-        $counts = StudentEnrollment::forTerm($termId)
+        $counts = StudentEnrollment::where('school_id', $schoolId)
+            ->forTerm($termId)
             ->visible()
             ->selectRaw("
                 COUNT(*) as total,
@@ -129,7 +140,8 @@ class EnrollmentController extends Controller
         ]);
 
         $schoolId   = Auth::user()->school_id;
-        $enrollment = StudentEnrollment::findOrFail($enrollmentId);
+        $enrollment = StudentEnrollment::where('school_id', $schoolId)->findOrFail($enrollmentId);
+        $this->authorize('update', $enrollment);
 
         // If the student already has an active enrollment for this term
         // and admin is trying to change it → flag as wrongly_promoted instead
@@ -179,8 +191,9 @@ class EnrollmentController extends Controller
     {
         $schoolId   = Auth::user()->school_id;
         $enrollment = StudentEnrollment::with(['student', 'schoolClass', 'stream', 'invoice'])
-            
+            ->where('school_id', $schoolId)
             ->findOrFail($enrollmentId);
+        $this->authorize('update', $enrollment);
 
         // Available classes for the correction dropdown
         $classes = Classes::where('school_id', $schoolId)
@@ -188,7 +201,7 @@ class EnrollmentController extends Controller
             ->get();
 
         // Available streams
-        $streams = \App\Models\Stream::where('school_id', $schoolId)->get();
+        $streams = \App\Models\Stream::all();
 
         return response()->json([
             'enrollment'    => $enrollment,
@@ -211,16 +224,18 @@ class EnrollmentController extends Controller
     public function executeCorrection(Request $request, int $enrollmentId)
     {
         $request->validate([
-            'correct_class_id'  => 'required|exists:classes,id',
-            'correct_stream_id' => 'nullable|exists:streams,id',
+            'correct_class_id'  => ['required', TenantRules::classes()],
+            'correct_stream_id' => ['nullable', TenantRules::streamInSchool()],
             'correction_reason' => 'required|string|max:500',
+            'school_id'         => TenantRules::prohibitedSchoolId(),
         ]);
 
         $schoolId = Auth::user()->school_id;
 
         $wrongEnrollment = StudentEnrollment::with(['invoice', 'student'])
-           
+            ->where('school_id', $schoolId)
             ->findOrFail($enrollmentId);
+        $this->authorize('update', $wrongEnrollment);
 
         DB::transaction(function () use ($wrongEnrollment, $request, $schoolId) {
 
@@ -244,7 +259,6 @@ class EnrollmentController extends Controller
 
             // 3. Create the corrected enrollment — inherits the prior-term link
             $correctedEnrollment = StudentEnrollment::create([
-                'school_id'                   => $schoolId,
                 'student_id'                  => $wrongEnrollment->student_id,
                 'class_id'                    => $request->correct_class_id,
                 'stream_id'                   => $request->correct_stream_id
@@ -278,11 +292,21 @@ class EnrollmentController extends Controller
         $request->validate([
             'statuses'   => 'required|array',
             'statuses.*' => 'required|in:active,repeating,inactive',
+            'school_id'  => TenantRules::prohibitedSchoolId(),
         ]);
 
-        DB::transaction(function () use ($request) {
+        $schoolId = Auth::user()->school_id;
+
+        TenantBulkIds::assertBelongToSchool(
+            StudentEnrollment::class,
+            array_keys($request->statuses),
+            $schoolId
+        );
+
+        DB::transaction(function () use ($request, $schoolId) {
             foreach ($request->statuses as $enrollmentId => $status) {
-                StudentEnrollment::where('id', $enrollmentId)
+                StudentEnrollment::where('school_id', $schoolId)
+                    ->where('id', $enrollmentId)
                     ->whereNull('promoted_from_enrollment_id') // only pre-promotion rows
                     ->update(['status' => $status]);
             }

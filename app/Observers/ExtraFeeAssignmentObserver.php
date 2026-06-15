@@ -1,68 +1,53 @@
 <?php
 
 namespace App\Observers;
-use App\Services\InvoiceService;
+
 use App\Models\StudentExtraFee;
+use App\Services\InvoiceService;
 
 class ExtraFeeAssignmentObserver
 {
+    private function shouldSkipBatchInvoice(): bool
+    {
+        return (app()->bound('batchAssigningExtraFees') && app('batchAssigningExtraFees') === true)
+            || (app()->bound('extraFeeBatch') && app('extraFeeBatch') === true);
+    }
+
     public function created(StudentExtraFee $extraFee): void
     {
-        // Skip invoice update if we are inside a batch assignment
-        if (app()->bound('extraFeeBatch') && app('extraFeeBatch') === true) {
+        if ($this->shouldSkipBatchInvoice()) {
             return;
         }
 
-        // Refresh the relation so term_id is not null due to stale cache
-        $extraFee->loadMissing('extraFee');
-
-        $student = $extraFee->student;
-        $termId  = $extraFee->extraFee?->term_id;
-
-        if ($student && $termId) {
-            app(InvoiceService::class)->createOrUpdateInvoice($student, $termId);
-        }
+        $this->refreshInvoiceForAssignment($extraFee);
     }
 
     public function deleted(StudentExtraFee $extraFee): void
     {
-        // Always refresh relation (otherwise term_id is null)
-        $extraFee->loadMissing('extraFee', 'student');
-
-        $student = $extraFee->student;
-        $termId  = $extraFee->extraFee?->term_id;
-        \Log::info("Observer fired for StudentExtraFee deleted", [
-        'student_id' => $student?->id,
-        'term_id'    => $termId,
-    ]);
-
-        if ($student && $termId) {
-            app(InvoiceService::class)->createOrUpdateInvoice($student, $termId);
-        }
+        $this->refreshInvoiceForAssignment($extraFee);
     }
 
-    /**
-     * Handle the ExtraFeeAssignment "deleted" event.
-     */
     public function updated(StudentExtraFee $extraFee): void
     {
-        $student = $extraFee->student;
-        app(InvoiceService::class)->createOrUpdateInvoice($student, $extraFee->term_id);
+        $this->refreshInvoiceForAssignment($extraFee);
     }
 
-    /**
-     * Handle the ExtraFeeAssignment "restored" event.
-     */
-    public function restored(StudentExtraFee $extraFee): void
+    private function refreshInvoiceForAssignment(StudentExtraFee $extraFee): void
     {
-        //
-    }
+        $extraFee->loadMissing('extraFee', 'student');
 
-    /**
-     * Handle the ExtraFeeAssignment "force deleted" event.
-     */
-    public function forceDeleted(StudentExtraFee $extraFee): void
-    {
-        //
+        $student  = $extraFee->student;
+        $termId   = $extraFee->extraFee?->term_id;
+        $schoolId = (int) ($extraFee->school_id ?: $student?->school_id);
+
+        if (! $student || ! $termId || ! $schoolId) {
+            return;
+        }
+
+        if ((int) $student->school_id !== $schoolId) {
+            return;
+        }
+
+        app(InvoiceService::class)->createOrUpdateInvoice($schoolId, $student, $termId);
     }
 }

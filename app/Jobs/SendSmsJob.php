@@ -2,64 +2,81 @@
 
 namespace App\Jobs;
 
-
 use App\Models\SmsLog;
 use App\Services\SendSmsService;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-
 class SendSmsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public int $tries = 3;
 
-public $smsLogId;
+    public array $backoff = [10, 30, 60];
 
+    public function __construct(
+        public int $smsLogId,
+        public int $schoolId
+    ) {}
 
-// Allow 3 attempts
-public $tries = 3;
-public $backoff = [10, 30, 60];
+    public function handle(SendSmsService $smsService): void
+    {
+        $smsLog = SmsLog::findForSchool($this->schoolId, $this->smsLogId);
 
+        if (! $smsLog) {
+            return;
+        }
 
-public function __construct(int $smsLogId)
-{
-$this->smsLogId = $smsLogId;
-}
+        try {
+            $response = $smsService->sendNow($smsLog->to, $smsLog->message);
+            $messageId = self::extractProviderMessageId($response);
 
+            $smsLog->update([
+                'status' => 'sent',
+                'response' => is_string($response) ? $response : json_encode($response),
+                'provider_message_id' => $messageId,
+            ]);
+        } catch (Exception $e) {
+            $smsLog->update([
+                'status' => 'failed',
+                'response' => $e->getMessage(),
+            ]);
 
-public function handle(SendSmsService $smsService)
-{
-$smsLog = SmsLog::find($this->smsLogId);
+            throw $e;
+        }
+    }
 
+    private static function extractProviderMessageId(mixed $response): ?string
+    {
+        if (is_string($response)) {
+            $decoded = json_decode($response, true);
 
-if (! $smsLog) {
-return;
-}
+            if (is_array($decoded)) {
+                $response = $decoded;
+            } else {
+                return null;
+            }
+        }
 
+        if (! is_array($response)) {
+            return null;
+        }
 
-try {
-$response = $smsService->sendNow($smsLog->to, $smsLog->message);
+        $recipients = $response['SMSMessageData']['Recipients'] ?? null;
 
+        if (is_array($recipients) && isset($recipients[0]['messageId'])) {
+            return (string) $recipients[0]['messageId'];
+        }
 
-$smsLog->update([
-'status' => 'sent',
-'response' => json_encode($response),
-]);
+        if (isset($response['messageId'])) {
+            return (string) $response['messageId'];
+        }
 
-
-} catch (Exception $e) {
-$smsLog->update([
-'status' => 'failed',
-'response' => $e->getMessage(),
-]);
-
-
-// Let the job fail so Laravel can retry according to $tries
-throw $e;
-}
-}
+        return null;
+    }
 }

@@ -9,6 +9,12 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
+    public const ROLE_ADMIN = 'admin';
+
+    public const ROLE_ACCOUNTANT = 'accountant';
+
+    public const ROLE_PLATFORM = 'platform';
+
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
@@ -25,9 +31,10 @@ class User extends Authenticatable
     'email',
     'password',
     'role',
-    'school_id',
     'phone',
     ];
+
+    protected $guarded = ['school_id'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -73,7 +80,12 @@ public function isAccountant()
 
      public function isSensitiveRole(): bool
     {
-        return in_array($this->role, ['admin','accountant']);
+        return in_array($this->role, [self::ROLE_ADMIN, self::ROLE_ACCOUNTANT], true);
+    }
+
+    public function isPlatformAdmin(): bool
+    {
+        return $this->role === self::ROLE_PLATFORM && $this->school_id === null;
     }
 
     // Set 2FA secret (encrypt for storage)

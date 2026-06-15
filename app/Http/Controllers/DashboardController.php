@@ -10,14 +10,22 @@ use App\Models\InvoicePayment;
 use App\Models\OtherIncome;
 use App\Models\Expense;
 use Carbon\CarbonPeriod;
-use Illuminate\Support\Facades\DB;
+use App\Support\TenantFilters;
 
 class DashboardController extends Controller
 {
     public function showDashboard(Request $request)
     {
-        $schoolId = auth()->user()->school_id;
-        $viewType = $request->get('view', 'term'); // 'term' or 'annual'
+        $schoolId = TenantFilters::schoolId();
+        $viewType = $request->get('view', 'term');
+
+        $filterKeys = array_filter([
+            $request->filled('term_id') ? 'term_id' : null,
+            $request->filled('academic_year_id') ? 'academic_year_id' : null,
+        ]);
+        if ($filterKeys !== []) {
+            TenantFilters::validate($request, $filterKeys);
+        }
 
         // ── Shared data ──────────────────────────────────────────────────────
         // Load academic years with their terms — avoids N+1 later
@@ -33,9 +41,7 @@ class DashboardController extends Controller
 
         // Recent payments — eager load student via invoice
         $recentPayments = InvoicePayment::with('invoice.student')
-            ->whereHas('invoice', fn($q) => $q->whereHas('term', fn($q2) =>
-                $q2->where('school_id', $schoolId)
-            ))
+            ->whereHas('invoice', fn ($q) => $q->where('school_id', $schoolId))
             ->latest()
             ->take(5)
             ->get();
@@ -54,9 +60,9 @@ class DashboardController extends Controller
 
         // ── TERM VIEW ────────────────────────────────────────────────────────
         if ($viewType === 'term') {
-            $termId      = $request->get('term_id');
+            $termId = $request->get('term_id');
             $selectedTerm = $termId
-                ? Term::with('academicYear')->find($termId)
+                ? Term::forSchool($schoolId)->with('academicYear')->findOrFail($termId)
                 : Term::with('academicYear')->where('school_id', $schoolId)->where('active', true)->first();
 
             if (! $selectedTerm) {
@@ -65,7 +71,7 @@ class DashboardController extends Controller
                 )));
             }
 
-            $metrics = $this->termMetrics($selectedTerm->id);
+            $metrics = $this->termMetrics($schoolId, $selectedTerm->id);
 
             return view('dashboard', array_merge($metrics, compact(
                 'viewType', 'selectedTerm', 'terms', 'academicYears', 'recentPayments'
@@ -75,7 +81,7 @@ class DashboardController extends Controller
         // ── ANNUAL VIEW ──────────────────────────────────────────────────────
         $selectedYearId  = $request->get('academic_year_id');
         $selectedYear    = $selectedYearId
-            ? AcademicYear::find($selectedYearId)
+            ? AcademicYear::forSchool($schoolId)->findOrFail($selectedYearId)
             : AcademicYear::whereHas('terms', fn($q) => $q->where('school_id', $schoolId))
                           ->orderByDesc('start_date')
                           ->first();
@@ -96,7 +102,7 @@ class DashboardController extends Controller
             )));
         }
 
-        $metrics = $this->annualMetrics($termIds, $selectedYear);
+        $metrics = $this->annualMetrics($schoolId, $termIds, $selectedYear);
 
         return view('dashboard', array_merge($metrics, compact(
             'viewType', 'selectedYear', 'terms', 'academicYears', 'recentPayments'
@@ -104,29 +110,29 @@ class DashboardController extends Controller
     }
 
     // ── Private: term-scoped metrics ─────────────────────────────────────────
-    private function termMetrics(int $termId): array
+    private function termMetrics(int $schoolId, int $termId): array
     {
-        // Single aggregated query instead of multiple separate queries
-        $invoiceTotals = Invoice::where('term_id', $termId)
+        $invoiceTotals = Invoice::where('school_id', $schoolId)
+            ->where('term_id', $termId)
             ->selectRaw('SUM(total_amount) as billed')
             ->first();
 
         $totalFeesBilled    = $invoiceTotals->billed ?? 0;
-        $totalFeesCollected = InvoicePayment::whereHas('invoice', fn($q) =>
-            $q->where('term_id', $termId)
+        $totalFeesCollected = InvoicePayment::whereHas('invoice', fn ($q) =>
+            $q->where('school_id', $schoolId)->where('term_id', $termId)
         )->sum('amount');
 
-        $otherIncome   = OtherIncome::where('term_id', $termId)->sum('amount');
-        $totalExpenses = Expense::where('term_id', $termId)->sum('amount');
+        $otherIncome   = OtherIncome::where('school_id', $schoolId)->where('term_id', $termId)->sum('amount');
+        $totalExpenses = Expense::where('school_id', $schoolId)->where('term_id', $termId)->sum('amount');
 
         $expensesByCategory = Expense::selectRaw('SUM(amount) as total, expense_category_id')
+            ->where('school_id', $schoolId)
             ->where('term_id', $termId)
             ->groupBy('expense_category_id')
             ->with('category')
             ->get();
 
-        // Monthly net within term range
-        $term       = Term::find($termId);
+        $term       = Term::forSchool($schoolId)->findOrFail($termId);
         $monthlyNet = [];
 
         if ($term->start_date && $term->end_date) {
@@ -138,15 +144,17 @@ class DashboardController extends Controller
 
                 $fees = InvoicePayment::whereMonth('created_at', $m)
                     ->whereYear('created_at', $y)
-                    ->whereHas('invoice', fn($q) => $q->where('term_id', $termId))
+                    ->whereHas('invoice', fn ($q) => $q->where('school_id', $schoolId)->where('term_id', $termId))
                     ->sum('amount');
 
-                $expenses = Expense::whereMonth('created_at', $m)
+                $expenses = Expense::where('school_id', $schoolId)
+                    ->whereMonth('created_at', $m)
                     ->whereYear('created_at', $y)
                     ->where('term_id', $termId)
                     ->sum('amount');
 
-                $income = OtherIncome::whereMonth('created_at', $m)
+                $income = OtherIncome::where('school_id', $schoolId)
+                    ->whereMonth('created_at', $m)
                     ->whereYear('created_at', $y)
                     ->where('term_id', $termId)
                     ->sum('amount');
@@ -168,17 +176,18 @@ class DashboardController extends Controller
     }
 
     // ── Private: annual-scoped metrics ───────────────────────────────────────
-    private function annualMetrics($termIds, AcademicYear $selectedYear): array
+    private function annualMetrics(int $schoolId, $termIds, AcademicYear $selectedYear): array
     {
-        $totalFeesBilled    = Invoice::whereIn('term_id', $termIds)->sum('total_amount');
-        $totalFeesCollected = InvoicePayment::whereHas('invoice', fn($q) =>
-            $q->whereIn('term_id', $termIds)
+        $totalFeesBilled    = Invoice::where('school_id', $schoolId)->whereIn('term_id', $termIds)->sum('total_amount');
+        $totalFeesCollected = InvoicePayment::whereHas('invoice', fn ($q) =>
+            $q->where('school_id', $schoolId)->whereIn('term_id', $termIds)
         )->sum('amount');
 
-        $otherIncome   = OtherIncome::whereIn('term_id', $termIds)->sum('amount');
-        $totalExpenses = Expense::whereIn('term_id', $termIds)->sum('amount');
+        $otherIncome   = OtherIncome::where('school_id', $schoolId)->whereIn('term_id', $termIds)->sum('amount');
+        $totalExpenses = Expense::where('school_id', $schoolId)->whereIn('term_id', $termIds)->sum('amount');
 
         $expensesByCategory = Expense::selectRaw('SUM(amount) as total, expense_category_id')
+            ->where('school_id', $schoolId)
             ->whereIn('term_id', $termIds)
             ->groupBy('expense_category_id')
             ->with('category')
@@ -196,15 +205,17 @@ class DashboardController extends Controller
 
             $fees = InvoicePayment::whereMonth('created_at', $m)
                 ->whereYear('created_at', $y)
-                ->whereHas('invoice', fn($q) => $q->whereIn('term_id', $termIds))
+                ->whereHas('invoice', fn ($q) => $q->where('school_id', $schoolId)->whereIn('term_id', $termIds))
                 ->sum('amount');
 
-            $expenses = Expense::whereMonth('created_at', $m)
+            $expenses = Expense::where('school_id', $schoolId)
+                ->whereMonth('created_at', $m)
                 ->whereYear('created_at', $y)
                 ->whereIn('term_id', $termIds)
                 ->sum('amount');
 
-            $income = OtherIncome::whereMonth('created_at', $m)
+            $income = OtherIncome::where('school_id', $schoolId)
+                ->whereMonth('created_at', $m)
                 ->whereYear('created_at', $y)
                 ->whereIn('term_id', $termIds)
                 ->sum('amount');

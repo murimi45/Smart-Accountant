@@ -41,7 +41,7 @@ class PromotionService
         ?int $userId = null
     ): void {
         try {
-            $this->chunkSourceEnrollments($fromTermId, function ($enrollments) use (
+            $this->chunkSourceEnrollments($schoolId, $fromTermId, function ($enrollments) use (
                 $schoolId,
                 $toTermId
             ) {
@@ -59,17 +59,22 @@ class PromotionService
             });
 
             $this->activateTermPromotion($schoolId, $toTermId);
-            $this->generateInvoicesForPromotedTerm($toTermId);
+            $this->generateInvoicesForPromotedTerm($schoolId, $toTermId);
 
-            PromotionRun::where('id', $promotionRunId)
+            PromotionRun::withoutGlobalScopes()
+                ->where('id', $promotionRunId)
+                ->where('school_id', $schoolId)
                 ->update(['status' => 'completed']);
 
         } catch (\Throwable $e) {
-            PromotionRun::where('id', $promotionRunId)->update([
-                'status'        => 'failed',
-                'error_message' => $e->getMessage(),
-                'active_key'    => null,
-            ]);
+            PromotionRun::withoutGlobalScopes()
+                ->where('id', $promotionRunId)
+                ->where('school_id', $schoolId)
+                ->update([
+                    'status'        => 'failed',
+                    'error_message' => $e->getMessage(),
+                    'active_key'    => null,
+                ]);
 
             throw $e;
         }
@@ -96,7 +101,7 @@ class PromotionService
             $graduatedCount = 0;
             $skipped        = [];
 
-            $this->chunkSourceEnrollments($fromTerm->id, function ($enrollments) use (
+            $this->chunkSourceEnrollments($schoolId, $fromTerm->id, function ($enrollments) use (
                 $schoolId,
                 $toTerm,
                 &$enrolledCount,
@@ -146,17 +151,22 @@ class PromotionService
             }
 
             $this->activateYearPromotion($schoolId, $toTerm);
-            $this->generateInvoicesForPromotedTerm($toTerm->id);
+            $this->generateInvoicesForPromotedTerm($schoolId, $toTerm->id);
 
-            PromotionRun::where('id', $promotionRunId)
+            PromotionRun::withoutGlobalScopes()
+                ->where('id', $promotionRunId)
+                ->where('school_id', $schoolId)
                 ->update(['status' => 'completed']);
 
         } catch (\Throwable $e) {
-            PromotionRun::where('id', $promotionRunId)->update([
-                'status'        => 'failed',
-                'error_message' => $e->getMessage(),
-                'active_key'    => null,
-            ]);
+            PromotionRun::withoutGlobalScopes()
+                ->where('id', $promotionRunId)
+                ->where('school_id', $schoolId)
+                ->update([
+                    'status'        => 'failed',
+                    'error_message' => $e->getMessage(),
+                    'active_key'    => null,
+                ]);
 
             throw $e;
         }
@@ -165,9 +175,11 @@ class PromotionService
     /**
      * Process enrollments in chunks to limit transaction size and memory use.
      */
-    private function chunkSourceEnrollments(int $fromTermId, callable $callback): void
+    private function chunkSourceEnrollments(int $schoolId, int $fromTermId, callable $callback): void
     {
-        StudentEnrollment::with(['student', 'schoolClass', 'stream'])
+        StudentEnrollment::withoutGlobalScopes()
+            ->with(['student', 'schoolClass', 'stream'])
+            ->where('school_id', $schoolId)
             ->where('term_id', $fromTermId)
             ->whereIn('status', [
                 StudentEnrollment::STATUS_ACTIVE,
@@ -182,30 +194,47 @@ class PromotionService
     private function activateTermPromotion(int $schoolId, int $toTermId): void
     {
         DB::transaction(function () use ($schoolId, $toTermId) {
-            Term::where('school_id', $schoolId)->update(['active' => false]);
-            Term::where('id', $toTermId)->update(['active' => true]);
+            Term::withoutGlobalScopes()
+                ->where('school_id', $schoolId)
+                ->update(['active' => false]);
+            Term::withoutGlobalScopes()
+                ->where('id', $toTermId)
+                ->where('school_id', $schoolId)
+                ->update(['active' => true]);
         });
     }
 
     private function activateYearPromotion(int $schoolId, Term $toTerm): void
     {
         DB::transaction(function () use ($schoolId, $toTerm) {
-            Term::where('school_id', $schoolId)->update(['active' => false]);
-            Term::where('id', $toTerm->id)->update(['active' => true]);
+            Term::withoutGlobalScopes()
+                ->where('school_id', $schoolId)
+                ->update(['active' => false]);
+            Term::withoutGlobalScopes()
+                ->where('id', $toTerm->id)
+                ->where('school_id', $schoolId)
+                ->update(['active' => true]);
 
-            AcademicYear::where('school_id', $schoolId)->update(['is_current' => false]);
-            AcademicYear::where('id', $toTerm->academic_year_id)->update(['is_current' => true]);
+            AcademicYear::withoutGlobalScopes()
+                ->where('school_id', $schoolId)
+                ->update(['is_current' => false]);
+            AcademicYear::withoutGlobalScopes()
+                ->where('id', $toTerm->academic_year_id)
+                ->where('school_id', $schoolId)
+                ->update(['is_current' => true]);
         });
     }
 
     /**
      * Create invoices after all enrollments exist (deferred from EnrollmentObserver during bulk promote).
      */
-    private function generateInvoicesForPromotedTerm(int $toTermId): void
+    private function generateInvoicesForPromotedTerm(int $schoolId, int $toTermId): void
     {
         $invoiceService = app(InvoiceService::class);
 
-        StudentEnrollment::with('student')
+        StudentEnrollment::withoutGlobalScopes()
+            ->with('student')
+            ->where('school_id', $schoolId)
             ->where('term_id', $toTermId)
             ->whereNotNull('promoted_from_enrollment_id')
             ->whereIn('status', [
@@ -220,6 +249,7 @@ class PromotionService
                     }
 
                     $invoiceService->createOrUpdateInvoice(
+                        $schoolId,
                         $enrollment->student,
                         $enrollment->term_id,
                         $enrollment->id
@@ -247,17 +277,23 @@ class PromotionService
             $classId,
             $status
         ) {
-            return StudentEnrollment::firstOrCreate(
-                ['promoted_from_enrollment_id' => $source->id],
-                [
-                    'school_id'  => $schoolId,
-                    'student_id' => $source->student_id,
-                    'class_id'   => $classId,
-                    'stream_id'  => $source->stream_id,
-                    'term_id'    => $toTermId,
-                    'status'     => $status,
-                ]
-            );
+            $existing = StudentEnrollment::withoutGlobalScopes()
+                ->where('school_id', $schoolId)
+                ->where('promoted_from_enrollment_id', $source->id)
+                ->first();
+
+            if ($existing) {
+                return $existing;
+            }
+
+            return StudentEnrollment::createForSchool($schoolId, [
+                'promoted_from_enrollment_id' => $source->id,
+                'student_id' => $source->student_id,
+                'class_id'   => $classId,
+                'stream_id'  => $source->stream_id,
+                'term_id'    => $toTermId,
+                'status'     => $status,
+            ]);
         });
     }
 
@@ -268,7 +304,9 @@ class PromotionService
     {
         $issues = [];
 
-        $enrollments = StudentEnrollment::with(['student', 'schoolClass'])
+        $enrollments = StudentEnrollment::withoutGlobalScopes()
+            ->with(['student', 'schoolClass'])
+            ->where('school_id', $schoolId)
             ->where('term_id', $fromTermId)
             ->where('status', StudentEnrollment::STATUS_ACTIVE)
             ->get();

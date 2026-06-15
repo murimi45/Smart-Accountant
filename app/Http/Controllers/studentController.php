@@ -6,6 +6,8 @@ use App\Models\Classes;
 use App\Models\Term;
 use App\Models\Student;
 use App\Models\StudentEnrollment;
+use App\Support\TenantFilters;
+use App\Support\TenantRules;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -33,8 +35,10 @@ class StudentController extends Controller
 
     public function listStudents(Request $request)
     {
-        $data['classes'] = Classes::all();
-        $data['terms']   = Term::all();
+        TenantFilters::validate($request);
+
+        $data['classes'] = Classes::orderBy('order')->get();
+        $data['terms']   = Term::with('academicYear')->orderByDesc('start_date')->get();
         $data['getRecord'] = Student::getRecord($request)->paginate(10);
 
         return view('student.list', $data);
@@ -57,20 +61,26 @@ class StudentController extends Controller
 
     public function insertStudents(Request $request)
     {
+        $this->authorize('create', Student::class);
+
         $schoolId = auth()->user()->school_id;
 
         $validated = $request->validate([
             'name'      => 'required|string|max:255',
             'phone'     => 'nullable|string|max:20',
-            'admission' => 'required|string|unique:students,admission',
+            'admission' => [
+                'required',
+                'string',
+                TenantRules::unique('students', 'admission'),
+            ],
             'guardian_name' => 'nullable|string|max:255',
             'gender'    => 'required|in:male,female',
-            'class_id'  => 'required|exists:classes,id',
-            'term_id'   => 'required|exists:terms,id',
+            'class_id'  => ['required', TenantRules::classes()],
+            'term_id'   => ['required', TenantRules::terms()],
+            'school_id' => TenantRules::prohibitedSchoolId(),
         ]);
 
         $student = Student::create([
-            'school_id' => $schoolId,
             'full_name' => $validated['name'],
             'phone'     => $validated['phone'] ?? null,
             'admission' => $validated['admission'],
@@ -79,7 +89,6 @@ class StudentController extends Controller
         ]);
 
         StudentEnrollment::create([
-            'school_id'  => $schoolId,
             'student_id' => $student->id,
             'class_id'   => $validated['class_id'],
             'term_id'    => $validated['term_id'],
@@ -92,7 +101,8 @@ class StudentController extends Controller
     public function editStudents($id)
     {
         $schoolId = Auth::user()->school_id;
-        $student = Student::findOrFail($id);
+        $student = Student::forSchool($schoolId)->findOrFail($id);
+        $this->authorize('update', $student);
         $activeTerm = Term::current1($schoolId);
         $enrollment = $this->enrollmentForEdit($student, $activeTerm);
 
@@ -107,17 +117,23 @@ class StudentController extends Controller
 
     public function updateStudents(Request $request, $id)
     {
-        $student  = Student::findOrFail($id);
         $schoolId = auth()->user()->school_id;
+        $student  = Student::forSchool($schoolId)->findOrFail($id);
+        $this->authorize('update', $student);
 
         $validated = $request->validate([
             'name'      => 'required|string|max:255',
             'phone'     => 'nullable|string|max:20',
-            'admission' => 'required|string|unique:students,admission,' . $id,
+            'admission' => [
+                'required',
+                'string',
+                TenantRules::unique('students', 'admission', $student->id),
+            ],
             'gender'    => 'required|in:male,female',
-            'class_id'  => 'required|exists:classes,id',
-            'term_id'   => 'required|exists:terms,id',
+            'class_id'  => ['required', TenantRules::classes()],
+            'term_id'   => ['required', TenantRules::terms()],
             'guardian_name' => 'nullable|string|max:255',
+            'school_id' => TenantRules::prohibitedSchoolId(),
         ]);
 
         $student->update([
@@ -134,7 +150,6 @@ class StudentController extends Controller
                 'term_id'    => $validated['term_id'],
             ],
             [
-                'school_id' => $schoolId,
                 'class_id'  => $validated['class_id'],
                 'status'    => 'active',
             ]
@@ -145,7 +160,9 @@ class StudentController extends Controller
 
     public function deleteStudent($id)
     {
-        Student::findOrFail($id)->delete();
+        $student = Student::forSchool(TenantFilters::schoolId())->findOrFail($id);
+        $this->authorize('delete', $student);
+        $student->delete();
 
         return redirect()->back()->with('success', 'Deleted successfully.');
     }

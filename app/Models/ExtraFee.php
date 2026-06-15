@@ -5,22 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\softDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Models\Scopes\SchoolScope;
-use Auth;
+use App\Models\Concerns\BelongsToSchool;
 
 class ExtraFee extends Model
 {
-     use softDeletes, HasFactory;
+     use softDeletes, HasFactory, BelongsToSchool;
      protected $fillable=[
         'name','amount','is_quantity_based', 'description', 'school_id', 'created_by','status','term_id',
         'year',
      ];
 
-
-    protected static function booted()
-    {
-        static::addGlobalScope(new SchoolScope);
-    }
 
     public function creator()
     {

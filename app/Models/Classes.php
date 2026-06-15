@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Scopes\SchoolScope;
+use App\Models\Concerns\BelongsToSchool;
 
 class Classes extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, BelongsToSchool;
 
     protected $table = 'classes';
 
@@ -29,12 +29,6 @@ class Classes extends Model
     protected $casts = [
         'order' => 'integer',
     ];
-
-    
-    protected static function booted()
-    {
-        static::addGlobalScope(new SchoolScope());
-    }
 
    
     public static function getRecord()

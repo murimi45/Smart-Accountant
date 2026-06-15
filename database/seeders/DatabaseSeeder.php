@@ -2,22 +2,27 @@
 
 namespace Database\Seeders;
 
+use App\Models\Schools;
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $school = Schools::factory()->create([
+            'school_name' => 'Demo School',
+            'email'       => 'demo@school.test',
         ]);
+
+        User::factory()
+            ->admin()
+            ->forSchool($school)
+            ->create([
+                'admin_name' => 'Demo Admin',
+                'email'      => 'admin@school.test',
+            ]);
+
+        $this->call(AccountsTableSeeder::class, false, ['schoolId' => $school->id]);
     }
 }

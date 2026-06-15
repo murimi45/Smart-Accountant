@@ -279,7 +279,7 @@
                             <p class="text-danger mb-0" style="font-size:13px;">
                                 No academic year exists after
                                 <strong>{{ $currentAcademicYear?->name ?? 'the current year' }}</strong>.
-                                Create the next year and its first term first.
+                                Create the next year with Term 1, Term 2, and Term 3 first.
                             </p>
                         @else
                             <select name="academic_year" id="academic_year" class="form-select" required>

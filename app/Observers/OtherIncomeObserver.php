@@ -9,8 +9,7 @@ class OtherIncomeObserver
 {
     public function created(OtherIncome $income)
     {
-        CashbookEntry::create([
-            'school_id' => $income->school_id,
+        CashbookEntry::createForSchool($income->school_id, [
             'transaction_type' => 'inflow',
             'entry_type' => 'original',
             'source_id' => $income->id,
@@ -25,8 +24,8 @@ class OtherIncomeObserver
     public function updated(OtherIncome $income)
     {
         $entry = CashbookEntry::where('source_type', OtherIncome::class)
-                              ->where('source_id', $income->id)
-                              ->first();
+            ->where('source_id', $income->id)
+            ->first();
 
         if ($entry) {
             $entry->update([
@@ -40,14 +39,12 @@ class OtherIncomeObserver
 
     public function deleted(OtherIncome $income)
     {
-        // Soft delete: create reversal entry
         $entry = CashbookEntry::where('source_type', OtherIncome::class)
-                              ->where('source_id', $income->id)
-                              ->first();
+            ->where('source_id', $income->id)
+            ->first();
 
         if ($entry) {
-            CashbookEntry::create([
-                'school_id' => $entry->school_id,
+            CashbookEntry::createForSchool($entry->school_id, [
                 'transaction_type' => 'outflow',
                 'entry_type' => 'reversal',
                 'source_id' => $income->id,
@@ -63,7 +60,6 @@ class OtherIncomeObserver
 
     public function restored(OtherIncome $income)
     {
-        // Recreate original cashbook entry when income is restored
         $this->created($income);
     }
 }

@@ -3,9 +3,11 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\BelongsToSchool;
 
 class PromotionRun extends Model
 {
+    use BelongsToSchool;
     protected $fillable = [
         'school_id',
         'from_term_id',

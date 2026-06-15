@@ -1,37 +1,46 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\SmsLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
-
 class SmsDeliveryController extends Controller
 {
-// Africa's Talking will POST delivery receipts here (adjust keys as AT sends)
-public function receive(Request $request)
-{
-Log::info('DLR payload: ' . json_encode($request->all()));
+    public function receive(Request $request)
+    {
+        Log::info('DLR payload: ' . json_encode($request->all()));
 
+        $providerMessageId = $request->input('id')
+            ?? $request->input('messageId')
+            ?? $request->input('message_id');
 
-// Example: AT may send "id", "status", "to" in their webhook - adjust mapping
-$to = $request->input('to');
-$status = $request->input('status') ?? 'delivered';
-$external = $request->input('id') ?? null;
+        if (! $providerMessageId) {
+            Log::warning('SMS delivery report missing provider message id — skipped update');
 
+            return response('OK', 200);
+        }
 
-// Find latest pending sms log for the 'to' number
-$smsLog = SmsLog::where('to', $to)->where('status', 'sent')->latest()->first();
+        $smsLog = SmsLog::withoutGlobalScopes()
+            ->where('provider_message_id', $providerMessageId)
+            ->first();
 
+        if (! $smsLog) {
+            Log::warning('SMS delivery report: no log matched provider id', [
+                'provider_message_id' => $providerMessageId,
+            ]);
 
-if ($smsLog) {
-$smsLog->update([
-'status' => $status,
-'response' => json_encode($request->all()),
-]);
-}
+            return response('OK', 200);
+        }
 
+        $status = $request->input('status') ?? 'delivered';
 
-return response('OK', 200);
-}
+        $smsLog->update([
+            'status'   => $status,
+            'response' => json_encode($request->all()),
+        ]);
+
+        return response('OK', 200);
+    }
 }

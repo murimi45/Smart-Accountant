@@ -13,8 +13,9 @@ class InvoicePaymentObserver
         $invoice = $payment->invoice;
         $student = $invoice->student ?? null;
 
-        CashbookEntry::create([
-            'school_id'        => $student->school_id, 
+        $schoolId = $student?->school_id ?? $invoice->school_id;
+
+        CashbookEntry::createForSchool($schoolId, [
             'transaction_type' => 'inflow',
             'entry_type'       => 'original',
             'source_id'        => $payment->id,
@@ -22,8 +23,8 @@ class InvoicePaymentObserver
             'amount'           => $payment->amount,
             'payment_method'   => $payment->method,
             'transaction_date' => $payment->payment_date,
-            'description'      => "School fees payment for student " 
-                                    . ($student ? $student->name : "ID {$invoice->student_id}"),
+            'description'      => "School fees payment for student "
+                                    . ($student ? $student->full_name : "ID {$invoice->student_id}"),
         ]);
 }
 }

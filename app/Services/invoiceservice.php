@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Invoice;
-use App\Models\InvoiceItem;
 use App\Models\ClassFee;
 use App\Models\StudentExtraFee;
 use App\Models\StudentEnrollment;
@@ -12,6 +11,7 @@ use App\Models\Term;
 use Illuminate\Support\Facades\DB;
 use App\Jobs\SendPaymentNotification;
 use InvalidArgumentException;
+use RuntimeException;
 
 class InvoiceService
 {
@@ -19,19 +19,30 @@ class InvoiceService
     |--------------------------------------------------------------------------
     | CREATE OR UPDATE INVOICE
     |
-    | $student     — Student model
-    | $termId      — int
-    | $enrollmentId — int|null
-    |       Pass this whenever you have it (observer always passes it).
-    |       If null, the method resolves it from the active enrollment.
-    |       This keeps backward compatibility with any existing direct calls.
+    | $schoolId     — required tenant key (never rely on Auth in workers)
+    | $student       — Student model
+    | $termId        — int
+    | $enrollmentId  — int|null; pass when known (observers always do)
     |--------------------------------------------------------------------------
     */
-    public function createOrUpdateInvoice($student, $termId, $enrollmentId = null)
+    public function createOrUpdateInvoice(int $schoolId, $student, int $termId, ?int $enrollmentId = null): ?Invoice
     {
-        // 1. Resolve the enrollment_id if not passed directly
-        if (!$enrollmentId) {
-            $enrollment = StudentEnrollment::where('student_id', $student->id)
+        if ((int) $student->school_id !== $schoolId) {
+            throw new RuntimeException('Student does not belong to the expected school.');
+        }
+
+        if ($enrollmentId) {
+            $enrollment = StudentEnrollment::withoutGlobalScopes()
+                ->where('school_id', $schoolId)
+                ->find($enrollmentId);
+
+            if (! $enrollment) {
+                return null;
+            }
+        } else {
+            $enrollment = StudentEnrollment::withoutGlobalScopes()
+                ->where('school_id', $schoolId)
+                ->where('student_id', $student->id)
                 ->where('term_id', $termId)
                 ->whereIn('status', [
                     StudentEnrollment::STATUS_ACTIVE,
@@ -40,39 +51,36 @@ class InvoiceService
                 ->latest()
                 ->first();
 
-            if (!$enrollment) {
-                // No active enrollment for this student in this term — skip
+            if (! $enrollment) {
                 return null;
             }
 
             $enrollmentId = $enrollment->id;
-        } else {
-            $enrollment = StudentEnrollment::find($enrollmentId);
-
-            if (!$enrollment) return null;
         }
 
-        // 2. Find or create the invoice anchored to enrollment_id
-        //    student_id and term_id are kept for reporting/filtering convenience
-        $invoice = Invoice::firstOrCreate(
-            [
-                'enrollment_id' => $enrollmentId,   // primary anchor — new
-            ],
-            [
-                'student_id'   => $student->id,     // kept for easy querying
-                'term_id'      => $termId,           // kept for easy querying
-                'invoice_date' => now(),
-            ]
-        );
+        $invoice = Invoice::withoutGlobalScopes()
+            ->where('school_id', $schoolId)
+            ->where('enrollment_id', $enrollmentId)
+            ->first();
 
-        // 3. Clear old line items and recalculate fresh
+        if (! $invoice) {
+            $invoice = new Invoice([
+                'student_id'   => $student->id,
+                'term_id'      => $termId,
+                'enrollment_id' => $enrollmentId,
+                'invoice_date' => now(),
+            ]);
+            $invoice->school_id = $schoolId;
+            $invoice->save();
+        }
+
         $invoice->items()->delete();
 
         $total = 0;
 
-        // 3a. Class fee — look up by class_id from the enrollment (not student)
-        //     This is the key change: enrollment.class_id is the source of truth
-        $classFee = ClassFee::where('class_id', $enrollment->class_id)
+        $classFee = ClassFee::withoutGlobalScopes()
+            ->where('school_id', $schoolId)
+            ->where('class_id', $enrollment->class_id)
             ->where('term_id', $termId)
             ->first();
 
@@ -86,9 +94,10 @@ class InvoiceService
             $total += $classFee->amount;
         }
 
-        // 3b. Extra fees scoped to this term
-        $extraFees = StudentExtraFee::where('student_id', $student->id)
-            ->whereHas('extraFee', fn($q) => $q->where('term_id', $termId))
+        $extraFees = StudentExtraFee::withoutGlobalScopes()
+            ->where('school_id', $schoolId)
+            ->where('student_id', $student->id)
+            ->whereHas('extraFee', fn ($q) => $q->where('term_id', $termId))
             ->get();
 
         foreach ($extraFees as $extra) {
@@ -100,9 +109,7 @@ class InvoiceService
             $total += $extra->amount;
         }
 
-        // 3c. Balance / credit forward from previous enrollment's invoice
-        //     Look up via previous enrollment — not student_id + term_id - 1
-        $previousInvoice = $this->getPreviousInvoice($student->id, $enrollmentId);
+        $previousInvoice = $this->getPreviousInvoice($schoolId, $enrollmentId);
 
         if ($previousInvoice) {
             $carried = $previousInvoice->total_amount - $previousInvoice->amount_paid;
@@ -116,7 +123,6 @@ class InvoiceService
                 $invoice->balance_forward = $carried;
                 $total += $carried;
                 $this->transferPreviousInvoice($previousInvoice, $invoice, $carried);
-
             } elseif ($carried < 0) {
                 $invoice->items()->create([
                     'term_id'     => $termId,
@@ -129,7 +135,6 @@ class InvoiceService
             }
         }
 
-        // 4. Finalise totals and save
         $invoice->total_amount = $total;
         $invoice->balance      = $total - $invoice->amount_paid;
         $invoice->status       = $this->calculateStatus($invoice);
@@ -138,17 +143,11 @@ class InvoiceService
         return $invoice->fresh();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | PAYMENT MADE — unchanged from original
-    |--------------------------------------------------------------------------
-    */
     public function paymentMade(Invoice $invoice, float $amount, string $method): Invoice
     {
         $this->assertPayableInvoice($invoice);
 
         return DB::transaction(function () use ($invoice, $amount, $method) {
-
             InvoicePayment::create([
                 'invoice_id'   => $invoice->id,
                 'amount'       => $amount,
@@ -162,7 +161,11 @@ class InvoiceService
                 'status'  => $this->calculateStatus($invoice),
             ]);
 
-            SendPaymentNotification::dispatch($invoice, $amount);
+            SendPaymentNotification::dispatch(
+                $invoice->id,
+                (int) $invoice->school_id,
+                $amount
+            );
 
             \Log::info('Invoice paid', [
                 'invoice_id' => $invoice->id,
@@ -174,33 +177,23 @@ class InvoiceService
         });
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | PRIVATE HELPERS
-    |--------------------------------------------------------------------------
-    */
-
-    /**
-     * Find the previous term's invoice by walking back through enrollment history.
-     * Uses promoted_from_enrollment_id chain — not term_id arithmetic.
-     */
-    private function getPreviousInvoice($studentId, int $currentEnrollmentId): ?Invoice
+    private function getPreviousInvoice(int $schoolId, int $currentEnrollmentId): ?Invoice
     {
-        $currentEnrollment = StudentEnrollment::find($currentEnrollmentId);
+        $currentEnrollment = StudentEnrollment::withoutGlobalScopes()
+            ->where('school_id', $schoolId)
+            ->find($currentEnrollmentId);
 
-        if (!$currentEnrollment || !$currentEnrollment->promoted_from_enrollment_id) {
+        if (! $currentEnrollment || ! $currentEnrollment->promoted_from_enrollment_id) {
             return null;
         }
 
-        return Invoice::where('enrollment_id', $currentEnrollment->promoted_from_enrollment_id)
+        return Invoice::withoutGlobalScopes()
+            ->where('school_id', $schoolId)
+            ->where('enrollment_id', $currentEnrollment->promoted_from_enrollment_id)
             ->where('status', '!=', Invoice::STATUS_VOIDED)
             ->first();
     }
 
-    /**
-     * Close the prior-term invoice so balances are not double-counted.
-     * Historical total_amount / amount_paid are preserved for statements.
-     */
     private function transferPreviousInvoice(
         Invoice $previousInvoice,
         Invoice $newInvoice,
@@ -230,9 +223,10 @@ class InvoiceService
             );
         }
 
-        $schoolId = $invoice->school_id;
-        if (auth()->check() && auth()->user()->school_id) {
-            $schoolId = auth()->user()->school_id;
+        $schoolId = (int) $invoice->school_id;
+
+        if (! $schoolId) {
+            throw new InvalidArgumentException('Invoice has no school assigned.');
         }
 
         $currentTerm = Term::current1($schoolId);
@@ -261,9 +255,12 @@ class InvoiceService
     {
         if ($invoice->amount_paid >= $invoice->total_amount) {
             return 'paid';
-        } elseif ($invoice->amount_paid > 0) {
+        }
+
+        if ($invoice->amount_paid > 0) {
             return 'partially_paid';
         }
+
         return 'unpaid';
     }
 }

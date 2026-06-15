@@ -8,35 +8,30 @@ use Illuminate\Support\Facades\Auth;
 
 class AcademicYearController extends Controller
 {
-    /**
-     * Display a listing of Academic Years
-     */
     public function index()
     {
-        $years = AcademicYear::all(); // Global scope should handle school filtering
+        $years = AcademicYear::orderByDesc('start_date')->get();
+
         return view('academic_years.index', compact('years'));
     }
 
-    /**
-     * Store a newly created Academic Year (from Modal)
-     */
     public function store(Request $request)
     {
+        $schoolId = Auth::user()->school_id;
+
         $request->validate([
-            'name'       => 'required|string|max:255|unique:academic_years,name,NULL,id,school_id,' . Auth::user()->school_id,
+            'name'       => 'required|string|max:255|unique:academic_years,name,NULL,id,school_id,' . $schoolId,
             'start_date' => 'required|date',
             'end_date'   => 'required|date|after_or_equal:start_date',
             'is_current' => 'nullable|boolean',
+            'school_id'  => 'prohibited',
         ]);
 
-        // If user wants to set this as current year, unset all others first
         if ($request->boolean('is_current')) {
-            AcademicYear::where('school_id', Auth::user()->school_id)
-                        ->update(['is_current' => false]);
+            AcademicYear::forSchool($schoolId)->update(['is_current' => false]);
         }
 
         AcademicYear::create([
-            'school_id'   => Auth::user()->school_id,
             'name'        => $request->name,
             'start_date'  => $request->start_date,
             'end_date'    => $request->end_date,
@@ -44,31 +39,26 @@ class AcademicYearController extends Controller
         ]);
 
         return redirect()->route('academic-years.index')
-                         ->with('success', 'Academic Year created successfully.');
+            ->with('success', 'Academic Year created successfully.');
     }
 
-    /**
-     * Update the specified Academic Year (from Modal)
-     */
     public function update(Request $request, AcademicYear $academicYear)
     {
-        // Authorization: Ensure user can only edit their school's year
-        if ($academicYear->school_id !== Auth::user()->school_id) {
-            abort(403, 'Unauthorized action.');
-        }
+        $schoolId = Auth::user()->school_id;
+        AcademicYear::forSchool($schoolId)->findOrFail($academicYear->id);
 
         $request->validate([
-            'name'       => 'required|string|max:255|unique:academic_years,name,' . $academicYear->id . ',id,school_id,' . Auth::user()->school_id,
+            'name'       => 'required|string|max:255|unique:academic_years,name,' . $academicYear->id . ',id,school_id,' . $schoolId,
             'start_date' => 'required|date',
             'end_date'   => 'required|date|after_or_equal:start_date',
             'is_current' => 'nullable|boolean',
+            'school_id'  => 'prohibited',
         ]);
 
-        // If setting as current, reset all other years
         if ($request->boolean('is_current')) {
-            AcademicYear::where('school_id', Auth::user()->school_id)
-                        ->where('id', '!=', $academicYear->id)
-                        ->update(['is_current' => false]);
+            AcademicYear::forSchool($schoolId)
+                ->where('id', '!=', $academicYear->id)
+                ->update(['is_current' => false]);
         }
 
         $academicYear->update([
@@ -79,28 +69,21 @@ class AcademicYearController extends Controller
         ]);
 
         return redirect()->route('academic-years.index')
-                         ->with('success', 'Academic Year updated successfully.');
+            ->with('success', 'Academic Year updated successfully.');
     }
 
-    /**
-     * Remove the specified Academic Year
-     */
     public function destroy(AcademicYear $academicYear)
     {
-        // Authorization check
-        if ($academicYear->school_id !== Auth::user()->school_id) {
-            abort(403, 'Unauthorized action.');
-        }
+        AcademicYear::forSchool()->findOrFail($academicYear->id);
 
-        // Optional: Prevent deleting current academic year
         if ($academicYear->is_current) {
             return redirect()->route('academic-years.index')
-                             ->with('error', 'Cannot delete the current academic year.');
+                ->with('error', 'Cannot delete the current academic year.');
         }
 
         $academicYear->delete();
 
         return redirect()->route('academic-years.index')
-                         ->with('success', 'Academic Year deleted successfully.');
+            ->with('success', 'Academic Year deleted successfully.');
     }
 }

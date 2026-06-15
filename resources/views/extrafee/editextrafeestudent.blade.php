@@ -17,6 +17,18 @@
         </div>
     </div>
 
+    @if ($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <strong>Could not save changes:</strong>
+            <ul class="mb-0 mt-2">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     {{-- Main Content Card --}}
     <div class="row">
         <div class="col-12">
@@ -117,8 +129,10 @@
                                             @foreach($students as $student)
                                                 @php
                                                     $existing = $assignedStudents->firstWhere('student_id', $student->id);
+                                                    $enrollment = $student->enrollments->first();
+                                                    $className = $enrollment?->schoolClass?->name ?? '—';
                                                 @endphp
-                                                <tr data-class="{{ $student->class_id }}" class="student-row">
+                                                <tr data-class="{{ $enrollment?->class_id }}" class="student-row">
                                                     <td>
                                                         <input type="hidden" name="students[{{ $student->id }}][student_id]" value="{{ $student->id }}">
                                                         <input type="checkbox" 
@@ -131,9 +145,9 @@
                                                     <td>
                                                         <div class="d-flex align-items-center">
                                                             <div class="user-avatar me-2" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #36a9e2 0%, #1e88c7 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;">
-                                                                {{ strtoupper(substr($student->name, 0, 1)) }}
+                                                                {{ strtoupper(substr($student->full_name, 0, 1)) }}
                                                             </div>
-                                                            <strong>{{ $student->name }}</strong>
+                                                            <strong>{{ $student->full_name }}</strong>
                                                         </div>
                                                     </td>
                                                     <td>
@@ -141,7 +155,7 @@
                                                             {{ $student->admission }}
                                                         </span>
                                                     </td>
-                                                    <td>{{ $student->class->name }}</td>
+                                                    <td>{{ $className }}</td>
                                                     <td class="quantity-col">
                                                         <input type="number" 
                                                             class="form-control quantity-input" 

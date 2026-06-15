@@ -33,6 +33,8 @@ class ClassController extends Controller
      */
     public function insert(Request $request)
     {
+        $this->authorize('create', Classes::class);
+
         $schoolId = Auth::user()->school_id;
 
         $request->validate([
@@ -83,10 +85,8 @@ class ClassController extends Controller
             'order' => 'required|integer|min:1',
         ]);
 
-        $class = Classes::findOrFail($id);
-
-
-        // Check if the new order is already taken by another class (of the same school)
+        $class = Classes::forSchool()->findOrFail($id);
+        $this->authorize('update', $class);
         $orderExists = Classes::where('order', $request->order)
             ->where('id', '!=', $id)
             ->where('school_id', $class->school_id)
@@ -110,12 +110,8 @@ class ClassController extends Controller
      */
     public function delete($id)
     {
-        $class = Classes::findOrFail($id);
-
-        // Security check
-        if ($class->school_id !== Auth::user()->school_id) {
-            abort(403);
-        }
+        $class = Classes::forSchool()->findOrFail($id);
+        $this->authorize('delete', $class);
 
         $class->delete();
 

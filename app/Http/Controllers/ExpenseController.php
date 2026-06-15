@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 use App\Models\Expense;
 use App\Models\Term;
 use App\Models\ExpenseCategory;
+use App\Support\TenantRules;
+use App\Support\TenantFilters;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Notifications\ExpenseRecordedNotification;
@@ -12,7 +14,7 @@ class ExpenseController extends Controller
 {
    public function index(Request $request)
 {
-    $schoolId = auth()->user()->school_id;
+    $schoolId = TenantFilters::validate($request, ['term_id', 'class_id', 'category_id']);
 
     // Start with a query builder — DO NOT call get()/paginate() yet
     $query = Expense::with('category')
@@ -49,6 +51,8 @@ class ExpenseController extends Controller
 
     public function edit(Expense $expense)
     {
+        $this->authorize('update', $expense);
+
         $categories = ExpenseCategory::all();
         $terms=Term::where('school_id', auth()->user()->school_id)->get();
         return view('expensesdefined.create', compact('categories', 'expense','terms'));
@@ -57,19 +61,22 @@ class ExpenseController extends Controller
 
    public function store(Request $request)
 {
+    $this->authorize('create', Expense::class);
+
     $data = $request->validate([
-        'expense_category_id' => 'nullable|exists:expense_categories,id',
+        'expense_category_id' => ['nullable', TenantRules::expenseCategories()],
         'description' => 'nullable|string',
         'amount' => 'required|numeric|min:0.01',
         'payment_method' => 'nullable|string',
         'expense_date' => 'nullable|date',
-        'term_id' => 'required|exists:terms,id',
+        'term_id' => ['required', TenantRules::terms()],
+        'school_id' => TenantRules::prohibitedSchoolId(),
     ]);
 
-    $term = Term::findOrFail($data['term_id']);
+    $term = Term::forSchool()->findOrFail($data['term_id']);
     $data['year'] = $term->year;
-    $data['school_id'] = auth()->user()->school_id;
     $data['created_by'] = auth()->id();
+    unset($data['school_id']);
 
     // ✅ Create expense (your original logic)
     $expense = Expense::create($data);
@@ -96,13 +103,14 @@ class ExpenseController extends Controller
         $this->authorize('update', $expense);
          
         $data = $request->validate([
-            'expense_category_id' => 'nullable|exists:expense_categories,id',
+            'expense_category_id' => ['nullable', TenantRules::expenseCategories()],
             'description' => 'nullable|string',
             'amount' => 'required|numeric|min:0.01',
             'payment_method' => 'nullable|string',
             'expense_date' => 'nullable|date',
-            'term_id'=>'required|exists:terms,id',
+            'term_id'=>['required', TenantRules::terms()],
             'year'=>'required|digits:4|integer',
+            'school_id' => TenantRules::prohibitedSchoolId(),
         ]);
 
         $expense->update($data); // observer updates the original cashbook entry
@@ -118,7 +126,9 @@ class ExpenseController extends Controller
 
     public function restore($id)
     {
-        $expense = Expense::withTrashed()->findOrFail($id);
+        $expense = Expense::withTrashed()
+            ->where('school_id', auth()->user()->school_id)
+            ->findOrFail($id);
         $this->authorize('restore', $expense);
         $expense->restore(); // observer creates "restored" cashbook entry
         return redirect()->back()->with('success', 'Expense restored.');

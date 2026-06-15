@@ -10,6 +10,7 @@ use App\Models\AcademicYear;
 use App\Models\StudentEnrollment;
 use App\Models\PromotionRun;
 use App\Services\PromotionService;
+use App\Support\TenantRules;
 use Illuminate\Support\Facades\Auth;
 
 class PromotionController extends Controller
@@ -22,8 +23,8 @@ class PromotionController extends Controller
     public function promoteToNextTerm(Request $request)
     {
         $request->validate([
-            "from_term_id" => "required|exists:terms,id",
-            "to_term_id" => "required|exists:terms,id",
+            "from_term_id" => ["required", TenantRules::terms()],
+            "to_term_id" => ["required", TenantRules::terms()],
         ]);
 
         $schoolId = Auth::user()->school_id;
@@ -209,17 +210,24 @@ class PromotionController extends Controller
             );
         }
 
-        $nextYearFirstTerm = Term::where("school_id", $schoolId)
-            ->where("academic_year_id", $targetAcademicYear->id)
-            ->orderBy("start_date")
-            ->first();
+        $termsError = Term::validateRequiredTermsForYearPromotion(
+            $schoolId,
+            $targetAcademicYear->id,
+            $targetYearName
+        );
+
+        if ($termsError) {
+            return redirect()->route("addterm")->with("error", $termsError);
+        }
+
+        $nextYearFirstTerm = Term::firstInYear($schoolId, $targetAcademicYear->id);
 
         if (!$nextYearFirstTerm) {
             return redirect()
                 ->route("addterm")
                 ->with(
                     "error",
-                    "Next academic year's first term ({$targetYearName}) not found. Please create it first."
+                    "Academic year {$targetYearName} has no Term 1. Create Term 1 (term number 1) before promoting to the next year."
                 );
         }
 
@@ -287,7 +295,8 @@ class PromotionController extends Controller
                 $activeKey
             ) {
                 // Lock any existing row for this slot (including failed with null key — optional)
-                $blocking = PromotionRun::where("active_key", $activeKey)
+                $blocking = PromotionRun::where('school_id', $schoolId)
+                    ->where("active_key", $activeKey)
                     ->lockForUpdate()
                     ->first();
 

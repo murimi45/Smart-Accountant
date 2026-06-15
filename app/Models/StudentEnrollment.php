@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Builder;
-use App\Models\Scopes\SchoolScope;
+use App\Models\Concerns\BelongsToSchool;
 
 class StudentEnrollment extends Model
 {
+    use BelongsToSchool;
     protected $table = 'student_enrollments';
 
     protected $fillable = [
@@ -39,6 +40,19 @@ class StudentEnrollment extends Model
     const STATUS_INACTIVE         = 'inactive';
     const STATUS_WRONGLY_PROMOTED = 'wrongly_promoted';
     const STATUS_CANCELLED        = 'cancelled';
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $enrollment) {
+            if ($enrollment->school_id || ! $enrollment->student_id) {
+                return;
+            }
+
+            $enrollment->school_id = Student::withoutGlobalScopes()
+                ->whereKey($enrollment->student_id)
+                ->value('school_id');
+        });
+    }
 
     /*
     |--------------------------------------------------------------------------

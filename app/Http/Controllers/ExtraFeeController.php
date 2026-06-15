@@ -9,7 +9,9 @@ use App\Models\Term;
 use App\Models\ClassFee;
 use App\Models\Classes;
 use App\Models\StudentExtraFee;
+use App\Models\StudentEnrollment;
 use App\Services\InvoiceService;
+use App\Support\TenantRules;
 
 class ExtraFeeController extends Controller
 {
@@ -42,15 +44,16 @@ class ExtraFeeController extends Controller
             'name' => 'required|string|max:255',
             'amount'=>'nullable|numeric',
             'is_quantity_based' => 'required|boolean',
-            'description'=>'required|string',
-             'term_id'=>'required|exists:terms,id',
-            'status'=>'required|string|in:active,inactive'
+             'description'=>'required|string',
+             'term_id'=>['required', TenantRules::terms()],
+            'status'=>'required|string|in:active,inactive',
+            'school_id' => TenantRules::prohibitedSchoolId(),
             
         ]);
-        $term=Term::findOrFail($validated['term_id']);
+        $term = Term::forSchool($schoolId)->findOrFail($validated['term_id']);
         $validated['year']=$term->year;
-        $validated['school_id']=$schoolId;
         $validated['created_by']=$userId;
+        unset($validated['school_id']);
 
         ExtraFee::create($validated);
 
@@ -61,29 +64,28 @@ class ExtraFeeController extends Controller
      public function updateExtraFee($id)
         {
             
-           $extrafee=ExtraFee::findOrFail($id);
+           $extrafee = ExtraFee::forSchool()->findOrFail($id);
            
-           $terms=Term::all();
-        //    $classfee=ClassFee::find($id);
+           $terms = Term::with('academicYear')->orderByDesc('start_date')->get();
            return view('extrafee.edit', compact('extrafee','terms'));
 
         }
 
     public function editExtraFee(Request $request,$id){
 
-        $extrafee=ExtraFee::findOrFail($id);
-        $schoolId=auth()->user()->school_id;
+        $extrafee = ExtraFee::forSchool()->findOrFail($id);
+        $schoolId = auth()->user()->school_id;
 
         $validated= $request->validate([
             'name' => 'required|string|max:255',
             'amount'=>'nullable|numeric',
             'is_quantity_based' => 'required|boolean',
             'description'=>'required|string',
-            'status'=>'required|string|in:active,inactive'
-            
+            'status'=>'required|string|in:active,inactive',
+            'school_id' => TenantRules::prohibitedSchoolId(),
         ]);
 
-        $validated['school_id']=$schoolId;
+        unset($validated['school_id']);
 
         $extrafee->update($validated);
 
@@ -94,7 +96,7 @@ class ExtraFeeController extends Controller
 
          public function deleteExtraFee($id)
       {
-              $extraFee = ExtraFee::findOrFail($id); 
+              $extraFee = ExtraFee::forSchool()->findOrFail($id); 
               $extraFee->delete();
               return redirect()->back()->with('success', 'Extra Fee deleted successfully.');
     }
@@ -107,12 +109,15 @@ class ExtraFeeController extends Controller
 public function assignStudentExtraFee(Request $request)
 {
     $request->validate([
-        'extra_fee_id'          => 'required|exists:extra_fees,id',
-        'students'              => 'required|array',
-        'students.*.quantity'   => 'nullable|numeric|min:1',
+        'extra_fee_id'            => ['required', TenantRules::extraFees()],
+        'students'                => 'required|array',
+        'students.*.student_id'   => ['required', TenantRules::students()],
+        'students.*.quantity'     => 'nullable|numeric|min:1',
+        'school_id'               => TenantRules::prohibitedSchoolId(),
     ]);
 
-    $extraFee = ExtraFee::findOrFail($request->extra_fee_id);
+    $extraFee = ExtraFee::forSchool()->findOrFail($request->extra_fee_id);
+    $schoolId = auth()->user()->school_id;
 
     // collect student fee records for bulk insert/update
     $studentFees = [];
@@ -120,7 +125,12 @@ public function assignStudentExtraFee(Request $request)
 
     foreach ($request->students as $studentId => $studentData) {
         if (empty($studentData['selected'])) {
-            continue; // skip unchecked students
+            continue;
+        }
+
+        $student = Student::forSchool($schoolId)->find($studentData['student_id']);
+        if (! $student) {
+            continue;
         }
 
         $quantity = !empty($studentData['quantity']) ? (int) $studentData['quantity'] : 1;
@@ -129,7 +139,7 @@ public function assignStudentExtraFee(Request $request)
 
         // Instead of firing observer per student, we collect
         $studentFees[] = [
-            'student_id'     => $studentData['student_id'],
+            'student_id'     => $student->id,
             'extra_fee_id'   => $extraFee->id,
             'quantity'       => $quantity,
             'amount'         => $total,
@@ -139,7 +149,7 @@ public function assignStudentExtraFee(Request $request)
             'updated_at'     => now(),
         ];
 
-        $updatedStudentIds[] = $studentData['student_id'];
+        $updatedStudentIds[] = $student->id;
     }
 
     if (!empty($studentFees)) {
@@ -149,8 +159,8 @@ public function assignStudentExtraFee(Request $request)
         // use upsert so existing records update instead of duplicate
         StudentExtraFee::upsert(
             $studentFees,
-            ['extra_fee_id', 'student_id'], // unique keys
-            ['quantity', 'amount', 'school_id', 'created_by', 'updated_at']
+            ['student_id', 'extra_fee_id', 'school_id'],
+            ['quantity', 'amount', 'created_by', 'updated_at']
         );
 
         // ✅ Refresh to make sure term_id is available
@@ -159,7 +169,7 @@ public function assignStudentExtraFee(Request $request)
         // 🔑 Fire invoice updates once per student
         $students = Student::whereIn('id', $updatedStudentIds)->get();
         foreach ($students as $student) {
-            app(InvoiceService::class)->createOrUpdateInvoice($student, $extraFee->term_id);
+            app(InvoiceService::class)->createOrUpdateInvoice($schoolId, $student, $extraFee->term_id);
         }
 
         // Reactivate observer
@@ -174,6 +184,8 @@ public function assignStudentExtraFee(Request $request)
 
   public function showAssignExtraFeeForm(Request $request)
 {
+    $schoolId = auth()->user()->school_id;
+    $activeTerm = Term::current1($schoolId);
     $extraFees = ExtraFee::all();
     $classes = Classes::all();
 
@@ -182,21 +194,36 @@ public function assignStudentExtraFee(Request $request)
 
     // Load students only if an extra fee is selected
     if ($request->filled('extra_fee_id')) {
-        $studentsQuery = Student::where('school_id', auth()->user()->school_id);
+        $studentsQuery = Student::where('school_id', $schoolId)
+            ->whereHas('enrollments', function ($q) use ($request, $activeTerm) {
+                $q->whereNotIn('status', [StudentEnrollment::STATUS_CANCELLED]);
 
-        // Apply filters only if they are given
-        if ($request->filled('class_id')) {
-            $studentsQuery->where('class_id', $request->class_id);
-        }
+                if ($activeTerm) {
+                    $q->where('term_id', $activeTerm->id);
+                }
+
+                if ($request->filled('class_id')) {
+                    $q->where('class_id', $request->class_id);
+                }
+            })
+            ->with(['enrollments' => function ($q) use ($activeTerm) {
+                $q->whereNotIn('status', [StudentEnrollment::STATUS_CANCELLED]);
+
+                if ($activeTerm) {
+                    $q->where('term_id', $activeTerm->id);
+                }
+
+                $q->with('schoolClass')->latest();
+            }]);
 
         if ($request->filled('search')) {
             $studentsQuery->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
+                $q->where('full_name', 'like', '%' . $request->search . '%')
                   ->orWhere('admission', 'like', '%' . $request->search . '%');
             });
         }
 
-        $students = $studentsQuery->get();
+        $students = $studentsQuery->orderBy('full_name')->get();
     }
 
     // Get assigned fees only if extra fee is selected
@@ -222,10 +249,9 @@ public function assignStudentExtraFee(Request $request)
 
     public function listExtraFeeStudent(Request $request)
     {
-        // $extraFeeStudents=StudentExtraFee::all();
-        // return view('extrafee.extrafeestudent', compact('extraFeeStudents'));
+        $schoolId = auth()->user()->school_id;
 
-        $query=StudentExtraFee::query();
+        $query = StudentExtraFee::where('school_id', $schoolId);
 
         if($request->filled('extra_fee_id')){
             $query->where('extra_fee_id',$request->extra_fee_id);
@@ -247,9 +273,27 @@ public function assignStudentExtraFee(Request $request)
 
      public function editAssignedExtraFee($id)
     {
-        $assignedFee = StudentExtraFee::findOrFail($id);
-        $students = Student::with('class')->get();
-        $assignedStudents = StudentExtraFee::where('extra_fee_id',  $assignedFee->extra_fee_id)->get();
+        $schoolId = auth()->user()->school_id;
+        $assignedFee = StudentExtraFee::with('extraFee')->where('school_id', $schoolId)->findOrFail($id);
+        $this->authorize('update', $assignedFee);
+        $termId = $assignedFee->extraFee?->term_id ?? Term::current1($schoolId)?->id;
+
+        $students = Student::where('school_id', $schoolId)
+            ->with(['enrollments' => function ($q) use ($termId) {
+                $q->whereNotIn('status', [StudentEnrollment::STATUS_CANCELLED]);
+
+                if ($termId) {
+                    $q->where('term_id', $termId);
+                }
+
+                $q->with('schoolClass')->latest();
+            }])
+            ->orderBy('full_name')
+            ->get();
+
+        $assignedStudents = StudentExtraFee::where('school_id', $schoolId)
+            ->where('extra_fee_id', $assignedFee->extra_fee_id)
+            ->get();
         $extraFees = ExtraFee::with('term')->get();
 
         return view('extrafee.editextrafeestudent', compact(
@@ -263,31 +307,124 @@ public function assignStudentExtraFee(Request $request)
 
 
     public function updateAssignedExtraFee(Request $request, $id)
-{
-    
-    $request->validate([
-        'extra_fee_id' => 'required|exists:extra_fees,id',
-        'quantity' => 'required|numeric|min:1'
-    ]);
-    dd($request);
+    {
+        $schoolId = auth()->user()->school_id;
+        $assignedFee = StudentExtraFee::where('school_id', $schoolId)->findOrFail($id);
+        $this->authorize('update', $assignedFee);
+        $originalExtraFeeId = (int) $assignedFee->extra_fee_id;
 
-    // Find the assigned extra fee record
-    $assignedFee = StudentExtraFee::findOrFail($id);
+        $request->validate([
+            'extra_fee_id'            => ['required', TenantRules::extraFees()],
+            'students'                => 'required|array',
+            'students.*.student_id'   => ['required', TenantRules::students()],
+            'students.*.quantity'       => 'nullable|numeric|min:1',
+            'school_id'               => TenantRules::prohibitedSchoolId(),
+        ]);
 
-    // Update fields
-    $assignedFee->extra_fee_id = $request->extra_fee_id;
-    $assignedFee->quantity = $request->quantity;
-    $assignedFee->save();
+        $extraFee = ExtraFee::forSchool()->findOrFail($request->extra_fee_id);
+        $newExtraFeeId = (int) $extraFee->id;
 
-    return redirect()->route('listextrafeestudents')
-                     ->with('success', 'Assigned extra fee updated successfully.');
-}
+        $selected = [];
+        foreach ($request->students as $studentData) {
+            if (empty($studentData['selected'])) {
+                continue;
+            }
+
+            $student = Student::where('school_id', $schoolId)->find($studentData['student_id'] ?? null);
+            if (! $student) {
+                continue;
+            }
+
+            $quantity = ! empty($studentData['quantity']) ? (int) $studentData['quantity'] : 1;
+            $selected[$student->id] = $quantity;
+        }
+
+        $affectedStudentIds = [];
+        app()->instance('batchAssigningExtraFees', true);
+
+        try {
+            if ($originalExtraFeeId !== $newExtraFeeId) {
+                $removed = StudentExtraFee::where('school_id', $schoolId)
+                    ->where('extra_fee_id', $originalExtraFeeId)
+                    ->get();
+
+                foreach ($removed as $assignment) {
+                    $affectedStudentIds[] = $assignment->student_id;
+                    $assignment->delete();
+                }
+            } else {
+                $toRemove = StudentExtraFee::where('school_id', $schoolId)
+                    ->where('extra_fee_id', $originalExtraFeeId)
+                    ->whereNotIn('student_id', array_keys($selected))
+                    ->get();
+
+                foreach ($toRemove as $assignment) {
+                    $affectedStudentIds[] = $assignment->student_id;
+                    $assignment->delete();
+                }
+            }
+
+            $studentFees = [];
+            foreach ($selected as $studentId => $quantity) {
+                $total = $quantity * $extraFee->amount;
+
+                $studentFees[] = [
+                    'student_id'   => $studentId,
+                    'extra_fee_id' => $newExtraFeeId,
+                    'quantity'     => $quantity,
+                    'amount'       => $total,
+                    'school_id'    => $schoolId,
+                    'created_by'   => auth()->id(),
+                    'created_at'   => now(),
+                    'updated_at'   => now(),
+                ];
+
+                $affectedStudentIds[] = $studentId;
+            }
+
+            if ($studentFees !== []) {
+                StudentExtraFee::upsert(
+                    $studentFees,
+                    ['student_id', 'extra_fee_id', 'school_id'],
+                    ['quantity', 'amount', 'created_by', 'updated_at']
+                );
+            }
+
+            $extraFee->refresh();
+            $affectedStudentIds = array_unique($affectedStudentIds);
+
+            foreach ($affectedStudentIds as $studentId) {
+                $student = Student::forSchool($schoolId)->find($studentId);
+                if (! $student) {
+                    continue;
+                }
+
+                app(InvoiceService::class)->createOrUpdateInvoice($schoolId, $student, $extraFee->term_id);
+
+                if ($originalExtraFeeId !== $newExtraFeeId) {
+                    $originalFee = ExtraFee::forSchool($schoolId)->find($originalExtraFeeId);
+                    if ($originalFee?->term_id) {
+                        app(InvoiceService::class)->createOrUpdateInvoice($schoolId, $student, $originalFee->term_id);
+                    }
+                }
+            }
+        } finally {
+            app()->forgetInstance('batchAssigningExtraFees');
+        }
+
+        return redirect()
+            ->route('listextrafeestudents')
+            ->with('success', 'Assigned extra fee updated successfully.');
+    }
 
 
 
    public function deleteAssignedExtraFee($id)
 {
-    $assignedFee = StudentExtraFee::with('extraFee', 'student')->findOrFail($id);
+    $assignedFee = StudentExtraFee::with('extraFee', 'student')
+        ->where('school_id', auth()->user()->school_id)
+        ->findOrFail($id);
+    $this->authorize('delete', $assignedFee);
 
     $student = $assignedFee->student;
     $termId  = $assignedFee->extraFee?->term_id;
@@ -295,7 +432,11 @@ public function assignStudentExtraFee(Request $request)
     $assignedFee->delete();
 
     if ($student && $termId) {
-        app(\App\Services\InvoiceService::class)->createOrUpdateInvoice($student, $termId);
+        app(\App\Services\InvoiceService::class)->createOrUpdateInvoice(
+            (int) auth()->user()->school_id,
+            $student,
+            $termId
+        );
     }
 
     return redirect()->back()->with('success', 'Extra Fee deleted successfully.');

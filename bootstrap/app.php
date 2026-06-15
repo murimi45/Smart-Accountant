@@ -1,5 +1,7 @@
 <?php
 
+use App\Support\CrossTenantSecurityLog;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -23,10 +25,17 @@ return Application::configure(basePath: dirname(__DIR__))
     $middleware->validateCsrfTokens(except: [
         'payment/confirm',
         'payment/validate',
+        'api/payment/confirm',
+        'api/payment/validate',
+        'api/sms/delivery-report',
     ]);
 })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->reportable(function (AuthorizationException $e) {
+            if (auth()->check()) {
+                CrossTenantSecurityLog::authorizationDenied($e);
+            }
+        });
     })
     ->withProviders([
         App\Providers\FortifyServiceProvider::class,

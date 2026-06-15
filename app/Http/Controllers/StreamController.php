@@ -4,71 +4,67 @@ namespace App\Http\Controllers;
 
 use App\Models\Stream;
 use App\Models\Classes;
+use App\Support\TenantRules;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class StreamController extends Controller
 {
-    /**
-     * Display a listing of all Streams
-     */
     public function index()
     {
         $streams = Stream::with('class')
-                         ->latest()
-                         ->get();
+            ->latest()
+            ->get();
 
-        $classes = Classes::all();   // Needed for Add & Edit modals
+        $classes = Classes::orderBy('order')->get();
 
         return view('streams.index', compact('streams', 'classes'));
     }
 
-    /**
-     * Store a newly created Stream (from Modal)
-     */
     public function store(Request $request)
     {
+        $this->authorize('create', Stream::class);
+
         $request->validate([
-            'class_id' => 'required|exists:classes,id',
+            'class_id' => ['required', TenantRules::classes()],
             'name'     => 'required|string|max:10|unique:streams,name,NULL,id,class_id,' . $request->class_id,
+            'school_id' => TenantRules::prohibitedSchoolId(),
         ]);
 
         Stream::create($request->only(['class_id', 'name']));
 
         return redirect()->route('streams.index')
-                         ->with('success', 'Stream created successfully.');
+            ->with('success', 'Stream created successfully.');
     }
 
-    /**
-     * Update the specified Stream (from Modal)
-     */
     public function update(Request $request, Stream $stream)
     {
+        $this->authorize('update', $stream);
+
         $request->validate([
-            'class_id' => 'required|exists:classes,id',
+            'class_id' => ['required', TenantRules::classes()],
             'name'     => 'required|string|max:10|unique:streams,name,' . $stream->id . ',id,class_id,' . $request->class_id,
+            'school_id' => TenantRules::prohibitedSchoolId(),
         ]);
 
         $stream->update($request->only(['class_id', 'name']));
 
         return redirect()->route('streams.index')
-                         ->with('success', 'Stream updated successfully.');
+            ->with('success', 'Stream updated successfully.');
     }
 
-    /**
-     * Remove the specified Stream
-     */
     public function destroy(Stream $stream)
     {
-        // Prevent deletion if students are assigned
-        if ($stream->students()->count() > 0) {
+        $this->authorize('delete', $stream);
+
+        if ($stream->enrollments()->exists()) {
             return redirect()->route('streams.index')
-                             ->with('error', 'Cannot delete stream with assigned students.');
+                ->with('error', 'Cannot delete stream with assigned students.');
         }
 
         $stream->delete();
 
         return redirect()->route('streams.index')
-                         ->with('success', 'Stream deleted successfully.');
+            ->with('success', 'Stream deleted successfully.');
     }
 }

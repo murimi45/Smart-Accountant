@@ -4,64 +4,42 @@ namespace App\Policies;
 
 use App\Models\Expense;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
+use App\Policies\Concerns\ChecksSchoolAccess;
 
 class ExpensePolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
+    use ChecksSchoolAccess;
+
     public function viewAny(User $user): bool
     {
-        return false;
+        return $this->isFinanceUser($user);
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Expense $expense): bool
     {
-        return false;
+        return $this->isFinanceUser($user)
+            && $this->belongsToSameSchool($user, $expense->school_id);
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return false;
+        return $this->isFinanceUser($user);
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Expense $expense): bool
     {
-         return $user->id === $expense->created_by;
+        return $this->belongsToSameSchool($user, $expense->school_id)
+            && $user->id === $expense->created_by;
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Expense $expense)
-     {
-    // Example: only the creator can delete
-    return $user->id === $expense->created_by;
-     }
+    public function delete(User $user, Expense $expense): bool
+    {
+        return $this->update($user, $expense);
+    }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
     public function restore(User $user, Expense $expense): bool
     {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Expense $expense): bool
-    {
-        return false;
+        return $this->isFinanceUser($user)
+            && $this->belongsToSameSchool($user, $expense->school_id);
     }
 }

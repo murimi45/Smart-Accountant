@@ -4,11 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Scopes\SchoolScope;
+use App\Models\Concerns\BelongsToSchool;
 
 class Term extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, BelongsToSchool;
 
     protected $fillable = [
         'school_id',
@@ -19,17 +19,6 @@ class Term extends Model
         'end_date',
         'active',
     ];
-
-    protected static function booted()
-    {
-        static::addGlobalScope(new SchoolScope);
-
-        static::creating(function ($model) {
-        if (auth()->check()) {
-            $model->school_id = auth()->user()->school_id;
-        }
-    });
-    }
 
     // ── Relationships ────────────────────────────────────────────
     public function academicYear()
@@ -175,6 +164,59 @@ class Term extends Model
     public static function nextAfter(int $schoolId, ?self $from): ?self
     {
         return self::nextInYear($schoolId, $from);
+    }
+
+    /**
+     * Term numbers required in the target year before year promotion.
+     */
+    public const YEAR_PROMOTION_REQUIRED_TERM_NUMBERS = [1, 2, 3];
+
+    /**
+     * Term 1 of an academic year — entry point for year promotion.
+     */
+    public static function firstInYear(int $schoolId, int $academicYearId): ?self
+    {
+        return self::with('academicYear')
+            ->where('school_id', $schoolId)
+            ->where('academic_year_id', $academicYearId)
+            ->where('term_number', 1)
+            ->first();
+    }
+
+    /**
+     * @return list<int> Missing term_number values (e.g. [2, 3])
+     */
+    public static function missingTermNumbersForYear(int $schoolId, int $academicYearId): array
+    {
+        $existing = self::where('school_id', $schoolId)
+            ->where('academic_year_id', $academicYearId)
+            ->whereIn('term_number', self::YEAR_PROMOTION_REQUIRED_TERM_NUMBERS)
+            ->pluck('term_number')
+            ->map(fn ($n) => (int) $n)
+            ->all();
+
+        return array_values(array_diff(self::YEAR_PROMOTION_REQUIRED_TERM_NUMBERS, $existing));
+    }
+
+    /**
+     * Returns an error message if Term 1–3 are not all present, otherwise null.
+     */
+    public static function validateRequiredTermsForYearPromotion(
+        int $schoolId,
+        int $academicYearId,
+        ?string $yearName = null
+    ): ?string {
+        $missing = self::missingTermNumbersForYear($schoolId, $academicYearId);
+
+        if ($missing === []) {
+            return null;
+        }
+
+        $label = $yearName ?? 'the target academic year';
+        $list = implode(', ', array_map(fn (int $n) => "Term {$n}", $missing));
+
+        return "Academic year {$label} is missing {$list}. "
+            . 'Create Term 1, Term 2, and Term 3 before promoting to the next year.';
     }
 
     /**

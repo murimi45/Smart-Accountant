@@ -41,8 +41,8 @@ class MpesaService
             ->post($this->baseUrl . '/mpesa/c2b/v1/registerurl', [
                 'ShortCode' => config('services.mpesa.shortcode'),
                 'ResponseType' => 'Completed',
-                'ConfirmationURL' => url('/api/mpesa/confirm'),
-                'ValidationURL' => url('/api/mpesa/validate'),
+                'ConfirmationURL' => url('/api/payment/confirm'),
+                'ValidationURL' => url('/api/payment/validate'),
             ]);
 
         return $response->json();

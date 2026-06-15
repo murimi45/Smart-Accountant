@@ -47,13 +47,14 @@ class CreateNewUser implements CreatesNewUsers
         ]);
 
         // ✅ Create the Admin User (linked to the school)
-        $user = User::create([
+        $user = new User([
             'admin_name' => $input['admin_name'],
             'email' => $input['email'],
             'password' => Hash::make($input['password']),
             'role' => 'admin',
-            'school_id' => $school->id,
         ]);
+        $user->school_id = $school->id;
+        $user->save();
 
         return $user; // ✅ Fortify auto-logs in the user after this
     }

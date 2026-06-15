@@ -1,17 +1,22 @@
 <?php
 
 namespace App\Observers;
+
 use App\Models\Expense;
 use App\Models\CashbookEntry;
 use Illuminate\Support\Facades\DB;
 
 class ExpenseObserver
 {
+    private function createCashbookEntry(Expense $expense, array $attributes): CashbookEntry
+    {
+        return CashbookEntry::createForSchool($expense->school_id, $attributes);
+    }
+
     public function created(Expense $expense)
     {
         DB::transaction(function () use ($expense) {
-            $expense->cashbookEntries()->create([
-                'school_id' => $expense->school_id,
+            $this->createCashbookEntry($expense, [
                 'transaction_type' => 'outflow',
                 'entry_type' => 'original',
                 'amount' => $expense->amount,
@@ -24,7 +29,6 @@ class ExpenseObserver
 
     public function updated(Expense $expense)
     {
-        // update the original cashbook entry when key fields change
         DB::transaction(function () use ($expense) {
             $original = $expense->cashbookEntries()->where('entry_type', 'original')->first();
 
@@ -36,9 +40,7 @@ class ExpenseObserver
                     'description' => 'Expense: ' . ($expense->description ?? 'Unspecified') . ' #' . $expense->id,
                 ]);
             } else {
-                // fallback: create the original if missing
-                $expense->cashbookEntries()->create([
-                    'school_id' => $expense->school_id,
+                $this->createCashbookEntry($expense, [
                     'transaction_type' => 'outflow',
                     'entry_type' => 'original',
                     'amount' => $expense->amount,
@@ -52,18 +54,15 @@ class ExpenseObserver
 
     public function deleting(Expense $expense)
     {
-        // only run for soft deletes
         if ($expense->isForceDeleting()) {
             return;
         }
 
         DB::transaction(function () use ($expense) {
-            // find the original entry (if any)
             $original = $expense->cashbookEntries()->where('entry_type', 'original')->first();
 
-            $expense->cashbookEntries()->create([
-                'school_id' => $expense->school_id,
-                'transaction_type' => 'inflow', // reversal of an outflow
+            $this->createCashbookEntry($expense, [
+                'transaction_type' => 'inflow',
                 'entry_type' => 'reversal',
                 'amount' => $expense->amount,
                 'payment_method' => $expense->payment_method,
@@ -77,14 +76,12 @@ class ExpenseObserver
     public function restoring(Expense $expense)
     {
         DB::transaction(function () use ($expense) {
-            
             $reversal = $expense->cashbookEntries()
-                        ->where('entry_type', 'reversal')
-                        ->orderByDesc('created_at')
-                        ->first();
+                ->where('entry_type', 'reversal')
+                ->orderByDesc('created_at')
+                ->first();
 
-            $expense->cashbookEntries()->create([
-                'school_id' => $expense->school_id,
+            $this->createCashbookEntry($expense, [
                 'transaction_type' => 'outflow',
                 'entry_type' => 'restored',
                 'amount' => $expense->amount,
@@ -95,5 +92,4 @@ class ExpenseObserver
             ]);
         });
     }
-
 }

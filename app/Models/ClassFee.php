@@ -4,13 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\softDeletes;
-use App\Models\Scopes\SchoolScope;
-use Auth;
+use App\Models\Concerns\BelongsToSchool;
 
 
 class ClassFee extends Model
 {
-    use softDeletes;
+    use softDeletes, BelongsToSchool;
 
     protected $fillable=['school_id',
         'class_id',
@@ -18,12 +17,6 @@ class ClassFee extends Model
         'year',
         'amount',
         'description','status'];
-
-
-         protected static function booted()
-    {
-        static::addGlobalScope(new SchoolScope);
-    }
 
 
         public function class()
