@@ -230,8 +230,6 @@ class PromotionService
      */
     private function generateInvoicesForPromotedTerm(int $schoolId, int $toTermId): void
     {
-        $invoiceService = app(InvoiceService::class);
-
         StudentEnrollment::withoutGlobalScopes()
             ->with('student')
             ->where('school_id', $schoolId)
@@ -242,20 +240,27 @@ class PromotionService
                 StudentEnrollment::STATUS_REPEATING,
             ])
             ->orderBy('id')
-            ->chunkById(self::CHUNK_SIZE, function ($enrollments) use ($invoiceService) {
-                foreach ($enrollments as $enrollment) {
-                    if (!$enrollment->student) {
-                        continue;
-                    }
-
-                    $invoiceService->createOrUpdateInvoice(
-                        $schoolId,
-                        $enrollment->student,
-                        $enrollment->term_id,
-                        $enrollment->id
-                    );
-                }
+            ->chunkById(self::CHUNK_SIZE, function ($enrollments) use ($schoolId) {
+                $this->createInvoicesForEnrollmentChunk($schoolId, $enrollments);
             });
+    }
+
+    private function createInvoicesForEnrollmentChunk(int $schoolId, $enrollments): void
+    {
+        $invoiceService = app(InvoiceService::class);
+
+        foreach ($enrollments as $enrollment) {
+            if (! $enrollment->student) {
+                continue;
+            }
+
+            $invoiceService->createOrUpdateInvoice(
+                $schoolId,
+                $enrollment->student,
+                $enrollment->term_id,
+                $enrollment->id
+            );
+        }
     }
 
     /*

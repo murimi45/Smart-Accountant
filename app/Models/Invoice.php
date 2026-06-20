@@ -26,6 +26,8 @@ class Invoice extends Model
         'amount_paid',
         'base_fee',
         'balance_forward',
+        'imported_opening_balance',
+        'opening_balance_notes',
         'credit_forward',
         'balance',
         'invoice_date',
@@ -38,6 +40,10 @@ class Invoice extends Model
     | RELATIONSHIPS
     |--------------------------------------------------------------------------
     */
+
+    protected $casts = [
+        'imported_opening_balance' => 'decimal:2',
+    ];
 
     public function student()
     {
@@ -63,6 +69,11 @@ class Invoice extends Model
     public function payments()
     {
         return $this->hasMany(InvoicePayment::class);
+    }
+
+    public function waivers()
+    {
+        return $this->hasMany(InvoiceWaiver::class);
     }
 
     /*

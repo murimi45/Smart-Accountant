@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\AcademicYear;
+use App\Models\Budget;
 use App\Models\Classes;
 use App\Models\ClassFee;
 use App\Models\Expense;
@@ -10,6 +11,7 @@ use App\Models\ExpenseCategory;
 use App\Models\ExtraFee;
 use App\Models\IncomeCategory;
 use App\Models\Invoice;
+use App\Models\InvoiceWaiver;
 use App\Models\OtherIncome;
 use App\Models\PaymentChannel;
 use App\Models\PromotionRun;
@@ -20,6 +22,7 @@ use App\Models\StudentExtraFee;
 use App\Models\Term;
 use App\Models\User;
 use App\Policies\AcademicYearPolicy;
+use App\Policies\BudgetPolicy;
 use App\Policies\ClassFeePolicy;
 use App\Policies\ClassPolicy;
 use App\Policies\ExpenseCategoryPolicy;
@@ -27,6 +30,7 @@ use App\Policies\ExpensePolicy;
 use App\Policies\ExtraFeePolicy;
 use App\Policies\IncomeCategoryPolicy;
 use App\Policies\InvoicePolicy;
+use App\Policies\InvoiceWaiverPolicy;
 use App\Policies\OtherIncomePolicy;
 use App\Policies\PaymentChannelPolicy;
 use App\Policies\PromotionRunPolicy;
@@ -45,6 +49,7 @@ class AuthServiceProvider extends ServiceProvider
         Student::class           => StudentPolicy::class,
         StudentEnrollment::class => StudentEnrollmentPolicy::class,
         Invoice::class           => InvoicePolicy::class,
+        InvoiceWaiver::class     => InvoiceWaiverPolicy::class,
         PromotionRun::class      => PromotionRunPolicy::class,
         StudentExtraFee::class   => StudentExtraFeePolicy::class,
         User::class              => UserPolicy::class,
@@ -57,6 +62,7 @@ class AuthServiceProvider extends ServiceProvider
         ClassFee::class          => ClassFeePolicy::class,
         ExtraFee::class          => ExtraFeePolicy::class,
         ExpenseCategory::class   => ExpenseCategoryPolicy::class,
+        Budget::class            => BudgetPolicy::class,
         IncomeCategory::class    => IncomeCategoryPolicy::class,
         PaymentChannel::class    => PaymentChannelPolicy::class,
     ];

@@ -4,6 +4,7 @@ namespace App\Actions\Fortify;
 
 use App\Models\User;
 use App\Models\Schools;
+use Database\Seeders\AccountsTableSeeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -45,6 +46,8 @@ class CreateNewUser implements CreatesNewUsers
             'address' => $input['address'] ?? null,
             'subscription_status' => 'inactive',
         ]);
+
+        (new AccountsTableSeeder)->run($school->id);
 
         // ✅ Create the Admin User (linked to the school)
         $user = new User([

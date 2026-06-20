@@ -260,7 +260,7 @@
 <div class="modal fade" id="promoteModal" tabindex="-1" aria-labelledby="promoteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form action="<?php echo e(route('promotions.class')); ?>" method="POST">
+            <form action="<?php echo e(route('promotion.class')); ?>" method="POST">
                 <?php echo csrf_field(); ?>
                 <div class="modal-header">
                     <h5 class="modal-title" id="promoteModalLabel">

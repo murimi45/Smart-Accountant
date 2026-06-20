@@ -17,6 +17,7 @@ use App\Models\StudentEnrollment;
 use App\Models\StudentExtraFee;
 use App\Models\Term;
 use App\Models\User;
+use Database\Seeders\AccountsTableSeeder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
 
@@ -50,12 +51,16 @@ class TenantFixtureBuilder
 
     private static function createSchool(string $label): Schools
     {
-        return Schools::create([
+        $school = Schools::create([
             'school_name'     => "Probe School {$label}",
             'email'           => "school-{$label}@probe.test",
             'phone'           => '0700000001',
             'subscription_status' => 'active',
         ]);
+
+        (new AccountsTableSeeder)->run($school->id);
+
+        return $school;
     }
 
     private static function createUser(Schools $school, string $email, string $role): User

@@ -4,13 +4,13 @@
 
 <div class="main-wrapper">
     {{-- Page Header --}}
-    <div class="page-header mb-4">
-        <h4 class="mb-1">Welcome back!</h4>
-        <p class="text-muted mb-0">Here's your School Accounts overview</p>
+    <div class="page-header">
+        <h4>Welcome back!</h4>
+        <p>Here's your School Accounts overview</p>
     </div>
 
     {{-- Filter Card --}}
-    <div class="card filter-card mb-4">
+    <div class="card filter-card">
         <div class="card-body">
             <form method="GET" action="{{ route('dashboard') }}" class="filter-form">
                 <div class="row g-3 align-items-end">
@@ -27,7 +27,7 @@
                         <label class="form-label"><i class="fa fa-calendar me-1"></i>Select Term</label>
                         <select name="term_id" class="form-select" onchange="this.form.submit()">
                             @foreach($terms as $term)
-                                <option value="{{ $term->id }}" 
+                                <option value="{{ $term->id }}"
                                     {{ isset($selectedTerm) && $selectedTerm->id == $term->id ? 'selected' : '' }}>
                                     {{ $term->name }} ({{ $term->year }})
                                 </option>
@@ -38,13 +38,13 @@
                     <div class="col-md-3">
                         <label class="form-label"><i class="fa fa-calendar-alt me-1"></i>Select Year</label>
                         <select name="academic_year_id" class="form-select" onchange="this.form.submit()">
-    @foreach($academicYears as $academicYear)
-        <option value="{{ $academicYear->id }}" 
-            {{ isset($selectedYear) && $selectedYear->id == $academicYear->id ? 'selected' : '' }}>
-            {{ $academicYear->name }}
-        </option>
-    @endforeach
-</select>
+                            @foreach($academicYears as $academicYear)
+                                <option value="{{ $academicYear->id }}"
+                                    {{ isset($selectedYear) && $selectedYear->id == $academicYear->id ? 'selected' : '' }}>
+                                    {{ $academicYear->name }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                     @endif
                 </div>
@@ -52,219 +52,212 @@
         </div>
     </div>
 
-    {{-- Financial Summary Cards --}}
-    <div class="row mb-4">
-        <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
-            <div class="summary-card">
-                <div class="summary-icon" style="background-color: #e0f2fe;">
-                    <i class="fa fa-credit-card" style="color: #36a9e2;"></i>
-                </div>
-                <div class="summary-content">
-                    <div class="summary-value">KSh {{ number_format($totalFeesBilled, 2) }}</div>
-                    <div class="summary-label">Total Fees Billed</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
-            <div class="summary-card">
-                <div class="summary-icon" style="background-color: #e8f5e0;">
-                    <i class="fa fa-money-bill-wave" style="color: #79c347;"></i>
-                </div>
-                <div class="summary-content">
-                    <div class="summary-value">KSh {{ number_format($totalFeesCollected, 2) }}</div>
-                    <div class="summary-label">Fees Collected</div>
+    {{-- Primary KPI Cards --}}
+    <div class="section-block">
+        <div class="row g-3">
+            <div class="col-lg-3 col-md-6">
+                <div class="kpi-card">
+                    <div class="kpi-top">
+                        <span class="kpi-label">Total Fees Billed</span>
+                        <span class="kpi-icon kpi-icon-neutral"><i class="fa fa-credit-card"></i></span>
+                    </div>
+                    <div class="kpi-value">KSh {{ number_format($totalFeesBilled, 2) }}</div>
                 </div>
             </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3 mb-md-0">
-            <div class="summary-card">
-                <div class="summary-icon" style="background-color: #fee2e2;">
-                    <i class="fa fa-balance-scale" style="color: #ef4444;"></i>
-                </div>
-                <div class="summary-content">
-                    <div class="summary-value">KSh {{ number_format($outstandingBalances, 2) }}</div>
-                    <div class="summary-label">Outstanding Balance</div>
+            <div class="col-lg-3 col-md-6">
+                <div class="kpi-card">
+                    <div class="kpi-top">
+                        <span class="kpi-label">Fees Collected</span>
+                        <span class="kpi-icon kpi-icon-success"><i class="fa fa-money-bill-wave"></i></span>
+                    </div>
+                    <div class="kpi-value">KSh {{ number_format($totalFeesCollected, 2) }}</div>
                 </div>
             </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="summary-card">
-                <div class="summary-icon" style="background-color: #fef3c7;">
-                    <i class="fa fa-chart-line" style="color: #f59e0b;"></i>
+            <div class="col-lg-3 col-md-6">
+                <div class="kpi-card">
+                    <div class="kpi-top">
+                        <span class="kpi-label">Outstanding Balance</span>
+                        <span class="kpi-icon kpi-icon-danger"><i class="fa fa-balance-scale"></i></span>
+                    </div>
+                    <div class="kpi-value">KSh {{ number_format($outstandingBalances, 2) }}</div>
                 </div>
-                <div class="summary-content">
-                    <div class="summary-value">KSh {{ number_format($netPosition, 2) }}</div>
-                    <div class="summary-label">Net Position</div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="kpi-card kpi-card-accent">
+                    <div class="kpi-top">
+                        <span class="kpi-label">Net Position</span>
+                        <span class="kpi-icon kpi-icon-warning"><i class="fa fa-chart-line"></i></span>
+                    </div>
+                    <div class="kpi-value">KSh {{ number_format($netPosition, 2) }}</div>
                 </div>
             </div>
         </div>
     </div>
 
     {{-- Secondary Stats --}}
-    <div class="row mb-4">
-        <div class="col-md-6 mb-3 mb-md-0">
-            <div class="summary-card-secondary">
-                <div class="summary-icon-secondary" style="background-color: #d1fae5;">
-                    <i class="fa fa-plus-circle" style="color: #10b981;"></i>
-                </div>
-                <div class="summary-content-secondary">
-                    <div class="summary-value-secondary">KSh {{ number_format($otherIncome, 2) }}</div>
-                    <div class="summary-label-secondary">Other Income</div>
+    <div class="section-block">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="stat-row-card">
+                    <span class="stat-row-icon stat-row-icon-success"><i class="fa fa-plus-circle"></i></span>
+                    <div class="stat-row-content">
+                        <div class="stat-row-label">Other Income</div>
+                        <div class="stat-row-value">KSh {{ number_format($otherIncome, 2) }}</div>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-6">
-            <div class="summary-card-secondary">
-                <div class="summary-icon-secondary" style="background-color: #fee2e2;">
-                    <i class="fa fa-minus-circle" style="color: #ef4444;"></i>
-                </div>
-                <div class="summary-content-secondary">
-                    <div class="summary-value-secondary">KSh {{ number_format($totalExpenses, 2) }}</div>
-                    <div class="summary-label-secondary">Total Expenses</div>
+            <div class="col-md-6">
+                <div class="stat-row-card">
+                    <span class="stat-row-icon stat-row-icon-danger"><i class="fa fa-minus-circle"></i></span>
+                    <div class="stat-row-content">
+                        <div class="stat-row-label">Total Expenses</div>
+                        <div class="stat-row-value">KSh {{ number_format($totalExpenses, 2) }}</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     {{-- Main Content Row --}}
-    <div class="row">
-        {{-- Recent Payments Table --}}
-        <div class="col-xl-8 mb-4">
-            <div class="card table-card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fa fa-receipt me-2"></i>Recent Payments
-                    </h5>
-                </div>
-                <div class="card-body p-0">
+    <div class="section-block">
+        <div class="row g-3">
+            {{-- Recent Payments Table --}}
+            <div class="col-xl-8">
+                <div class="card table-card h-100">
+                    <div class="card-header">
+                        <h5><i class="fa fa-receipt me-2"></i>Recent Payments</h5>
+                    </div>
                     <div class="card-body p-0">
-    <div class="table-responsive">
-        <table class="table dashboard-table mb-0">
-            <thead>
-                <tr>
-                    <th>Student ID</th>
-                    <th>Student Name</th>
-                    <th class="d-none d-lg-table-cell">Class</th>
-                    <th>Amount</th>
-                    <th class="d-none d-md-table-cell">Date</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-               @forelse($recentPayments as $payment)
-<tr>
-    <td>
-        <span class="student-id">
-            {{ $payment->student?->student_id ?? 'N/A' }}
-        </span>
-    </td>
-    <td>
-        {{ $payment->student?->name ?? 'Unknown Student' }}
-    </td>
-    <td class="d-none d-lg-table-cell">
-        <span class="badge-class">
-            {{ $payment->student?->class_name ?? 'N/A' }}
-        </span>
-    </td>
-    <td>
-        <span class="amount-text">KSh {{ number_format($payment->amount) }}</span>
-    </td>
-    <td class="d-none d-md-table-cell">
-        {{ $payment->payment_date ? \Carbon\Carbon::parse($payment->payment_date)->format('M d, Y') : 'N/A' }}
-    </td>
-    <td>
-        <span class="badge 
-            {{ $payment->status === 'Paid' ? 'badge-success' : ($payment->status === 'Pending' ? 'badge-warning' : 'badge-danger') }}">
-            {{ $payment->status ?? 'Unknown' }}
-        </span>
-    </td>
-</tr>
-@empty
-<tr>
-    <td colspan="7" class="text-center">No recent payments found.</td>
-</tr>
-@endforelse
-
-            </tbody>
-        </table>
-    </div>
-</div>
-
-    
-</div>
-
-            </div>
-        </div>
-
-        {{-- Sidebar --}}
-        <div class="col-xl-4 mb-4">
-            {{-- Quick Actions --}}
-            <div class="card quick-actions-card mb-4">
-                <div class="card-body">
-                    <h5 class="mb-3">
-                        <i class="fa fa-bolt me-2"></i>Quick Actions
-                    </h5>
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-primary btn-quick">
-                            <i class="fa fa-plus-circle me-2"></i>Record New Payment
-                        </button>
-                        <button class="btn btn-success btn-quick">
-                            <i class="fa fa-file-invoice me-2"></i>Generate Invoice
-                        </button>
-                        <button class="btn btn-warning btn-quick">
-                            <i class="fa fa-user-plus me-2"></i>Add Student
-                        </button>
-                        <button class="btn btn-secondary btn-quick">
-                            <i class="fa fa-download me-2"></i>Export Report
-                        </button>
+                        <div class="table-responsive">
+                            <table class="table dashboard-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Student ID</th>
+                                        <th>Student Name</th>
+                                        <th class="d-none d-lg-table-cell">Class</th>
+                                        <th class="text-end">Amount</th>
+                                        <th class="d-none d-md-table-cell">Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($recentPayments as $payment)
+                                    <tr>
+                                        <td>
+                                            <span class="student-id">{{ $payment->student?->student_id ?? 'N/A' }}</span>
+                                        </td>
+                                        <td class="student-name">
+                                            {{ $payment->student?->name ?? 'Unknown Student' }}
+                                        </td>
+                                        <td class="d-none d-lg-table-cell">
+                                            <span class="badge-class">{{ $payment->student?->class_name ?? 'N/A' }}</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="amount-text">KSh {{ number_format($payment->amount) }}</span>
+                                        </td>
+                                        <td class="d-none d-md-table-cell">
+                                            <span class="date-text">{{ $payment->payment_date ? \Carbon\Carbon::parse($payment->payment_date)->format('M d, Y') : 'N/A' }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge
+                                                {{ $payment->status === 'Paid' ? 'badge-success' : ($payment->status === 'Pending' ? 'badge-warning' : 'badge-danger') }}">
+                                                {{ $payment->status ?? 'Unknown' }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-4">No recent payments found.</td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {{-- Notifications --}}
-            <livewire:dashboard-notifications />
+            {{-- Sidebar --}}
+            <div class="col-xl-4">
+                <div class="d-flex flex-column gap-3 h-100">
+                    {{-- Quick Actions --}}
+                    <div class="card quick-actions-card">
+                        <div class="card-header">
+                            <h5><i class="fa fa-bolt me-2"></i>Quick Actions</h5>
+                        </div>
+                        <div class="card-body p-2">
+                            <button class="action-row">
+                                <span class="action-row-icon action-row-icon-primary"><i class="fa fa-plus-circle"></i></span>
+                                <span class="action-row-label">Record New Payment</span>
+                                <i class="fa fa-chevron-right action-row-chevron"></i>
+                            </button>
+                            <button class="action-row">
+                                <span class="action-row-icon action-row-icon-success"><i class="fa fa-file-invoice"></i></span>
+                                <span class="action-row-label">Generate Invoice</span>
+                                <i class="fa fa-chevron-right action-row-chevron"></i>
+                            </button>
+                            <button class="action-row">
+                                <span class="action-row-icon action-row-icon-warning"><i class="fa fa-user-plus"></i></span>
+                                <span class="action-row-label">Add Student</span>
+                                <i class="fa fa-chevron-right action-row-chevron"></i>
+                            </button>
+                            <button class="action-row">
+                                <span class="action-row-icon action-row-icon-neutral"><i class="fa fa-download"></i></span>
+                                <span class="action-row-label">Export Report</span>
+                                <i class="fa fa-chevron-right action-row-chevron"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Notifications --}}
+                    <livewire:dashboard-notifications />
+                </div>
+            </div>
         </div>
     </div>
 
     {{-- Charts Section --}}
-    <div class="row">
-        <div class="col-lg-6 mb-4">
-            <div class="card chart-card">
-                <div class="card-body">
-                    <h5 class="mb-4">
-                        <i class="fa fa-pie-chart me-2"></i>Fees vs Collections
-                    </h5>
-                    <div class="chart-container">
-                        <canvas id="feesPieChart"></canvas>
+    <div class="section-block">
+        <div class="row g-3">
+            <div class="col-lg-6">
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <h5><i class="fa fa-pie-chart me-2"></i>Fees vs Collections</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="feesPieChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="col-lg-6 mb-4">
-            <div class="card chart-card">
-                <div class="card-body">
-                    <h5 class="mb-4">
-                        <i class="fa fa-shopping-cart me-2"></i>Expenses Breakdown
-                    </h5>
-                    <div class="chart-container">
-                        <canvas id="expensesPieChart"></canvas>
+            <div class="col-lg-6">
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <h5><i class="fa fa-shopping-cart me-2"></i>Expenses Breakdown</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="expensesPieChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-12 mb-4">
-            <div class="card chart-card">
-                <div class="card-body">
-                    <h5 class="mb-4">
-                        <i class="fa fa-chart-line me-2"></i>Net Position Over Time
-                    </h5>
-                    <div class="chart-container">
-                        <canvas id="netLineChart"></canvas>
+    <div class="section-block">
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <h5><i class="fa fa-chart-line me-2"></i>Net Position Over Time</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="netLineChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -273,450 +266,432 @@
 </div>
 
 <style>
-/* Base Variables */
+/* ============================================
+   DESIGN TOKENS
+   ============================================ */
 :root {
-    --primary-color: #36a9e2;
-    --success-color: #79c347;
+    --primary: #36a9e2;
+    --primary-dark: #2a8cbd;
+    --success: #79c347;
     --success-dark: #5fa732;
-    --danger-color: #ef4444;
-    --warning-color: #f59e0b;
-    --gray-50: #f9fafb;
-    --gray-100: #f3f4f6;
-    --gray-200: #e5e7eb;
-    --gray-300: #d1d5db;
-    --gray-500: #6b7280;
-    --gray-600: #4b5563;
-    --gray-700: #374151;
-    --gray-900: #111827;
-    --border-radius: 8px;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+
+    --ink-900: #0f172a;
+    --ink-700: #334155;
+    --ink-600: #475569;
+    --ink-500: #64748b;
+    --ink-400: #94a3b8;
+
+    --surface: #ffffff;
+    --surface-muted: #f8fafc;
+    --border: #e2e8f0;
+    --border-soft: #eef1f5;
+
+    --radius: 10px;
+    --radius-sm: 7px;
+
+    --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.04);
+    --shadow-card-hover: 0 4px 10px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.05);
+
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
 }
 
-/* Page Header */
+.main-wrapper {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+}
+
+.section-block {
+    margin-bottom: var(--space-6);
+}
+
+/* ============================================
+   PAGE HEADER
+   ============================================ */
+.page-header {
+    margin-bottom: var(--space-6);
+}
+
 .page-header h4 {
-    font-size: 24px;
-    font-weight: 600;
-    color: var(--gray-900);
-    margin: 0;
+    font-size: 22px;
+    font-weight: 650;
+    color: var(--ink-900);
+    margin: 0 0 var(--space-1) 0;
+    letter-spacing: -0.01em;
 }
 
 .page-header p {
     font-size: 14px;
-    color: var(--gray-500);
+    color: var(--ink-500);
+    margin: 0;
 }
 
-/* Cards */
-.filter-card,
-.table-card,
-.quick-actions-card,
-.chart-card {
-    border: 1px solid var(--gray-200);
-    border-radius: var(--border-radius);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+/* ============================================
+   UNIFIED CARD SYSTEM
+   ============================================ */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
 }
 
-.filter-card .card-body,
-.quick-actions-card .card-body,
-.chart-card .card-body {
-    padding: 20px;
+.filter-card {
+    margin-bottom: var(--space-6);
 }
 
-.table-card .card-header {
-    background: var(--gray-50);
-    border-bottom: 1px solid var(--gray-200);
-    padding: 16px 20px;
+.filter-card .card-body {
+    padding: var(--space-5);
 }
 
-/* Form Elements */
-.form-label {
+.card-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-soft);
+    padding: var(--space-4) var(--space-5);
+}
+
+.card-header h5 {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--ink-900);
+    margin: 0;
+    letter-spacing: -0.005em;
+}
+
+.card-header h5 i {
+    color: var(--ink-400);
     font-size: 13px;
-    font-weight: 500;
-    color: var(--gray-700);
-    margin-bottom: 6px;
+}
+
+/* ============================================
+   FORM ELEMENTS
+   ============================================ */
+.form-label {
+    font-size: 12.5px;
+    font-weight: 550;
+    color: var(--ink-600);
+    margin-bottom: var(--space-2);
 }
 
 .form-control,
 .form-select {
-    border: 1px solid var(--gray-300);
-    border-radius: var(--border-radius);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
     padding: 8px 12px;
-    font-size: 14px;
-    transition: border-color 0.2s;
+    font-size: 13.5px;
+    color: var(--ink-900);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .form-control:focus,
 .form-select:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(54, 169, 226, 0.1);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(54, 169, 226, 0.12);
 }
 
-/* Summary Cards */
-.summary-card {
-    background: white;
-    border: 1px solid var(--gray-200);
-    border-radius: var(--border-radius);
-    padding: 20px;
+/* ============================================
+   PRIMARY KPI CARDS
+   ============================================ */
+.kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    padding: var(--space-5);
+    height: 100%;
+    transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.kpi-card:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-1px);
+}
+
+.kpi-card-accent {
+    border-color: rgba(54, 169, 226, 0.25);
+}
+
+.kpi-top {
     display: flex;
     align-items: center;
-    gap: 16px;
-    transition: all 0.2s;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    justify-content: space-between;
+    margin-bottom: var(--space-4);
 }
 
-.summary-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    transform: translateY(-2px);
+.kpi-label {
+    font-size: 12.5px;
+    font-weight: 550;
+    color: var(--ink-500);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
 }
 
-.summary-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 12px;
+.kpi-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
 }
 
-.summary-icon i {
-    font-size: 24px;
-}
-
-.summary-content {
-    flex: 1;
-    min-width: 0;
-}
-
-.summary-value {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--gray-900);
-    margin-bottom: 4px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.summary-label {
+.kpi-icon i {
     font-size: 13px;
-    color: var(--gray-500);
-    font-weight: 500;
 }
 
-/* Secondary Summary Cards */
-.summary-card-secondary {
-    background: white;
-    border: 1px solid var(--gray-200);
-    border-radius: var(--border-radius);
-    padding: 24px;
+.kpi-icon-neutral { background: var(--surface-muted); color: var(--ink-500); }
+.kpi-icon-success { background: rgba(121, 195, 71, 0.12); color: var(--success-dark); }
+.kpi-icon-danger  { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+.kpi-icon-warning { background: rgba(245, 158, 11, 0.12); color: var(--warning); }
+
+.kpi-value {
+    font-size: 21px;
+    font-weight: 650;
+    color: var(--ink-900);
+    letter-spacing: -0.015em;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ============================================
+   SECONDARY STAT ROWS
+   ============================================ */
+.stat-row-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    padding: var(--space-5);
     display: flex;
     align-items: center;
-    gap: 20px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    transition: all 0.2s;
+    gap: var(--space-4);
+    transition: box-shadow 0.18s ease, transform 0.18s ease;
 }
 
-.summary-card-secondary:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    transform: translateY(-2px);
+.stat-row-card:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-1px);
 }
 
-.summary-icon-secondary {
-    width: 64px;
-    height: 64px;
-    border-radius: 12px;
+.stat-row-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 9px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
 }
 
-.summary-icon-secondary i {
-    font-size: 28px;
+.stat-row-icon i { font-size: 16px; }
+
+.stat-row-icon-success { background: rgba(121, 195, 71, 0.12); color: var(--success-dark); }
+.stat-row-icon-danger  { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+.stat-row-label {
+    font-size: 12.5px;
+    font-weight: 550;
+    color: var(--ink-500);
+    margin-bottom: 2px;
 }
 
-.summary-content-secondary {
-    flex: 1;
+.stat-row-value {
+    font-size: 18px;
+    font-weight: 650;
+    color: var(--ink-900);
+    font-variant-numeric: tabular-nums;
 }
 
-.summary-value-secondary {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--gray-900);
-    margin-bottom: 4px;
+/* ============================================
+   TABLE — FINTECH-GRADE
+   ============================================ */
+.table-card .card-body {
+    padding: 0;
 }
 
-.summary-label-secondary {
-    font-size: 14px;
-    color: var(--gray-500);
-    font-weight: 500;
-}
-
-/* Buttons */
-.btn {
-    border-radius: var(--border-radius);
-    padding: 8px 16px;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.2s;
-}
-
-.btn-primary {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-}
-
-.btn-primary:hover {
-    background-color: #2a8cbd;
-    border-color: #2a8cbd;
-}
-
-.btn-success {
-    background-color: var(--success-color);
-    border-color: var(--success-color);
-}
-
-.btn-success:hover {
-    background-color: var(--success-dark);
-    border-color: var(--success-dark);
-}
-
-.btn-warning {
-    background-color: var(--warning-color);
-    border-color: var(--warning-color);
-    color: white;
-}
-
-.btn-warning:hover {
-    background-color: #d97706;
-    border-color: #d97706;
-    color: white;
-}
-
-.btn-secondary {
-    background-color: var(--gray-600);
-    border-color: var(--gray-600);
-}
-
-.btn-secondary:hover {
-    background-color: var(--gray-700);
-    border-color: var(--gray-700);
-}
-
-.btn-light {
-    background-color: var(--gray-100);
-    border-color: var(--gray-200);
-    color: var(--gray-700);
-}
-
-.btn-light:hover {
-    background-color: var(--gray-200);
-    border-color: var(--gray-300);
-}
-
-.btn-quick {
-    padding: 12px 16px;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-/* Table */
 .dashboard-table {
-    font-size: 14px;
-}
-
-.dashboard-table thead {
-    background-color: var(--gray-50);
-    border-bottom: 2px solid var(--gray-200);
+    font-size: 13.5px;
+    margin: 0;
 }
 
 .dashboard-table thead th {
+    background: var(--surface-muted);
     font-weight: 600;
-    color: var(--gray-700);
-    padding: 12px 16px;
-    font-size: 13px;
+    color: var(--ink-500);
+    padding: 11px var(--space-5);
+    font-size: 11.5px;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
 }
 
 .dashboard-table tbody td {
-    padding: 14px 16px;
+    padding: 13px var(--space-5);
     vertical-align: middle;
-    border-bottom: 1px solid var(--gray-100);
+    border-bottom: 1px solid var(--border-soft);
+    color: var(--ink-700);
+}
+
+.dashboard-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.dashboard-table tbody tr {
+    transition: background-color 0.12s ease;
 }
 
 .dashboard-table tbody tr:hover {
-    background-color: var(--gray-50);
+    background-color: var(--surface-muted);
 }
 
-/* Student ID */
 .student-id {
-    color: var(--gray-600);
+    color: var(--ink-500);
     font-weight: 500;
-    font-size: 13px;
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
 }
 
-/* Badge Class */
+.student-name {
+    color: var(--ink-900);
+    font-weight: 550;
+}
+
 .badge-class {
-    background-color: var(--gray-100);
-    color: var(--gray-700);
-    padding: 4px 10px;
+    background-color: var(--surface-muted);
+    color: var(--ink-600);
+    padding: 3px 9px;
     border-radius: 6px;
-    font-weight: 500;
-    font-size: 12px;
+    font-weight: 550;
+    font-size: 11.5px;
     display: inline-block;
 }
 
-/* Amount */
 .amount-text {
     font-weight: 600;
-    color: var(--gray-900);
-    font-size: 14px;
+    color: var(--ink-900);
+    font-size: 13.5px;
+    font-variant-numeric: tabular-nums;
 }
 
-/* Status Badges */
-.badge {
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-weight: 500;
-    font-size: 12px;
-}
-
-.badge-success {
-    background-color: #e8f5e0;
-    color: #3d7a1f;
-}
-
-.badge-warning {
-    background-color: #fef3c7;
-    color: #92400e;
-}
-
-.badge-danger {
-    background-color: #fee2e2;
-    color: #991b1b;
-}
-
-/* Action Buttons */
-.action-buttons {
-    display: flex;
-    gap: 6px;
-}
-
-.action-buttons .btn-sm {
-    padding: 6px 12px;
+.date-text {
+    color: var(--ink-500);
     font-size: 13px;
 }
 
-/* Quick Actions */
-.quick-actions-card h5 {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--gray-900);
+.badge {
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-weight: 550;
+    font-size: 11.5px;
 }
 
-/* Charts */
-.chart-card h5 {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--gray-900);
+.badge-success { background-color: rgba(121, 195, 71, 0.12); color: var(--success-dark); }
+.badge-warning { background-color: rgba(245, 158, 11, 0.12); color: #92400e; }
+.badge-danger  { background-color: rgba(239, 68, 68, 0.1); color: #b91c1c; }
+
+/* ============================================
+   QUICK ACTIONS — MODERN ACTION ROWS
+   ============================================ */
+.action-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 10px var(--space-3);
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.14s ease;
+}
+
+.action-row:hover {
+    background-color: var(--surface-muted);
+}
+
+.action-row + .action-row {
+    margin-top: 2px;
+}
+
+.action-row-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 13px;
+}
+
+.action-row-icon-primary { background: rgba(54, 169, 226, 0.12); color: var(--primary-dark); }
+.action-row-icon-success { background: rgba(121, 195, 71, 0.12); color: var(--success-dark); }
+.action-row-icon-warning { background: rgba(245, 158, 11, 0.12); color: var(--warning); }
+.action-row-icon-neutral { background: var(--surface-muted); color: var(--ink-500); }
+
+.action-row-label {
+    flex: 1;
+    font-size: 13.5px;
+    font-weight: 550;
+    color: var(--ink-700);
+}
+
+.action-row-chevron {
+    font-size: 11px;
+    color: var(--ink-400);
+}
+
+/* ============================================
+   CHARTS
+   ============================================ */
+.chart-card .card-body {
+    padding: var(--space-5);
 }
 
 .chart-container {
     position: relative;
     width: 100%;
-    min-height: 300px;
+    min-height: 280px;
 }
 
-/* Responsive Design */
+/* ============================================
+   RESPONSIVE
+   ============================================ */
 @media (max-width: 992px) {
-    .summary-value {
-        font-size: 16px;
-    }
-
-    .summary-value-secondary {
-        font-size: 20px;
-    }
+    .kpi-value { font-size: 19px; }
+    .stat-row-value { font-size: 17px; }
 }
 
 @media (max-width: 768px) {
-    .summary-card {
-        padding: 16px;
-    }
-
-    .summary-icon {
-        width: 48px;
-        height: 48px;
-    }
-
-    .summary-icon i {
-        font-size: 20px;
-    }
-
-    .summary-value {
-        font-size: 15px;
-    }
-
-    .summary-label {
-        font-size: 12px;
-    }
-
-    .summary-card-secondary {
-        padding: 18px;
-    }
-
-    .summary-icon-secondary {
-        width: 56px;
-        height: 56px;
-    }
-
-    .summary-icon-secondary i {
-        font-size: 24px;
-    }
-
-    .summary-value-secondary {
-        font-size: 18px;
-    }
-
-    .dashboard-table {
-        font-size: 13px;
-    }
-
+    .kpi-card { padding: var(--space-4); }
+    .kpi-value { font-size: 17px; }
+    .stat-row-card { padding: var(--space-4); }
+    .stat-row-value { font-size: 16px; }
+    .dashboard-table { font-size: 13px; }
     .dashboard-table thead th,
-    .dashboard-table tbody td {
-        padding: 10px;
-    }
-
-    .chart-container {
-        min-height: 250px;
-    }
+    .dashboard-table tbody td { padding: 10px 12px; }
+    .chart-container { min-height: 240px; }
 }
 
 @media (max-width: 576px) {
-    .summary-card {
-        padding: 14px;
-    }
-
-    .summary-icon {
-        width: 42px;
-        height: 42px;
-    }
-
-    .summary-icon i {
-        font-size: 18px;
-    }
-
-    .summary-value {
-        font-size: 14px;
-    }
-
-    .action-buttons .btn-sm {
-        padding: 6px 10px;
-    }
+    .kpi-card { padding: var(--space-3); }
+    .kpi-value { font-size: 16px; }
 }
 </style>
 
 {{-- Scripts --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    const chartFont = { family: "-apple-system, 'Inter', 'Segoe UI', Roboto, sans-serif", size: 12 };
+
     // Fees vs Collections
     const feesCtx = document.getElementById('feesPieChart').getContext('2d');
     new Chart(feesCtx, {
@@ -730,18 +705,13 @@
                 borderColor: '#fff'
             }]
         },
-        options: { 
+        options: {
             responsive: true,
             maintainAspectRatio: true,
             plugins: {
                 legend: {
                     position: 'bottom',
-                    labels: {
-                        padding: 15,
-                        font: {
-                            size: 12
-                        }
-                    }
+                    labels: { padding: 16, font: chartFont, color: '#475569' }
                 }
             }
         }
@@ -768,18 +738,13 @@
                 borderColor: '#fff'
             }]
         },
-        options: { 
+        options: {
             responsive: true,
             maintainAspectRatio: true,
             plugins: {
                 legend: {
                     position: 'bottom',
-                    labels: {
-                        padding: 15,
-                        font: {
-                            size: 12
-                        }
-                    }
+                    labels: { padding: 16, font: chartFont, color: '#475569' }
                 }
             }
         }
@@ -795,12 +760,12 @@
                 label: 'Net Position',
                 data: [{{ implode(',', $monthlyNet) }}],
                 borderColor: '#36a9e2',
-                backgroundColor: 'rgba(54, 169, 226, 0.1)',
+                backgroundColor: 'rgba(54, 169, 226, 0.08)',
                 fill: true,
                 tension: 0.4,
-                borderWidth: 3,
-                pointRadius: 4,
-                pointHoverRadius: 6,
+                borderWidth: 2.5,
+                pointRadius: 3,
+                pointHoverRadius: 5,
                 pointBackgroundColor: '#36a9e2',
                 pointBorderColor: '#fff',
                 pointBorderWidth: 2
@@ -813,34 +778,19 @@
                 legend: {
                     display: true,
                     position: 'top',
-                    labels: {
-                        font: {
-                            size: 12
-                        }
-                    }
+                    align: 'end',
+                    labels: { font: chartFont, color: '#475569', boxWidth: 14 }
                 }
             },
-            scales: { 
-                y: { 
+            scales: {
+                y: {
                     beginAtZero: true,
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
-                    },
-                    ticks: {
-                        font: {
-                            size: 11
-                        }
-                    }
+                    grid: { color: 'rgba(15, 23, 42, 0.04)' },
+                    ticks: { font: chartFont, color: '#94a3b8' }
                 },
                 x: {
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        font: {
-                            size: 11
-                        }
-                    }
+                    grid: { display: false },
+                    ticks: { font: chartFont, color: '#94a3b8' }
                 }
             }
         }

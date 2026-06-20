@@ -5,15 +5,15 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
-class DailySummaryNotification extends Notification
+class DailySummaryRecordedNotification extends Notification
 {
     use Queueable;
 
-    protected $amount;
+    protected array $data;
 
-    public function __construct($amount)
+    public function __construct(array $data)
     {
-        $this->amount = $amount;
+        $this->data = $data;
     }
 
     public function via($notifiable)
@@ -21,12 +21,12 @@ class DailySummaryNotification extends Notification
         return ['database'];
     }
 
-    public function toDatabase($notifiable)
+    public function toArray($notifiable)
     {
         return [
             'type' => 'summary',
-            'title' => 'Daily Fee Summary',
-            'message' => 'A total of KES ' . number_format($this->amount) . ' was collected today',
+            'title' => $this->data['title'] ?? 'Daily Summary',
+            'message' => $this->data['message'] ?? '',
         ];
     }
 }

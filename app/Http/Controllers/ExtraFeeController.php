@@ -24,11 +24,6 @@ class ExtraFeeController extends Controller
         
     }
 
-     public function assignExtraFee(){
-        return view('extrafee.assignextrafee');
-        
-    }
-
      public function addExtraFee()
       {
             $this->authorize('create', ExtraFee::class);

@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\ClassController;
@@ -15,6 +14,8 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\IncomeCategoryController;
 use App\Http\Controllers\OtherIncomeController;
 use App\Http\Controllers\CashbookController;
+use App\Http\Controllers\BankReconciliationController;
+use App\Http\Controllers\BulkImportExportController;
 use App\Http\Controllers\PaymentChannelController;
 use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\SmsLogController;
@@ -24,15 +25,15 @@ use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\AccountantController;
 use App\Http\Controllers\StreamController;
 use App\Http\Controllers\EnrollmentController;
-use App\Http\Controllers\PaymentController;
- use App\Http\Controllers\PromotionProgressController;
+use App\Http\Controllers\PromotionProgressController;
+use App\Http\Controllers\AgedDebtorsController;
+use App\Http\Controllers\FinanceAuditLogController;
+use App\Http\Controllers\InvoiceWaiverController;
+use App\Http\Controllers\AccountController;
+use App\Http\Controllers\LedgerController;
+use App\Http\Controllers\FinancialReportsController;
+use App\Http\Controllers\BudgetController;
 use Illuminate\Support\Facades\Auth;
-
-// ✅ Public (No login)
-// Route::get('/register', [RegisterController::class, 'showRegistrationForm']);
-// Route::post('/register', [RegisterController::class, 'register'])->name('register');
-// Route::get('/login', [RegisterController::class, 'showLoginForm']);
-// Route::post('/login', [RegisterController::class, 'login'])->name('login');
 
 // ✅ Accessible after login but before 2FA verification (for initial setup)
 Route::get('/g', function () {
@@ -69,10 +70,21 @@ Route::middleware(['auth', 'school', 'tenant', '2fa'])->group(function () {
     Route::post('/balances/sms/send', [StatementController::class, 'sendBulkBalanceSms'])->name('balances.sms.send');
 
     Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
-    Route::get('/invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print');
+    Route::get('/reports/aged-debtors', [AgedDebtorsController::class, 'index'])->name('reports.aged-debtors');
+    Route::get('/audit-log', [FinanceAuditLogController::class, 'index'])->name('audit.index');
+    Route::get('/reports/aged-debtors/export/pdf', [AgedDebtorsController::class, 'exportPdf'])->name('reports.aged-debtors.pdf');
+    Route::get('/reports/aged-debtors/export/excel', [AgedDebtorsController::class, 'exportExcel'])->name('reports.aged-debtors.excel');
+    Route::get('/waivers', [InvoiceWaiverController::class, 'index'])->name('waivers.index');
+    Route::post('/invoices/{invoice}/waivers', [InvoiceWaiverController::class, 'store'])->name('waivers.store');
+    Route::post('/waivers/{waiver}/approve', [InvoiceWaiverController::class, 'approve'])->name('waivers.approve');
+    Route::post('/waivers/{waiver}/reject', [InvoiceWaiverController::class, 'reject'])->name('waivers.reject');
     Route::post('/invoices/{invoice}/payments', [InvoiceController::class, 'storePayment'])->name('payments.store');
+    Route::post('/invoices/{invoice}/payments/{payment}/reverse', [InvoiceController::class, 'reversePayment'])->name('payments.reverse');
 
     Route::get('/sms/logs', [SmsLogController::class, 'index'])->name('sms.logs');
+    Route::get('/sms/reminders', [FeeReminderController::class, 'edit'])->name('reminders.edit');
+    Route::put('/sms/reminders', [FeeReminderController::class, 'update'])->name('reminders.update');
+    Route::post('/sms/reminders/run', [FeeReminderController::class, 'runNow'])->name('reminders.run');
 
 
     // ✅ FINANCE (Admin + Accountant)
@@ -83,7 +95,7 @@ Route::middleware(['auth', 'school', 'tenant', '2fa'])->group(function () {
         Route::put('expense_categories/{id}', [ExpenseCategoryController::class,'update'])->name('expense_categories.update');
         Route::delete('expense_categories/{id}', [ExpenseCategoryController::class,'destroy'])->name('expense_categories.destroy');
         
-        Route::resource('academic-years', AcademicYearController::class);
+        Route::resource('academic-years', AcademicYearController::class)->only(['index', 'store', 'update', 'destroy']);
     
 
 
@@ -96,6 +108,9 @@ Route::middleware(['auth', 'school', 'tenant', '2fa'])->group(function () {
 
 
         Route::get('expenses', [ExpenseController::class,'index'])->name('expenses.index');
+        Route::get('budgets', [BudgetController::class, 'index'])->name('budgets.index');
+        Route::put('budgets', [BudgetController::class, 'update'])->name('budgets.update');
+        Route::get('reports/budget-variance', [BudgetController::class, 'variance'])->name('reports.budget-variance');
         Route::get('expenses/create', [ExpenseController::class,'create'])->name('expenses.create');
         Route::post('expenses', [ExpenseController::class,'store'])->name('expenses.store');
         Route::get('expenses/{expense}/edit', [ExpenseController::class,'edit'])->name('expenses.edit');
@@ -116,7 +131,7 @@ Route::middleware(['auth', 'school', 'tenant', '2fa'])->group(function () {
         Route::delete('other_incomes/{id}', [OtherIncomeController::class, 'destroy'])->name('other_incomes.destroy');
         
         
-        Route::resource('streams', StreamController::class);
+        Route::resource('streams', StreamController::class)->only(['index', 'store', 'update', 'destroy']);
         
         Route::get('/class', [ClassController::class, 'listClass'])->name('classlist');
         Route::post('/insertClass', [ClassController::class, 'insert'])->name('insertclass');
@@ -146,6 +161,21 @@ Route::middleware(['auth', 'school', 'tenant', '2fa'])->group(function () {
 
         
         Route::get('/cashbook', [CashbookController::class, 'index'])->name('cashbook.index');
+        Route::get('/accounts', [AccountController::class, 'index'])->name('accounts.index');
+        Route::get('/ledger', [LedgerController::class, 'index'])->name('ledger.index');
+        Route::get('/reports/financial', [FinancialReportsController::class, 'index'])->name('reports.financial');
+        Route::get('/reports/financial/export/pdf', [FinancialReportsController::class, 'exportPdf'])->name('reports.financial.pdf');
+        Route::get('/reconciliation', [BankReconciliationController::class, 'index'])->name('reconciliation.index');
+        Route::post('/reconciliation/deposits', [BankReconciliationController::class, 'storeDeposit'])->name('reconciliation.deposits.store');
+        Route::put('/reconciliation/deposits/{deposit}', [BankReconciliationController::class, 'updateDeposit'])->name('reconciliation.deposits.update');
+        Route::delete('/reconciliation/deposits/{deposit}', [BankReconciliationController::class, 'destroyDeposit'])->name('reconciliation.deposits.destroy');
+        Route::post('/reconciliation/match', [BankReconciliationController::class, 'match'])->name('reconciliation.match');
+        Route::delete('/reconciliation/matches/{match}', [BankReconciliationController::class, 'unmatch'])->name('reconciliation.unmatch');
+
+        Route::get('/bulk', [BulkImportExportController::class, 'index'])->name('bulk.index');
+        Route::get('/bulk/export/{type}', [BulkImportExportController::class, 'export'])->name('bulk.export');
+        Route::get('/bulk/template/{type}', [BulkImportExportController::class, 'template'])->name('bulk.template');
+        Route::post('/bulk/import/{type}', [BulkImportExportController::class, 'import'])->name('bulk.import');
 
         Route::get('/payment_channels', [PaymentChannelController::class, 'index'])->name('payment_channels.index');
         Route::post('/payment_channels', [PaymentChannelController::class, 'store'])->name('payment_channels.store');
@@ -178,8 +208,8 @@ Route::post('/logout-and-login', function () {
         Route::get('/deletestudent/{id}', [StudentController::class, 'deleteStudent'])->name('deleteStudent');
            
 
-        Route::resource('admins', AdminController::class);       // for admins
-        Route::resource('accountants', AccountantController::class);
+        Route::resource('admins', AdminController::class)->except(['show']);
+        Route::resource('accountants', AccountantController::class)->except(['show']);
 
 
        Route::post('/promotion/term',  [PromotionController::class, 'promoteToNextTerm'])->name('promotion.term');
@@ -194,9 +224,6 @@ Route::post('/logout-and-login', function () {
          
 
         
-        Route::post('/promotions/term', [PromotionController::class, 'promoteToNextTerm'])->name('promotions.term');
-        Route::post('/promotions/class', [PromotionController::class, 'promoteToNextClass'])->name('promotions.class');
-
           // ===========================
     // ENROLLMENT MODULE
     // ===========================
@@ -229,11 +256,6 @@ Route::post('/logout-and-login', function () {
                 [EnrollmentController::class, 'bulkUpdateStatus'])
                 ->name('bulk-status');
         });
-
-// Route::view('/student-enrollment', 'promotion.enrollment')
-//     ->name('enrollment.index');
-//     Route::view('/student-promotion', 'promotion.promotionprogress')
-//     ->name('enrollment.index');
 
     });
 

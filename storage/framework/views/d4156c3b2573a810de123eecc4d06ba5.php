@@ -47,7 +47,7 @@
 
         <div class="card-body">
             <?php if(isset($currentTerm)): ?>
-                <form action="<?php echo e(route('promotions.term')); ?>" method="POST" id="promotionForm">
+                <form action="<?php echo e(route('promotion.term')); ?>" method="POST" id="promotionForm">
                     <?php echo csrf_field(); ?>
                     <input type="hidden" name="from_term_id" value="<?php echo e($currentTerm->id); ?>">
 

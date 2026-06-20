@@ -33,4 +33,19 @@ class CashbookEntry extends Model
     {
         return $this->belongsTo(CashbookEntry::class, 'related_entry_id');
     }
+
+    public function reconciliationMatch()
+    {
+        return $this->hasOne(BankReconciliationMatch::class);
+    }
+
+    public function isReconciled(): bool
+    {
+        return $this->reconciliationMatch()->exists();
+    }
+
+    public function ledgerEntries()
+    {
+        return $this->hasMany(LedgerEntry::class);
+    }
 }

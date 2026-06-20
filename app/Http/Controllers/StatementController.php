@@ -7,8 +7,7 @@ use ZipArchive;
 use Illuminate\Http\Request;
 use App\Models\Student;
 use App\Models\Invoice;
-use App\Models\SmsLog;
-use App\Jobs\SendSmsJob;
+use App\Services\OverdueSmsReminderService;
 use App\Support\TenantFilters;
 use App\Support\TenantStorage;
 
@@ -135,7 +134,7 @@ class StatementController extends Controller
         return response()->download($zipPath)->deleteFileAfterSend(true);
     }
 
-    public function sendBulkBalanceSms(Request $request)
+    public function sendBulkBalanceSms(Request $request, OverdueSmsReminderService $reminderService)
     {
         if (! $request->filled('term_id')) {
             return back()->with('error', 'Please select a term.');
@@ -156,31 +155,14 @@ class StatementController extends Controller
             ));
         }
 
-        $invoices = $query->get();
+        $queued = 0;
 
-        foreach ($invoices as $invoice) {
-            $student = $invoice->student;
-
-            if (! $student?->phone) {
-                continue;
+        foreach ($query->get() as $invoice) {
+            if ($reminderService->queueBalanceReminder($invoice)) {
+                $queued++;
             }
-
-            $phone = preg_replace('/^0/', '+254', $student->phone);
-
-            $message = "Dear Parent, {$student->full_name} has an outstanding balance of KES " .
-                       number_format($invoice->balance, 2) .
-                       ". Kindly clear the balance. Thank you.";
-
-            $smsLog = SmsLog::create([
-                'to'         => $phone,
-                'message'    => $message,
-                'status'     => 'pending',
-                'student_id' => $student->id,
-            ]);
-
-            dispatch(new SendSmsJob($smsLog->id, $schoolId));
         }
 
-        return back()->with('success', 'SMS sending jobs have been queued for students with outstanding balances.');
+        return back()->with('success', "SMS sending jobs have been queued for {$queued} student(s) with outstanding balances.");
     }
 }

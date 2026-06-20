@@ -18,11 +18,6 @@ class ExpenseCategoryController extends Controller
         ', compact('categories'));
     }
 
-    public function create()
-    {
-        return view('expense_categories.create');
-    }
-
     public function store(Request $request)
     {
         $this->authorize('create', ExpenseCategory::class);
@@ -37,14 +32,6 @@ class ExpenseCategoryController extends Controller
 
         return redirect()->route('expense_categories.index')
             ->with('success', 'Expense category created successfully.');
-    }
-
-    public function edit(ExpenseCategory $expenseCategory)
-    {
-        ExpenseCategory::forSchool()->findOrFail($expenseCategory->id);
-        $this->authorize('update', $expenseCategory);
-
-        return view('expense_categories.edit', compact('expenseCategory'));
     }
 
     public function update(Request $request, $id)

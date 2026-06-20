@@ -10,4 +10,9 @@ class ExpenseCategory extends Model
     use BelongsToSchool;
 
     protected $fillable = ['school_id', 'name', 'description'];
+
+    public function budgets()
+    {
+        return $this->hasMany(Budget::class, 'expense_category_id');
+    }
 }

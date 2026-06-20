@@ -16,6 +16,10 @@ class AccountsTableSeeder extends Seeder
             return;
         }
 
+        if (DB::table('accounts')->where('school_id', $schoolId)->where('is_default', true)->exists()) {
+            return;
+        }
+
         $defaultAccounts = [
             ['name' => 'Cash at Hand', 'category' => 'asset', 'normal_balance' => 'debit'],
             ['name' => 'Cash at Bank', 'category' => 'asset', 'normal_balance' => 'debit'],

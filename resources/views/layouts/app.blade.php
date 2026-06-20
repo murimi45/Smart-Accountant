@@ -64,12 +64,20 @@
                         </li>
 
                         <!-- Students (Admin Only) -->
-                        <li>
-                            <a href="{{ url('/student') }}" class="{{ Request::is('student*') ? 'active' : '' }}">
-                                <i class="fa fa-users orange_color"></i>
-                                <span>Students</span>
-                            </a>
-                        </li>
+                    <li>
+                        <a href="{{ url('/student') }}" class="{{ Request::is('student*') && !Request::is('bulk*') ? 'active' : '' }}">
+                            <i class="fa fa-users orange_color"></i>
+                            <span>Students</span>
+                        </a>
+                    </li>
+                    @if(in_array(auth()->user()->role, ['admin', 'accountant']))
+                    <li>
+                        <a href="{{ route('bulk.index') }}" class="{{ Request::is('bulk*') ? 'active' : '' }}">
+                            <i class="fa fa-file-csv green_color"></i>
+                            <span>Bulk Import/Export</span>
+                        </a>
+                    </li>
+                    @endif
 
 
 
@@ -83,27 +91,32 @@
 
                     <!-- Fees (Shared) -->
                     <li>
-                        <a href="#feeMenu" data-toggle="collapse" aria-expanded="{{ Request::is('classfee*') || Request::is('extrafee*') || Request::is('listextrafeestudents*') || Request::is('invoices*') ? 'true' : 'false' }}" class="dropdown-toggle">
+                        <a href="#feeMenu" data-toggle="collapse" aria-expanded="{{ Request::is('classfee*') || Request::is('extrafee*') || Request::is('listextrafeestudents*') || Request::is('invoices*') || Request::is('reports/aged-debtors*') || Request::is('waivers*') || Request::is('audit-log*') ? 'true' : 'false' }}" class="dropdown-toggle">
                             <i class="fa fa-credit-card-alt red_color"></i>
                             <span>Fees</span>
                         </a>
-                        <ul class="collapse list-unstyled {{ Request::is('classfee*') || Request::is('extrafee*') || Request::is('listextrafeestudents*') || Request::is('invoices*') ? 'show' : '' }}" id="feeMenu">
+                        <ul class="collapse list-unstyled {{ Request::is('classfee*') || Request::is('extrafee*') || Request::is('listextrafeestudents*') || Request::is('invoices*') || Request::is('reports/aged-debtors*') || Request::is('waivers*') || Request::is('audit-log*') ? 'show' : '' }}" id="feeMenu">
                             <li><a class="{{ Request::is('classfee*') ? 'active' : '' }}" href="{{ url('/classfee') }}">Class Fees</a></li>
                             <li><a class="{{ Request::is('extrafee*') ? 'active' : '' }}" href="{{ url('/extrafee') }}">Extra Fees</a></li>
                             <li><a class="{{ Request::is('listextrafeestudents*') ? 'active' : '' }}" href="{{ url('/listextrafeestudents') }}">Assign Extra Fees</a></li>
                             <li><a class="{{ Request::is('invoices*') ? 'active' : '' }}" href="{{ url('/invoices') }}">Fee Summary</a></li>
+                            <li><a class="{{ Request::is('reports/aged-debtors*') ? 'active' : '' }}" href="{{ route('reports.aged-debtors') }}">Aged Debtors</a></li>
+                            <li><a class="{{ Request::is('waivers*') ? 'active' : '' }}" href="{{ route('waivers.index') }}">Fee Waivers</a></li>
+                            <li><a class="{{ Request::is('audit-log*') ? 'active' : '' }}" href="{{ route('audit.index') }}">Audit Log</a></li>
                         </ul>
                     </li>
 
                     <!-- Expenses (Shared) -->
                     <li>
-                        <a href="#expensesMenu" data-toggle="collapse" aria-expanded="{{ Request::is('expense_categories*') || Request::is('expenses*') ? 'true' : 'false' }}" class="dropdown-toggle">
+                        <a href="#expensesMenu" data-toggle="collapse" aria-expanded="{{ Request::is('expense_categories*') || Request::is('expenses*') || Request::is('budgets*') || Request::is('reports/budget-variance*') ? 'true' : 'false' }}" class="dropdown-toggle">
                             <i class="fa fa-shopping-cart purple_color"></i>
                             <span>Expenses</span>
                         </a>
-                        <ul class="collapse list-unstyled {{ Request::is('expense_categories*') || Request::is('expenses*') ? 'show' : '' }}" id="expensesMenu">
+                        <ul class="collapse list-unstyled {{ Request::is('expense_categories*') || Request::is('expenses*') || Request::is('budgets*') || Request::is('reports/budget-variance*') ? 'show' : '' }}" id="expensesMenu">
                             <li><a class="{{ Request::is('expense_categories*') ? 'active' : '' }}" href="{{ route('expense_categories.index') }}">Expense Categories</a></li>
-                            <li><a class="{{ Request::is('expenses*') ? 'active' : '' }}" href="{{ route('expenses.index') }}">All Expenses</a></li>
+                            <li><a class="{{ Request::is('expenses*') && !Request::is('budgets*') ? 'active' : '' }}" href="{{ route('expenses.index') }}">All Expenses</a></li>
+                            <li><a class="{{ Request::is('budgets*') ? 'active' : '' }}" href="{{ route('budgets.index') }}">Budgets</a></li>
+                            <li><a class="{{ Request::is('reports/budget-variance*') ? 'active' : '' }}" href="{{ route('reports.budget-variance') }}">Budget Variance</a></li>
                         </ul>
                     </li>
 
@@ -121,10 +134,17 @@
 
                     <!-- Cashbook (Shared) -->
                     <li>
-                        <a href="{{ route('cashbook.index') }}" class="{{ Request::is('cashbook*') ? 'active' : '' }}">
+                        <a href="#cashbookMenu" data-toggle="collapse" aria-expanded="{{ Request::is('cashbook*') || Request::is('reconciliation*') || Request::is('accounts*') || Request::is('ledger*') || Request::is('reports/financial*') ? 'true' : 'false' }}" class="dropdown-toggle">
                             <i class="fa fa-book blue_color"></i>
                             <span>Cashbook</span>
                         </a>
+                        <ul class="collapse list-unstyled {{ Request::is('cashbook*') || Request::is('reconciliation*') || Request::is('accounts*') || Request::is('ledger*') || Request::is('reports/financial*') ? 'show' : '' }}" id="cashbookMenu">
+                            <li><a class="{{ Request::is('cashbook*') && !Request::is('reconciliation*') ? 'active' : '' }}" href="{{ route('cashbook.index') }}">Transaction History</a></li>
+                            <li><a class="{{ Request::is('accounts*') ? 'active' : '' }}" href="{{ route('accounts.index') }}">Chart of Accounts</a></li>
+                            <li><a class="{{ Request::is('ledger*') ? 'active' : '' }}" href="{{ route('ledger.index') }}">General Ledger</a></li>
+                            <li><a class="{{ Request::is('reports/financial*') ? 'active' : '' }}" href="{{ route('reports.financial') }}">Financial Reports</a></li>
+                            <li><a class="{{ Request::is('reconciliation*') ? 'active' : '' }}" href="{{ route('reconciliation.index') }}">Bank Reconciliation</a></li>
+                        </ul>
                     </li>
 
                     <!-- Payment Channels (Admin Only) -->
@@ -137,12 +157,16 @@
                         </li>
                     @endif
 
-                    <!-- SMS Logs (Standalone Shared) -->
+                    <!-- SMS (Shared) -->
                     <li>
-                        <a href="{{ route('sms.logs') }}" class="{{ Request::is('sms/logs*') ? 'active' : '' }}">
+                        <a href="#smsMenu" data-toggle="collapse" aria-expanded="{{ Request::is('sms/*') ? 'true' : 'false' }}" class="dropdown-toggle">
                             <i class="fa fa-envelope-o orange_color"></i>
-                            <span>SMS Logs</span>
+                            <span>SMS</span>
                         </a>
+                        <ul class="collapse list-unstyled {{ Request::is('sms/*') ? 'show' : '' }}" id="smsMenu">
+                            <li><a class="{{ Request::is('sms/logs*') ? 'active' : '' }}" href="{{ route('sms.logs') }}">SMS Logs</a></li>
+                            <li><a class="{{ Request::is('sms/reminders*') ? 'active' : '' }}" href="{{ route('reminders.edit') }}">Fee Reminders</a></li>
+                        </ul>
                     </li>
 
                     <li>

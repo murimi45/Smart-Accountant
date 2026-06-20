@@ -9,7 +9,7 @@ class SmsLog extends Model
 {
     use BelongsToSchool;
 
-    protected $fillable = ['school_id', 'to', 'message', 'status', 'response', 'student_id', 'provider_message_id'];
+    protected $fillable = ['school_id', 'to', 'message', 'status', 'source', 'response', 'student_id', 'invoice_id', 'provider_message_id'];
 
     protected static function booted()
     {

@@ -5,8 +5,11 @@ namespace App\Services;
 use App\Models\Invoice;
 use App\Models\ClassFee;
 use App\Models\StudentExtraFee;
+use App\Models\Student;
 use App\Models\StudentEnrollment;
 use App\Models\InvoicePayment;
+use App\Models\InvoicePaymentReversal;
+use App\Models\Transaction;
 use App\Models\Term;
 use Illuminate\Support\Facades\DB;
 use App\Jobs\SendPaymentNotification;
@@ -74,7 +77,10 @@ class InvoiceService
             $invoice->save();
         }
 
-        $invoice->items()->delete();
+        $invoice->items()
+            ->whereNull('invoice_waiver_id')
+            ->where('is_opening_balance', false)
+            ->delete();
 
         $total = 0;
 
@@ -135,10 +141,10 @@ class InvoiceService
             }
         }
 
-        $invoice->total_amount = $total;
-        $invoice->balance      = $total - $invoice->amount_paid;
-        $invoice->status       = $this->calculateStatus($invoice);
         $invoice->save();
+
+        app(InvoiceWaiverService::class)->syncAllApprovedWaivers($invoice);
+        app(OpeningBalanceService::class)->syncLineItem($invoice->fresh());
 
         return $invoice->fresh();
     }
@@ -175,6 +181,123 @@ class InvoiceService
 
             return $invoice->fresh();
         });
+    }
+
+    public function reversePayment(InvoicePayment $payment, float $amount, string $reason, int $userId): Invoice
+    {
+        $reason = trim($reason);
+
+        if ($reason === '') {
+            throw new InvalidArgumentException('A reason is required to reverse a payment.');
+        }
+
+        if ($amount < 0.01) {
+            throw new InvalidArgumentException('Reversal amount must be at least 0.01.');
+        }
+
+        return DB::transaction(function () use ($payment, $amount, $reason, $userId) {
+            $payment = InvoicePayment::withoutGlobalScopes()
+                ->with(['reversals', 'invoice'])
+                ->lockForUpdate()
+                ->findOrFail($payment->id);
+
+            $invoice = Invoice::withoutGlobalScopes()
+                ->lockForUpdate()
+                ->findOrFail($payment->invoice_id);
+
+            $reversible = $payment->reversibleAmount();
+
+            if ($reversible <= 0) {
+                throw new InvalidArgumentException('This payment has already been fully reversed.');
+            }
+
+            if ($amount > $reversible + 0.001) {
+                throw new InvalidArgumentException(
+                    'Reversal amount cannot exceed the remaining payment balance (KSh ' . number_format($reversible, 2) . ').'
+                );
+            }
+
+            InvoicePaymentReversal::create([
+                'invoice_payment_id' => $payment->id,
+                'amount'             => $amount,
+                'reason'             => $reason,
+                'reversed_by'        => $userId,
+                'reversed_at'        => now(),
+            ]);
+
+            $isTransferred = $invoice->status === Invoice::STATUS_TRANSFERRED;
+            $isVoided = $invoice->status === Invoice::STATUS_VOIDED;
+
+            $invoice->decrement('amount_paid', $amount);
+            $invoice->refresh();
+
+            if (! $isTransferred && ! $isVoided) {
+                $invoice->update([
+                    'balance' => $invoice->total_amount - $invoice->amount_paid,
+                    'status'  => $this->calculateStatus($invoice),
+                ]);
+            }
+
+            $this->markMpesaTransactionReversed($payment, $invoice);
+
+            $this->refreshCarriedForwardInvoice($invoice);
+
+            return $invoice->fresh();
+        });
+    }
+
+    private function markMpesaTransactionReversed(InvoicePayment $payment, Invoice $invoice): void
+    {
+        if (strtolower((string) $payment->method) !== 'mpesa') {
+            return;
+        }
+
+        Transaction::withoutGlobalScopes()
+            ->where('invoice_id', $invoice->id)
+            ->where('amount', $payment->amount)
+            ->whereIn('status', ['applied', 'overpaid'])
+            ->latest()
+            ->limit(1)
+            ->update(['status' => 'reversed']);
+    }
+
+    private function refreshCarriedForwardInvoice(Invoice $transferredInvoice): void
+    {
+        $transferredInvoice->refresh();
+
+        $schoolId = (int) $transferredInvoice->school_id;
+        $priorEnrollmentId = (int) $transferredInvoice->enrollment_id;
+
+        if (! $schoolId || ! $priorEnrollmentId) {
+            return;
+        }
+
+        $currentEnrollment = StudentEnrollment::withoutGlobalScopes()
+            ->where('school_id', $schoolId)
+            ->where('promoted_from_enrollment_id', $priorEnrollmentId)
+            ->whereIn('status', [
+                StudentEnrollment::STATUS_ACTIVE,
+                StudentEnrollment::STATUS_REPEATING,
+            ])
+            ->orderByDesc('id')
+            ->first();
+
+        if (! $currentEnrollment) {
+            return;
+        }
+
+        $student = Student::withoutGlobalScopes()->find($transferredInvoice->student_id);
+
+        if (! $student) {
+            return;
+        }
+
+        $this->createOrUpdateInvoice(
+            $schoolId,
+            $student,
+            (int) $currentEnrollment->term_id,
+            (int) $currentEnrollment->id
+        );
     }
 
     private function getPreviousInvoice(int $schoolId, int $currentEnrollmentId): ?Invoice
@@ -249,6 +372,14 @@ class InvoiceService
         }
 
         return Term::current1($schoolId);
+    }
+
+    public function calculateStatusPublic(Invoice $invoice): string
+    {
+        $invoice->total_amount = (float) $invoice->total_amount;
+        $invoice->amount_paid = (float) $invoice->amount_paid;
+
+        return $this->calculateStatus($invoice);
     }
 
     private function calculateStatus($invoice): string
