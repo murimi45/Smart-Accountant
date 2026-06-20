@@ -2,11 +2,13 @@
 @section('main')
 
 <div class="main-wrapper">
+    {{-- Page Header --}}
     <div class="page-header mb-4">
         <h4 class="mb-1">Bank Reconciliation</h4>
         <p class="text-muted mb-0">Match bank statement deposits to fee payments recorded in the cashbook</p>
     </div>
 
+    {{-- Alerts --}}
     @if (session('success'))
         <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
             {{ session('success') }}
@@ -20,7 +22,8 @@
         </div>
     @endif
 
-    <div class="alert alert-light border mb-4 py-3">
+    {{-- Help Callout --}}
+    <div class="info-callout mb-4">
         <strong><i class="fa fa-info-circle me-1"></i>Made a mistake?</strong>
         <ul class="mb-0 mt-2 small text-muted">
             <li><strong>Wrong match</strong> — click <em>Unmatch</em> on the linked payment under the deposit. The payment returns to the unmatched list; the deposit opens again.</li>
@@ -29,35 +32,56 @@
         </ul>
     </div>
 
-
+    {{-- Summary Cards --}}
     <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-value">{{ $summary['open_deposits'] }}</div>
-                <div class="stat-label">Open bank deposits</div>
+        <div class="col-md-3 mb-3 mb-md-0">
+            <div class="summary-card">
+                <div class="summary-icon icon-budget">
+                    <i class="fa fa-university"></i>
+                </div>
+                <div class="summary-content">
+                    <div class="summary-value">{{ $summary['open_deposits'] }}</div>
+                    <div class="summary-label">Open bank deposits</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3 mb-md-0">
+            <div class="summary-card">
+                <div class="summary-icon icon-outstanding">
+                    <i class="fa fa-money-bill-wave"></i>
+                </div>
+                <div class="summary-content">
+                    <div class="summary-value">KSh {{ number_format($summary['open_deposit_total'], 2) }}</div>
+                    <div class="summary-label">Unmatched deposit total</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3 mb-md-0">
+            <div class="summary-card">
+                <div class="summary-icon icon-debtors">
+                    <i class="fa fa-receipt"></i>
+                </div>
+                <div class="summary-content">
+                    <div class="summary-value">{{ $summary['unmatched_inflows'] }}</div>
+                    <div class="summary-label">Unmatched payments</div>
+                </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-value">KSh {{ number_format($summary['open_deposit_total'], 2) }}</div>
-                <div class="stat-label">Unmatched deposit total</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-value">{{ $summary['unmatched_inflows'] }}</div>
-                <div class="stat-label">Unmatched payments</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-value">KSh {{ number_format($summary['unmatched_inflow_total'], 2) }}</div>
-                <div class="stat-label">Unmatched payment total</div>
+            <div class="summary-card">
+                <div class="summary-icon icon-overdue">
+                    <i class="fa fa-coins"></i>
+                </div>
+                <div class="summary-content">
+                    <div class="summary-value">KSh {{ number_format($summary['unmatched_inflow_total'], 2) }}</div>
+                    <div class="summary-label">Unmatched payment total</div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="card mb-4">
+    {{-- Record Deposit --}}
+    <div class="card form-card mb-4">
         <div class="card-header"><h5 class="mb-0"><i class="fa fa-university me-2"></i>Record bank deposit</h5></div>
         <div class="card-body">
             <form action="{{ route('reconciliation.deposits.store') }}" method="POST" class="row g-3 align-items-end">
@@ -85,8 +109,9 @@
         </div>
     </div>
 
+    {{-- Edit Selected Deposit --}}
     @if($selectedDeposit)
-    <div class="card mb-4 border-primary">
+    <div class="card form-card form-card-highlight mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0"><i class="fa fa-pen me-2"></i>Edit selected deposit</h5>
             <form action="{{ route('reconciliation.deposits.destroy', $selectedDeposit) }}" method="POST"
@@ -128,8 +153,9 @@
     @endif
 
     <div class="row">
+        {{-- Bank Deposits --}}
         <div class="col-xl-5 mb-4">
-            <div class="card h-100">
+            <div class="card form-card h-100">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Bank deposits</h5>
                     <form method="GET" class="d-flex gap-2">
@@ -145,7 +171,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-sm mb-0">
+                        <table class="table report-table report-table-compact mb-0">
                             <thead>
                                 <tr>
                                     <th>Date</th>
@@ -160,7 +186,7 @@
                                     @php
                                         $isSelected = $selectedDeposit && $selectedDeposit->id === $deposit->id;
                                     @endphp
-                                    <tr class="{{ $isSelected ? 'table-primary' : '' }}">
+                                    <tr class="{{ $isSelected ? 'row-selected' : '' }}">
                                         <td>{{ $deposit->deposit_date->format('d M Y') }}</td>
                                         <td>
                                             <div>{{ $deposit->reference ?: '—' }}</div>
@@ -176,11 +202,11 @@
                                         </td>
                                         <td>
                                             @if($deposit->status === 'reconciled')
-                                                <span class="badge bg-success">Reconciled</span>
+                                                <span class="badge badge-good">Reconciled</span>
                                             @elseif($deposit->status === 'partial')
-                                                <span class="badge bg-warning text-dark">Partial</span>
+                                                <span class="badge badge-watch">Partial</span>
                                             @else
-                                                <span class="badge bg-secondary">Unmatched</span>
+                                                <span class="badge badge-neutral">Unmatched</span>
                                             @endif
                                         </td>
                                         <td>
@@ -189,7 +215,7 @@
                                     </tr>
                                     @if($deposit->matches->isNotEmpty())
                                         @foreach($deposit->matches as $m)
-                                            <tr class="table-light">
+                                            <tr class="row-match">
                                                 <td colspan="2">
                                                     <small class="text-muted">
                                                         <i class="fa fa-link me-1"></i>
@@ -220,8 +246,9 @@
             </div>
         </div>
 
+        {{-- Unmatched Fee Payments --}}
         <div class="col-xl-7 mb-4">
-            <div class="card h-100">
+            <div class="card form-card h-100">
                 <div class="card-header">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                         <h5 class="mb-0">Unmatched fee payments (cashbook)</h5>
@@ -242,7 +269,7 @@
                     </div>
                 </div>
                 @if($selectedDeposit)
-                    <div class="card-body border-bottom py-2 bg-light">
+                    <div class="context-bar">
                         <small>
                             <strong>Matching to:</strong>
                             {{ $selectedDeposit->deposit_date->format('d M Y') }} —
@@ -252,13 +279,13 @@
                         </small>
                     </div>
                 @else
-                    <div class="card-body border-bottom py-2 bg-warning-subtle">
+                    <div class="context-bar context-bar-warn">
                         <small class="text-muted">Select an open bank deposit on the left to start matching payments.</small>
                     </div>
                 @endif
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-sm mb-0">
+                        <table class="table report-table report-table-compact mb-0">
                             <thead>
                                 <tr>
                                     <th>Date</th>
@@ -275,7 +302,7 @@
                                         $student = $payment?->invoice?->student;
                                         $score = $suggestions->get($entry->id)['score'] ?? 0;
                                     @endphp
-                                    <tr class="{{ $score >= 100 ? 'table-success' : ($score >= 50 ? 'table-warning' : '') }}">
+                                    <tr class="{{ $score >= 100 ? 'row-suggested-strong' : ($score >= 50 ? 'row-suggested-weak' : '') }}">
                                         <td>{{ \Carbon\Carbon::parse($entry->transaction_date)->format('d M Y') }}</td>
                                         <td>
                                             @if($student)
@@ -285,7 +312,7 @@
                                                 {{ Str::limit($entry->description, 45) }}
                                             @endif
                                             @if($score >= 100)
-                                                <span class="badge bg-success ms-1">Likely match</span>
+                                                <span class="badge badge-good badge-sm ms-1">Likely match</span>
                                             @endif
                                         </td>
                                         <td>{{ ucfirst($entry->payment_method) }}</td>
@@ -315,11 +342,308 @@
 </div>
 
 <style>
-.stat-card { background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:16px; }
-.stat-value { font-size:18px; font-weight:700; color:#111827; }
-.stat-label { font-size:13px; color:#6b7280; }
-.card { border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,.05); }
-.card-header { background:#f9fafb; border-bottom:1px solid #e5e7eb; padding:14px 18px; }
-.table th, .table td { padding:10px 14px; vertical-align:middle; font-size:14px; }
+/* Base Variables — shared across all report & form views */
+:root {
+    --primary-color: #36a9e2;
+    --success-color: #79c347;
+    --success-dark: #5fa732;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-900: #111827;
+    --border-radius: 8px;
+}
+
+/* Page Header */
+.page-header h4 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0;
+}
+
+.page-header p {
+    font-size: 14px;
+    color: var(--gray-500);
+}
+
+/* Alerts */
+.alert {
+    border-radius: var(--border-radius);
+    border: none;
+    padding: 16px;
+}
+
+.alert-success {
+    background-color: #e8f5e1;
+    color: var(--success-dark);
+}
+
+.alert-danger {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+/* Help Callout */
+.info-callout {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    padding: 16px 20px;
+    color: var(--gray-700);
+}
+
+.info-callout i {
+    color: var(--primary-color);
+}
+
+/* Summary Cards */
+.summary-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 100%;
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+}
+
+.summary-icon {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius);
+    font-size: 16px;
+}
+
+.icon-budget {
+    background: rgba(54, 169, 226, 0.1);
+    color: var(--primary-color);
+}
+
+.icon-outstanding {
+    background: rgba(245, 158, 11, 0.12);
+    color: var(--warning-color);
+}
+
+.icon-debtors {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger-color);
+}
+
+.icon-overdue {
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+}
+
+.summary-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gray-900);
+    line-height: 1.2;
+}
+
+.summary-label {
+    font-size: 13px;
+    color: var(--gray-500);
+    margin-top: 2px;
+}
+
+/* Cards */
+.form-card {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.form-card .card-header {
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+    padding: 16px 24px;
+}
+
+.form-card .card-header h5 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0;
+}
+
+.form-card .card-footer {
+    background: var(--gray-50);
+    border-top: 1px solid var(--gray-200);
+    padding: 12px 24px;
+}
+
+.form-card-highlight {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(54, 169, 226, 0.1);
+}
+
+/* Inputs inside form-card forms */
+.form-card .form-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-700);
+    margin-bottom: 6px;
+}
+
+.form-card .form-control,
+.form-card .form-select {
+    border: 1px solid var(--gray-300);
+    border-radius: var(--border-radius);
+    font-size: 14px;
+}
+
+.form-card .form-control:focus,
+.form-card .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(54, 169, 226, 0.1);
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: #2a8cbd;
+    border-color: #2a8cbd;
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.btn-success:hover {
+    background-color: var(--success-dark);
+    border-color: var(--success-dark);
+}
+
+/* Badges */
+.badge-good,
+.badge-watch,
+.badge-neutral {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: var(--border-radius);
+}
+
+.badge-good {
+    background-color: #e8f5e1;
+    color: var(--success-dark);
+}
+
+.badge-watch {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.badge-neutral {
+    background-color: var(--gray-100);
+    color: var(--gray-700);
+}
+
+.badge-sm {
+    font-size: 11px;
+    padding: 3px 8px;
+}
+
+/* Context Bars */
+.context-bar {
+    padding: 10px 24px;
+    border-bottom: 1px solid var(--gray-200);
+    background: rgba(54, 169, 226, 0.06);
+    color: var(--gray-700);
+}
+
+.context-bar-warn {
+    background: rgba(245, 158, 11, 0.1);
+}
+
+/* Report Table */
+.report-table {
+    font-size: 14px;
+    color: var(--gray-700);
+}
+
+.report-table thead th {
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--gray-600);
+    padding: 12px 24px;
+}
+
+.report-table td {
+    padding: 10px 24px;
+    border-color: var(--gray-100);
+    vertical-align: middle;
+}
+
+.report-table-compact thead th,
+.report-table-compact td {
+    padding: 8px 16px;
+}
+
+/* Row Highlights */
+.row-selected td {
+    background: rgba(54, 169, 226, 0.08);
+}
+
+.row-match td {
+    background: var(--gray-50);
+    border-top: none;
+}
+
+.row-suggested-strong td {
+    background: rgba(121, 195, 71, 0.1);
+}
+
+.row-suggested-weak td {
+    background: rgba(245, 158, 11, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .page-header h4 {
+        font-size: 20px;
+    }
+
+    .summary-card {
+        padding: 16px;
+    }
+
+    .summary-value {
+        font-size: 18px;
+    }
+
+    .report-table thead th,
+    .report-table td,
+    .report-table-compact thead th,
+    .report-table-compact td {
+        padding: 8px 12px;
+    }
+
+    .context-bar {
+        padding: 10px 16px;
+    }
+}
 </style>
 @endsection

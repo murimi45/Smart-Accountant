@@ -6,6 +6,7 @@
         <p class="text-muted mb-0">Review waiver requests and approval trail</p>
     </div>
 
+
     <?php if(session('success')): ?>
         <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
             <?php echo e(session('success')); ?>

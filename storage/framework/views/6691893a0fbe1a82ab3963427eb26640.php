@@ -1,4 +1,3 @@
-
 <?php $__env->startSection('main'); ?>
 
 <div class="main-wrapper">
@@ -119,13 +118,6 @@
                         <i class="fa fa-sms me-1"></i>Send SMS
                     </button>
                 </form>
-
-                <a href="<?php echo e(route('waivers.index')); ?>" class="btn btn-outline-warning btn-action">
-                    <i class="fa fa-hand-holding-usd me-1"></i>Waivers
-                    <?php if(($pendingWaiverCount ?? 0) > 0): ?>
-                        <span class="badge bg-danger ms-1"><?php echo e($pendingWaiverCount); ?></span>
-                    <?php endif; ?>
-                </a>
             </div>
         </div>
     </div>
@@ -167,8 +159,6 @@
                                 $canPay = $invoice->isCollectible()
                                     && $currentTerm
                                     && (int) $invoice->term_id === (int) $currentTerm->id;
-                                $canWaiver = $canPay;
-                                $waiverRowId = "waiver-row-{$i}";
                                 $rowId = "details-row-{$i}";
                                 $paymentRowId = "payment-row-{$i}";
                             ?>
@@ -232,16 +222,6 @@
                                             <span class="btn-text">Payment</span>
                                         </button>
                                         <?php endif; ?>
-                                        <?php if($canWaiver): ?>
-                                        <button type="button"
-                                                class="btn btn-sm btn-warning toggle-row"
-                                                data-target="<?php echo e($waiverRowId); ?>"
-                                                data-label="Waiver"
-                                                title="Request Waiver">
-                                            <i class="fa fa-hand-holding-usd"></i>
-                                            <span class="btn-text">Waiver</span>
-                                        </button>
-                                        <?php endif; ?>
                                         <a href="<?php echo e(route('statements.single', $invoice->student->id)); ?>" 
                                            class="btn btn-sm btn-light" 
                                            title="Print Statement">
@@ -271,12 +251,9 @@
                                                         </thead>
                                                         <tbody>
                                                             <?php $__currentLoopData = $invoice->items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                                <tr class="<?php echo e($item->isWaiverLine() ? 'table-success' : ''); ?>">
+                                                                <tr>
                                                                     <td><?php echo e($item->description); ?></td>
-                                                                    <td class="text-end <?php echo e((float) $item->amount < 0 ? 'text-success' : ''); ?>">
-                                                                        KSh <?php echo e(number_format($item->amount, 2)); ?>
-
-                                                                    </td>
+                                                                    <td class="text-end">KSh <?php echo e(number_format($item->amount, 2)); ?></td>
                                                                 </tr>
                                                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                             <tr class="table-total">
@@ -300,124 +277,31 @@
                                                                 <th>Date</th>
                                                                 <th>Method</th>
                                                                 <th class="text-end">Amount</th>
-                                                                <th>Status</th>
-                                                                <th></th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
                                                             <?php $__empty_2 = true; $__currentLoopData = $invoice->payments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $p): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_2 = false; ?>
-                                                                <?php
-                                                                    $reversible = $p->reversibleAmount();
-                                                                    $reversalRowId = "reversal-row-{$i}-{$p->id}";
-                                                                ?>
                                                                 <tr>
                                                                     <td><?php echo e($p->payment_date); ?></td>
                                                                     <td>
                                                                         <span class="badge bg-light text-dark"><?php echo e($p->method); ?></span>
                                                                     </td>
                                                                     <td class="text-end">KSh <?php echo e(number_format($p->amount, 2)); ?></td>
-                                                                    <td>
-                                                                        <?php if($p->isFullyReversed()): ?>
-                                                                            <span class="badge bg-secondary">Reversed</span>
-                                                                        <?php elseif($reversible < $p->amount): ?>
-                                                                            <span class="badge bg-warning text-dark">Partial</span>
-                                                                        <?php else: ?>
-                                                                            <span class="badge bg-success">Active</span>
-                                                                        <?php endif; ?>
-                                                                    </td>
-                                                                    <td class="text-end">
-                                                                        <?php if($reversible > 0): ?>
-                                                                        <button type="button"
-                                                                                class="btn btn-sm btn-outline-danger toggle-row"
-                                                                                data-target="<?php echo e($reversalRowId); ?>"
-                                                                                data-label="Reverse"
-                                                                                title="Reverse payment">
-                                                                            <i class="fa fa-undo"></i>
-                                                                        </button>
-                                                                        <?php endif; ?>
-                                                                    </td>
                                                                 </tr>
-                                                                <?php $__currentLoopData = $p->reversals; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $rev): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                                    <tr class="table-light">
-                                                                        <td colspan="2">
-                                                                            <small class="text-muted">
-                                                                                <i class="fa fa-undo me-1"></i>
-                                                                                <?php echo e($rev->reversed_at?->format('Y-m-d H:i')); ?>
-
-                                                                                <?php if($rev->reversedBy): ?>
-                                                                                    · <?php echo e($rev->reversedBy->admin_name); ?>
-
-                                                                                <?php endif; ?>
-                                                                            </small>
-                                                                        </td>
-                                                                        <td class="text-end text-danger">
-                                                                            <small>- KSh <?php echo e(number_format($rev->amount, 2)); ?></small>
-                                                                        </td>
-                                                                        <td colspan="2">
-                                                                            <small class="text-muted" title="<?php echo e($rev->reason); ?>">
-                                                                                <?php echo e(Str::limit($rev->reason, 40)); ?>
-
-                                                                            </small>
-                                                                        </td>
-                                                                    </tr>
-                                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                                <?php if($reversible > 0): ?>
-                                                                <tr id="<?php echo e($reversalRowId); ?>" class="reversal-form-row d-none">
-                                                                    <td colspan="5" class="pt-0 pb-3">
-                                                                        <form action="<?php echo e(route('payments.reverse', [$invoice->id, $p->id])); ?>" method="POST" class="border rounded p-3 bg-light">
-                                                                            <?php echo csrf_field(); ?>
-                                                                            <?php if($invoice->status === 'transferred'): ?>
-                                                                                <div class="alert alert-warning py-2 small mb-3">
-                                                                                    <i class="fa fa-exclamation-triangle me-1"></i>
-                                                                                    This invoice was transferred — reversing may update the current term balance forward.
-                                                                                </div>
-                                                                            <?php endif; ?>
-                                                                            <div class="row g-2 align-items-end">
-                                                                                <div class="col-md-3">
-                                                                                    <label class="form-label small mb-1">Amount (KSh)</label>
-                                                                                    <input type="number"
-                                                                                           name="amount"
-                                                                                           class="form-control form-control-sm"
-                                                                                           step="0.01"
-                                                                                           min="0.01"
-                                                                                           max="<?php echo e($reversible); ?>"
-                                                                                           value="<?php echo e($reversible); ?>"
-                                                                                           required>
-                                                                                    <div class="form-text">Max <?php echo e(number_format($reversible, 2)); ?></div>
-                                                                                </div>
-                                                                                <div class="col-md-6">
-                                                                                    <label class="form-label small mb-1">Reason (required)</label>
-                                                                                    <textarea name="reason"
-                                                                                              class="form-control form-control-sm"
-                                                                                              rows="2"
-                                                                                              maxlength="500"
-                                                                                              placeholder="Why is this payment being reversed?"
-                                                                                              required></textarea>
-                                                                                </div>
-                                                                                <div class="col-md-3">
-                                                                                    <button type="submit" class="btn btn-sm btn-danger w-100">
-                                                                                        <i class="fa fa-undo me-1"></i>Confirm Reversal
-                                                                                    </button>
-                                                                                </div>
-                                                                            </div>
-                                                                        </form>
-                                                                    </td>
-                                                                </tr>
-                                                                <?php endif; ?>
                                                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_2): ?>
                                                                 <tr>
-                                                                    <td colspan="5" class="text-muted text-center py-3">
+                                                                    <td colspan="3" class="text-muted text-center py-3">
                                                                         <i class="fa fa-info-circle me-1"></i>No payments recorded yet
                                                                     </td>
                                                                 </tr>
                                                             <?php endif; ?>
                                                             <tr class="table-total">
-                                                                <td colspan="3" class="text-end">Total Paid</td>
-                                                                <td class="text-end text-success" colspan="2">KSh <?php echo e(number_format($invoice->amount_paid, 2)); ?></td>
+                                                                <td colspan="2" class="text-end">Total Paid</td>
+                                                                <td class="text-end text-success">KSh <?php echo e(number_format($invoice->amount_paid, 2)); ?></td>
                                                             </tr>
                                                             <tr class="table-total">
-                                                                <td colspan="3" class="text-end">Balance</td>
-                                                                <td class="text-end <?php echo e($balance > 0 ? 'text-danger' : 'text-success'); ?>" colspan="2">
+                                                                <td colspan="2" class="text-end">Balance</td>
+                                                                <td class="text-end <?php echo e($balance > 0 ? 'text-danger' : 'text-success'); ?>">
                                                                     <?php echo e($balance > 0 ? 'KSh '.number_format($balance, 2) : 'Cleared'); ?>
 
                                                                 </td>
@@ -427,86 +311,6 @@
                                                 </div>
                                             </div>
                                         </div>
-
-                                        <?php if($invoice->waivers->isNotEmpty()): ?>
-                                        <div class="row mt-2">
-                                            <div class="col-12">
-                                                <h6 class="section-title">
-                                                    <i class="fa fa-hand-holding-usd me-2"></i>Waiver & Bursary Trail
-                                                </h6>
-                                                <div class="table-responsive">
-                                                    <table class="table table-sm inner-table">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Requested</th>
-                                                                <th>By</th>
-                                                                <th>Scope</th>
-                                                                <th>Discount</th>
-                                                                <th>Status</th>
-                                                                <th>Reviewed</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <?php $__currentLoopData = $invoice->waivers->sortByDesc('requested_at'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $waiver): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                                <tr>
-                                                                    <td><?php echo e($waiver->requested_at?->format('Y-m-d H:i')); ?></td>
-                                                                    <td><?php echo e($waiver->requestedBy?->admin_name ?? '—'); ?></td>
-                                                                    <td>
-                                                                        <?php if($waiver->scope === 'line'): ?>
-                                                                            <?php echo e(Str::limit($waiver->target_description, 35)); ?>
-
-                                                                        <?php else: ?>
-                                                                            Invoice
-                                                                        <?php endif; ?>
-                                                                    </td>
-                                                                    <td>
-                                                                        <?php if($waiver->discount_type === 'percentage'): ?>
-                                                                            <?php echo e(number_format($waiver->value, 2)); ?>%
-                                                                        <?php else: ?>
-                                                                            KSh <?php echo e(number_format($waiver->value, 2)); ?>
-
-                                                                        <?php endif; ?>
-                                                                        <?php if($waiver->computed_amount): ?>
-                                                                            <small class="text-success d-block">− KSh <?php echo e(number_format($waiver->computed_amount, 2)); ?></small>
-                                                                        <?php endif; ?>
-                                                                    </td>
-                                                                    <td>
-                                                                        <?php if($waiver->status === 'pending'): ?>
-                                                                            <span class="badge bg-warning text-dark">Pending</span>
-                                                                        <?php elseif($waiver->status === 'approved'): ?>
-                                                                            <span class="badge bg-success">Approved</span>
-                                                                        <?php else: ?>
-                                                                            <span class="badge bg-secondary">Rejected</span>
-                                                                        <?php endif; ?>
-                                                                    </td>
-                                                                    <td>
-                                                                        <?php if($waiver->reviewed_at): ?>
-                                                                            <?php echo e($waiver->reviewed_at->format('Y-m-d H:i')); ?>
-
-                                                                            <?php if($waiver->reviewedBy): ?>
-                                                                                · <?php echo e($waiver->reviewedBy->admin_name); ?>
-
-                                                                            <?php endif; ?>
-                                                                            <?php if($waiver->review_notes): ?>
-                                                                                <small class="text-muted d-block" title="<?php echo e($waiver->review_notes); ?>"><?php echo e(Str::limit($waiver->review_notes, 40)); ?></small>
-                                                                            <?php endif; ?>
-                                                                        <?php else: ?>
-                                                                            —
-                                                                        <?php endif; ?>
-                                                                    </td>
-                                                                </tr>
-                                                                <?php if($waiver->reason): ?>
-                                                                    <tr class="table-light">
-                                                                        <td colspan="6"><small class="text-muted"><strong>Reason:</strong> <?php echo e($waiver->reason); ?></small></td>
-                                                                    </tr>
-                                                                <?php endif; ?>
-                                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>
@@ -543,59 +347,6 @@
                                                 <label class="form-label">&nbsp;</label>
                                                 <button type="submit" class="btn btn-success w-100">
                                                     <i class="fa fa-check-circle me-1"></i>Add Payment
-                                                </button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                            <?php endif; ?>
-
-                            
-                            <?php if($canWaiver): ?>
-                            <tr class="waiver-form-row d-none" id="<?php echo e($waiverRowId); ?>">
-                                <td colspan="6" class="payment-cell">
-                                    <div class="payment-content">
-                                        <h6 class="section-title">
-                                            <i class="fa fa-hand-holding-usd me-2"></i>Request Fee Waiver / Bursary
-                                        </h6>
-                                        <p class="text-muted small mb-3">Requests require admin approval before the discount is applied.</p>
-                                        <form action="<?php echo e(route('waivers.store', $invoice->id)); ?>" method="POST" class="row g-3">
-                                            <?php echo csrf_field(); ?>
-                                            <div class="col-md-3">
-                                                <label class="form-label">Apply To</label>
-                                                <select name="scope" class="form-select waiver-scope-select" required>
-                                                    <option value="invoice">Whole invoice</option>
-                                                    <option value="line">Specific fee line</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-3 waiver-line-field d-none">
-                                                <label class="form-label">Fee Line</label>
-                                                <select name="invoice_item_id" class="form-select">
-                                                    <option value="">Select line…</option>
-                                                    <?php $__currentLoopData = $invoice->items->whereNull('invoice_waiver_id')->where('amount', '>', 0); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $feeItem): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                        <option value="<?php echo e($feeItem->id); ?>"><?php echo e(Str::limit($feeItem->description, 40)); ?> (KSh <?php echo e(number_format($feeItem->amount, 2)); ?>)</option>
-                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <label class="form-label">Discount Type</label>
-                                                <select name="discount_type" class="form-select" required>
-                                                    <option value="fixed">Fixed amount (KSh)</option>
-                                                    <option value="percentage">Percentage (%)</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <label class="form-label">Value</label>
-                                                <input type="number" name="value" class="form-control" step="0.01" min="0.01" required>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Reason (required)</label>
-                                                <input type="text" name="reason" class="form-control" maxlength="500" placeholder="e.g. Bursary — financial hardship" required>
-                                            </div>
-                                            <div class="col-md-2 d-flex align-items-end">
-                                                <button type="submit" class="btn btn-warning w-100">
-                                                    <i class="fa fa-paper-plane me-1"></i>Submit
                                                 </button>
                                             </div>
                                         </form>
@@ -1038,36 +789,14 @@ document.addEventListener('click', function (e) {
         if (btn.dataset.label === "Details") {
             if (textSpan) textSpan.textContent = "Details";
             if (icon) icon.className = "fa fa-eye";
-        } else if (btn.dataset.label === "Reverse") {
-            if (icon) icon.className = "fa fa-undo";
-        } else if (btn.dataset.label === "Waiver") {
-            if (textSpan) textSpan.textContent = "Waiver";
-            if (icon) icon.className = "fa fa-hand-holding-usd";
         } else {
             if (textSpan) textSpan.textContent = "Payment";
             if (icon) icon.className = "fa fa-plus";
         }
     } else {
-        if (btn.dataset.label === "Reverse") {
-            if (icon) icon.className = "fa fa-times";
-        } else if (textSpan) {
-            textSpan.textContent = "Hide";
-        }
-        if (btn.dataset.label !== "Reverse" && icon) {
-            icon.className = "fa fa-eye-slash";
-        }
+        if (textSpan) textSpan.textContent = "Hide";
+        if (icon) icon.className = "fa fa-eye-slash";
     }
-});
-document.addEventListener('change', function (e) {
-    if (!e.target.classList.contains('waiver-scope-select')) return;
-    const form = e.target.closest('form');
-    const lineField = form?.querySelector('.waiver-line-field');
-    const lineSelect = form?.querySelector('[name="invoice_item_id"]');
-    if (!lineField || !lineSelect) return;
-    const isLine = e.target.value === 'line';
-    lineField.classList.toggle('d-none', !isLine);
-    lineSelect.required = isLine;
-    if (!isLine) lineSelect.value = '';
 });
 </script>
 

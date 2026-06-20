@@ -2,11 +2,13 @@
 @section('main')
 
 <div class="main-wrapper">
+    {{-- Page Header --}}
     <div class="page-header mb-4">
         <h4 class="mb-1">Aged Debtors Report</h4>
         <p class="text-muted mb-0">Outstanding fee balances by age, filtered by class and term</p>
     </div>
 
+    {{-- Filter --}}
     <div class="card filter-card mb-3">
         <div class="card-body">
             <form method="GET" action="{{ route('reports.aged-debtors') }}" class="filter-form">
@@ -50,6 +52,7 @@
         </div>
     </div>
 
+    {{-- Context / Export Bar --}}
     <div class="card actions-card mb-4">
         <div class="card-body">
             <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
@@ -81,11 +84,12 @@
         </div>
     </div>
 
+    {{-- Summary Cards --}}
     <div class="row mb-4">
-        <div class="col-md-3">
+        <div class="col-md-3 mb-3 mb-md-0">
             <div class="summary-card">
-                <div class="summary-icon" style="background-color: #fee2e2;">
-                    <i class="fa fa-users" style="color: #ef4444;"></i>
+                <div class="summary-icon icon-debtors">
+                    <i class="fa fa-users"></i>
                 </div>
                 <div class="summary-content">
                     <div class="summary-value">{{ number_format($report['debtorCount']) }}</div>
@@ -93,10 +97,10 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-3 mb-3 mb-md-0">
             <div class="summary-card">
-                <div class="summary-icon" style="background-color: #fef3c7;">
-                    <i class="fa fa-money-bill-wave" style="color: #f59e0b;"></i>
+                <div class="summary-icon icon-outstanding">
+                    <i class="fa fa-money-bill-wave"></i>
                 </div>
                 <div class="summary-content">
                     <div class="summary-value">KSh {{ number_format($report['totals']['total_balance'], 2) }}</div>
@@ -104,10 +108,10 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-3 mb-3 mb-md-0">
             <div class="summary-card">
-                <div class="summary-icon" style="background-color: #fee2e2;">
-                    <i class="fa fa-clock" style="color: #dc2626;"></i>
+                <div class="summary-icon icon-overdue">
+                    <i class="fa fa-clock"></i>
                 </div>
                 <div class="summary-content">
                     <div class="summary-value">KSh {{ number_format($report['totals']['days_91_plus'], 2) }}</div>
@@ -117,8 +121,8 @@
         </div>
         <div class="col-md-3">
             <div class="summary-card">
-                <div class="summary-icon" style="background-color: #e8f5e0;">
-                    <i class="fa fa-check-circle" style="color: #79c347;"></i>
+                <div class="summary-icon icon-current">
+                    <i class="fa fa-check-circle"></i>
                 </div>
                 <div class="summary-content">
                     <div class="summary-value">KSh {{ number_format($report['totals']['current'], 2) }}</div>
@@ -128,16 +132,15 @@
         </div>
     </div>
 
-    <div class="card table-card">
-        <div class="card-header">
-            <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="fa fa-table me-2"></i>Aging Detail</h5>
-                <span class="badge bg-light text-dark">{{ $report['debtorCount'] }} rows</span>
-            </div>
+    {{-- Aging Detail Table --}}
+    <div class="card form-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fa fa-table me-2"></i>Aging Detail</h5>
+            <span class="badge badge-neutral">{{ $report['debtorCount'] }} rows</span>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table invoice-table mb-0">
+                <table class="table report-table report-table-compact mb-0">
                     <thead>
                         <tr>
                             <th>Admission</th>
@@ -165,7 +168,7 @@
                                 <td class="text-end">{{ number_format($row['buckets']['current'], 2) }}</td>
                                 <td class="text-end">{{ number_format($row['buckets']['days_31_60'], 2) }}</td>
                                 <td class="text-end">{{ number_format($row['buckets']['days_61_90'], 2) }}</td>
-                                <td class="text-end {{ $row['buckets']['days_91_plus'] > 0 ? 'text-danger fw-semibold' : '' }}">
+                                <td class="text-end {{ $row['buckets']['days_91_plus'] > 0 ? 'value-negative fw-semibold' : '' }}">
                                     {{ number_format($row['buckets']['days_91_plus'], 2) }}
                                 </td>
                                 <td class="text-end fw-semibold">{{ number_format($row['total_balance'], 2) }}</td>
@@ -179,8 +182,8 @@
                         @endforelse
                     </tbody>
                     @if(count($report['rows']) > 0)
-                        <tfoot class="table-light">
-                            <tr class="fw-bold">
+                        <tfoot>
+                            <tr class="fw-bold total-row">
                                 <td colspan="6" class="text-end">Totals</td>
                                 <td class="text-end">{{ number_format($report['totals']['current'], 2) }}</td>
                                 <td class="text-end">{{ number_format($report['totals']['days_31_60'], 2) }}</td>
@@ -197,48 +200,219 @@
 </div>
 
 <style>
-.filter-card, .actions-card, .table-card {
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
+/* Base Variables — shared across all report & form views */
+:root {
+    --primary-color: #36a9e2;
+    --success-color: #79c347;
+    --success-dark: #5fa732;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-900: #111827;
+    --border-radius: 8px;
+}
+
+/* Page Header */
+.page-header h4 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0;
+}
+
+.page-header p {
+    font-size: 14px;
+    color: var(--gray-500);
+}
+
+/* Filter & Actions Cards */
+.filter-card,
+.actions-card {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
+
+.filter-card .form-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-700);
+    margin-bottom: 6px;
+}
+
+.filter-card .form-select {
+    border: 1px solid var(--gray-300);
+    border-radius: var(--border-radius);
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+.filter-card .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(54, 169, 226, 0.1);
+}
+
+.btn-action {
+    font-size: 14px;
+    border-radius: var(--border-radius);
+}
+
+/* Summary Cards */
 .summary-card {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 20px;
     display: flex;
     align-items: center;
     gap: 16px;
+    height: 100%;
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    padding: 20px;
 }
+
 .summary-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 12px;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
+    border-radius: var(--border-radius);
+    font-size: 16px;
 }
-.summary-icon i { font-size: 24px; }
+
+.icon-debtors {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger-color);
+}
+
+.icon-outstanding {
+    background: rgba(245, 158, 11, 0.12);
+    color: var(--warning-color);
+}
+
+.icon-overdue {
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+}
+
+.icon-current {
+    background: rgba(121, 195, 71, 0.12);
+    color: var(--success-color);
+}
+
 .summary-value {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 700;
-    color: #111827;
+    color: var(--gray-900);
+    line-height: 1.2;
 }
+
+.value-positive {
+    color: var(--success-dark);
+}
+
+.value-negative {
+    color: var(--danger-color);
+}
+
 .summary-label {
     font-size: 13px;
-    color: #6b7280;
+    color: var(--gray-500);
+    margin-top: 2px;
 }
-.invoice-table thead {
-    background-color: #f9fafb;
+
+/* Report Card */
+.form-card {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
-.invoice-table th, .invoice-table td {
-    padding: 12px 16px;
+
+.form-card .card-header {
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+    padding: 16px 24px;
+}
+
+.form-card .card-header h5 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0;
+}
+
+/* Neutral Badge (row count, etc.) */
+.badge-neutral {
+    background-color: var(--gray-100);
+    color: var(--gray-700);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: var(--border-radius);
+}
+
+/* Report Table */
+.report-table {
     font-size: 14px;
+    color: var(--gray-700);
+}
+
+.report-table thead th {
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--gray-600);
+    padding: 12px 24px;
+}
+
+.report-table td {
+    padding: 10px 24px;
+    border-color: var(--gray-100);
     vertical-align: middle;
 }
-.btn-action { font-size: 14px; }
+
+.report-table tfoot .total-row td {
+    background: var(--gray-50);
+    border-top: 2px solid var(--gray-300);
+    border-bottom: none;
+    color: var(--gray-900);
+}
+
+/* Compact variant for wide, many-column tables */
+.report-table-compact thead th,
+.report-table-compact td {
+    padding: 10px 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .page-header h4 {
+        font-size: 20px;
+    }
+
+    .summary-card {
+        padding: 16px;
+    }
+
+    .summary-value {
+        font-size: 18px;
+    }
+
+    .report-table thead th,
+    .report-table td,
+    .report-table-compact thead th,
+    .report-table-compact td {
+        padding: 10px 12px;
+    }
+}
 </style>
 @endsection
