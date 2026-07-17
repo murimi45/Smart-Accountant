@@ -34,73 +34,6 @@
         </div>
     @endif
 
-    {{-- Term Promotion Card --}}
-    <div class="card promotion-card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0">
-                <i class="fa fa-arrow-circle-right me-2"></i>Term Promotion
-            </h5>
-            <p class="mb-0 mt-1 header-subtitle">Promote students to the next academic term</p>
-        </div>
-
-        <div class="card-body">
-            @if(isset($currentTerm))
-                <form action="{{ route('promotions.term') }}" method="POST" id="promotionForm">
-                    @csrf
-                    <input type="hidden" name="from_term_id" value="{{ $currentTerm->id }}">
-
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-5">
-                            <label class="form-label">
-                                <i class="fa fa-calendar-check me-1"></i>From Term
-                            </label>
-                            <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="fa fa-lock"></i>
-                                </span>
-                                <input type="text" 
-                                    value="{{ $currentTerm->name }}" 
-                                    class="form-control" 
-                                    readonly>
-                            </div>
-                            <small class="text-muted">Current active term</small>
-                        </div>
-
-                        <div class="col-md-5">
-                            <label class="form-label">
-                                <i class="fa fa-calendar-plus me-1"></i>To Term
-                                <span class="text-danger">*</span>
-                            </label>
-                            <select name="to_term_id" class="form-select" required
-                                @if(!$nextTerm) disabled @endif>
-                                @if($nextTerm)
-                                    <option value="{{ $nextTerm->id }}" selected>
-                                        {{ $nextTerm->name }} ({{ $nextTerm->year }})
-                                    </option>
-                                @else
-                                    <option value="">No next term — create the next term first</option>
-                                @endif
-                            </select>
-                            <small class="text-muted">Next term in sequence after {{ $currentTerm->name }}</small>
-                        </div>
-
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-success w-100"
-                                @if(!$nextTerm) disabled @endif>
-                                <i class="fa fa-rocket me-2"></i>Promote
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            @else
-                <div class="alert alert-warning">
-                    <i class="fa fa-exclamation-triangle me-2"></i>
-                    No current term found. Please create and set a current term before running a promotion.
-                </div>
-            @endif
-        </div>
-    </div>
-
     {{-- Term List Table --}}
     <div class="card table-card">
         <div class="card-header">
@@ -241,81 +174,22 @@
 }
 
 /* Cards */
-.promotion-card,
 .table-card {
     border: 1px solid var(--gray-200);
     border-radius: var(--border-radius);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.promotion-card .card-header,
 .table-card .card-header {
     background: var(--gray-50);
     border-bottom: 1px solid var(--gray-200);
     padding: 16px 20px;
 }
 
-.promotion-card .card-header h5,
 .table-card .card-header h5 {
     font-size: 16px;
     font-weight: 600;
     color: var(--gray-900);
-}
-
-.header-subtitle {
-    font-size: 13px;
-    color: var(--gray-500);
-    font-weight: 400;
-}
-
-.promotion-card .card-body {
-    padding: 24px;
-}
-
-/* Form Elements */
-.form-label {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--gray-700);
-    margin-bottom: 6px;
-}
-
-.form-control,
-.form-select {
-    border: 1px solid var(--gray-300);
-    border-radius: var(--border-radius);
-    padding: 8px 12px;
-    font-size: 14px;
-    transition: border-color 0.2s;
-}
-
-.form-control:focus,
-.form-select:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(54, 169, 226, 0.1);
-}
-
-.form-control[readonly] {
-    background-color: var(--gray-50);
-    color: var(--gray-600);
-}
-
-.text-muted {
-    font-size: 12px;
-    margin-top: 4px;
-    display: block;
-}
-
-/* Input Group */
-.input-group-text {
-    background-color: var(--gray-50);
-    border: 1px solid var(--gray-300);
-    border-right: none;
-    color: var(--gray-600);
-}
-
-.input-group .form-control {
-    border-left: none;
 }
 
 /* Buttons */
@@ -513,11 +387,6 @@
 .alert-danger {
     background-color: #fee2e2;
     color: #991b1b;
-}
-
-.alert-warning {
-    background-color: #fef3c7;
-    color: #92400e;
 }
 
 /* Badge Override */

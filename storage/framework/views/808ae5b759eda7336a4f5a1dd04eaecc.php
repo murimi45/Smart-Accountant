@@ -10,6 +10,7 @@
     
     <?php if(session('success')): ?>
         <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            <i class="fa fa-check-circle me-2"></i>
             <?php echo e(session('success')); ?>
 
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -17,6 +18,7 @@
     <?php endif; ?>
     <?php if(session('error')): ?>
         <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            <i class="fa fa-exclamation-circle me-2"></i>
             <?php echo e(session('error')); ?>
 
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -25,6 +27,7 @@
 
     <?php if(session('import_errors')): ?>
         <div class="alert alert-danger mb-4">
+            <i class="fa fa-exclamation-triangle me-2"></i>
             <strong>Import issues:</strong>
             <ul class="mb-0 mt-2 small">
                 <?php $__currentLoopData = session('import_errors'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $err): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -51,7 +54,7 @@
                         <?php echo csrf_field(); ?>
                         <label class="form-label small">Import CSV</label>
                         <input type="file" name="file" class="form-control form-control-sm mb-2" accept=".csv,text/csv" required>
-                        <button type="submit" class="btn btn-primary btn-sm w-100"><i class="fa fa-upload me-1"></i>Import students</button>
+                        <button type="submit" class="btn btn-success btn-sm w-100"><i class="fa fa-upload me-1"></i>Import students</button>
                     </form>
                 </div>
             </div>
@@ -79,7 +82,7 @@
                     <form action="<?php echo e(route('bulk.import', 'fees')); ?>" method="POST" enctype="multipart/form-data">
                         <?php echo csrf_field(); ?>
                         <input type="file" name="file" class="form-control form-control-sm mb-2" accept=".csv,text/csv" required>
-                        <button type="submit" class="btn btn-primary btn-sm w-100"><i class="fa fa-upload me-1"></i>Import class fees</button>
+                        <button type="submit" class="btn btn-success btn-sm w-100"><i class="fa fa-upload me-1"></i>Import class fees</button>
                     </form>
                 </div>
             </div>
@@ -146,9 +149,9 @@
 
     
     <div class="card form-card mt-4">
+        <div class="card-header"><h5 class="mb-0"><i class="fa fa-circle-info me-2"></i>CSV Tips</h5></div>
         <div class="card-body">
-            <h6 class="mb-2"><i class="fa fa-circle-info me-2"></i>CSV tips</h6>
-            <ul class="small text-muted mb-0">
+            <ul class="info-list small mb-0">
                 <li>Use the template headers exactly — open in Excel or Google Sheets, save as CSV UTF-8.</li>
                 <li><strong>Class</strong> and <strong>term</strong> must match names in the system (e.g. <code>Grade 1</code>, <code>Term 1 - 2026</code>).</li>
                 <li>Duplicate student admissions update the existing record and add enrollment for a new term if needed.</li>
@@ -160,7 +163,7 @@
 </div>
 
 <style>
-/* Base Variables — shared across all report & form views */
+/* Base Variables — matched to Admin Management page */
 :root {
     --primary-color: #36a9e2;
     --success-color: #79c347;
@@ -171,6 +174,7 @@
     --gray-100: #f3f4f6;
     --gray-200: #e5e7eb;
     --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
     --gray-500: #6b7280;
     --gray-600: #4b5563;
     --gray-700: #374151;
@@ -195,12 +199,12 @@
 .alert {
     border-radius: var(--border-radius);
     border: none;
-    padding: 16px;
+    padding: 12px 16px;
 }
 
 .alert-success {
-    background-color: #e8f5e1;
-    color: var(--success-dark);
+    background-color: #e8f5e0;
+    color: #3d7a1f;
 }
 
 .alert-danger {
@@ -218,7 +222,7 @@
 .form-card .card-header {
     background: var(--gray-50);
     border-bottom: 1px solid var(--gray-200);
-    padding: 16px 24px;
+    padding: 16px 20px;
 }
 
 .form-card .card-header h5 {
@@ -226,6 +230,10 @@
     font-weight: 600;
     color: var(--gray-900);
     margin: 0;
+}
+
+.form-card .card-body {
+    padding: 20px;
 }
 
 /* Warning Variant (e.g. opening balances) */
@@ -242,17 +250,19 @@
     color: #92400e;
 }
 
-/* Inputs inside form-card forms */
+/* Form Elements */
 .form-card .form-label {
     font-size: 12px;
     font-weight: 500;
     color: var(--gray-700);
+    margin-bottom: 6px;
 }
 
 .form-card .form-control,
 .form-card .form-select {
     border: 1px solid var(--gray-300);
     border-radius: var(--border-radius);
+    font-size: 13px;
 }
 
 .form-card .form-control:focus,
@@ -262,6 +272,17 @@
 }
 
 /* Buttons */
+.btn {
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
 .btn-primary {
     background-color: var(--primary-color);
     border-color: var(--primary-color);
@@ -275,11 +296,13 @@
 .btn-success {
     background-color: var(--success-color);
     border-color: var(--success-color);
+    color: #fff;
 }
 
 .btn-success:hover {
     background-color: var(--success-dark);
     border-color: var(--success-dark);
+    color: #fff;
 }
 
 .btn-warning {
@@ -294,9 +317,43 @@
     color: #fff;
 }
 
-.btn-outline-primary,
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    background: white;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+}
+
 .btn-outline-secondary {
-    border-radius: var(--border-radius);
+    color: var(--gray-600);
+    border-color: var(--gray-300);
+    background: white;
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--gray-50);
+    border-color: var(--gray-400);
+    color: var(--gray-700);
+}
+
+/* Info List (CSV Tips) */
+.info-list {
+    color: var(--gray-600);
+    padding-left: 18px;
+    line-height: 1.7;
+}
+
+.info-list code {
+    background: var(--gray-100);
+    color: var(--gray-700);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
 }
 
 /* Responsive Design */
@@ -306,7 +363,7 @@
     }
 
     .form-card .card-body {
-        padding: 20px 16px;
+        padding: 16px;
     }
 }
 </style>

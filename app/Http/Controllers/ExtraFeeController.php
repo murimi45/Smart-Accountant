@@ -263,8 +263,10 @@ public function assignStudentExtraFee(Request $request)
         }
 
         if($request->filled('student_name')){
-            $query->whereHas('student',function($q) use ($request){
-                $q->where('name','like','%'.$request->student_name.'%');
+            $search = $request->student_name;
+            $query->whereHas('student', function ($q) use ($search) {
+                $q->where('full_name', 'like', '%'.$search.'%')
+                  ->orWhere('admission', 'like', '%'.$search.'%');
             });
         }
 

@@ -6,7 +6,11 @@
     
     <div class="page-header">
         <h4>Welcome back!</h4>
-        <p>Here's your School Accounts overview</p>
+        <?php if($hasAccountantModule): ?>
+            <p>Here's your School Accounts overview</p>
+        <?php else: ?>
+            <p>Here's your school overview. Finance features unlock when the Accountant module is enabled.</p>
+        <?php endif; ?>
     </div>
 
     
@@ -52,6 +56,24 @@
             </form>
         </div>
     </div>
+
+    <?php if (! ($hasAccountantModule)): ?>
+    <div class="section-block">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="mb-2">Academics is ready</h5>
+                <p class="text-muted mb-3">
+                    Manage students, classes, terms, and enrollment from the sidebar.
+                    Fee, cashbook, and report menus appear after your school enables Accountant.
+                </p>
+                <?php if (\Illuminate\Support\Facades\Blade::check('role', 'admin')): ?>
+                <a href="<?php echo e(url('/student')); ?>" class="btn btn-primary me-2">Students</a>
+                <a href="<?php echo e(url('/class')); ?>" class="btn btn-outline-secondary">Class Levels</a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    <?php else: ?>
 
     
     <div class="section-block">
@@ -281,6 +303,7 @@ if (isset($__slots)) unset($__slots);
             </div>
         </div>
     </div>
+    <?php endif; ?>
 </div>
 
 <style>
@@ -707,6 +730,7 @@ if (isset($__slots)) unset($__slots);
 
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<?php if($hasAccountantModule): ?>
 <script>
     const chartFont = { family: "-apple-system, 'Inter', 'Segoe UI', Roboto, sans-serif", size: 12 };
 
@@ -814,5 +838,6 @@ if (isset($__slots)) unset($__slots);
         }
     });
 </script>
+<?php endif; ?>
 <?php $__env->stopSection(); ?>
 <?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\Allan\smart_accountant2\resources\views/dashboard.blade.php ENDPATH**/ ?>

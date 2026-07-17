@@ -1,0 +1,1 @@
+<?php /**PATH C:\Users\Allan\smart_accountant2\resources\views/accountant/edit.blade.php ENDPATH**/ ?>

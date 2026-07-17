@@ -257,7 +257,7 @@
 <div class="modal fade" id="promoteModal" tabindex="-1" aria-labelledby="promoteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form action="{{ route('promotions.class') }}" method="POST">
+            <form action="{{ route('promotion.class') }}" method="POST">
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title" id="promoteModalLabel">

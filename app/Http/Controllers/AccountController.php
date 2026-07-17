@@ -9,6 +9,8 @@ class AccountController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', Account::class);
+
         $schoolId = TenantFilters::schoolId();
 
         $accounts = Account::where('school_id', $schoolId)

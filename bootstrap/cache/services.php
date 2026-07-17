@@ -39,6 +39,10 @@
     35 => 'App\\Providers\\AppServiceProvider',
     36 => 'App\\Providers\\AuthServiceProvider',
     37 => 'App\\Providers\\EventServiceProvider',
+    38 => 'App\\Modules\\Academics\\Providers\\AcademicsServiceProvider',
+    39 => 'App\\Modules\\Finance\\Providers\\FinanceServiceProvider',
+    40 => 'App\\Modules\\Hr\\Providers\\HrServiceProvider',
+    41 => 'App\\Modules\\Grading\\Providers\\GradingServiceProvider',
   ),
   'eager' => 
   array (
@@ -65,6 +69,10 @@
     20 => 'App\\Providers\\AppServiceProvider',
     21 => 'App\\Providers\\AuthServiceProvider',
     22 => 'App\\Providers\\EventServiceProvider',
+    23 => 'App\\Modules\\Academics\\Providers\\AcademicsServiceProvider',
+    24 => 'App\\Modules\\Finance\\Providers\\FinanceServiceProvider',
+    25 => 'App\\Modules\\Hr\\Providers\\HrServiceProvider',
+    26 => 'App\\Modules\\Grading\\Providers\\GradingServiceProvider',
   ),
   'deferred' => 
   array (

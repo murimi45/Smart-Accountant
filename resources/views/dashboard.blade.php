@@ -6,7 +6,11 @@
     {{-- Page Header --}}
     <div class="page-header">
         <h4>Welcome back!</h4>
-        <p>Here's your School Accounts overview</p>
+        @if($hasAccountantModule)
+            <p>Here's your School Accounts overview</p>
+        @else
+            <p>Here's your school overview. Finance features unlock when the Accountant module is enabled.</p>
+        @endif
     </div>
 
     {{-- Filter Card --}}
@@ -51,6 +55,24 @@
             </form>
         </div>
     </div>
+
+    @unless($hasAccountantModule)
+    <div class="section-block">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="mb-2">Academics is ready</h5>
+                <p class="text-muted mb-3">
+                    Manage students, classes, terms, and enrollment from the sidebar.
+                    Fee, cashbook, and report menus appear after your school enables Accountant.
+                </p>
+                @role('admin')
+                <a href="{{ url('/student') }}" class="btn btn-primary me-2">Students</a>
+                <a href="{{ url('/class') }}" class="btn btn-outline-secondary">Class Levels</a>
+                @endrole
+            </div>
+        </div>
+    </div>
+    @else
 
     {{-- Primary KPI Cards --}}
     <div class="section-block">
@@ -263,6 +285,7 @@
             </div>
         </div>
     </div>
+    @endunless
 </div>
 
 <style>
@@ -689,6 +712,7 @@
 
 {{-- Scripts --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+@if($hasAccountantModule)
 <script>
     const chartFont = { family: "-apple-system, 'Inter', 'Segoe UI', Roboto, sans-serif", size: 12 };
 
@@ -796,4 +820,5 @@
         }
     });
 </script>
+@endif
 @endsection

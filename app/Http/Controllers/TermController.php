@@ -11,17 +11,11 @@ class TermController extends Controller
 {
     public function listTerm()
     {
-        $schoolId = auth()->user()->school_id;
-
         $terms = Term::with('academicYear')
             ->orderByDesc('start_date')
             ->get();
 
-        $termId      = Term::currentId();
-        $currentTerm = Term::current();
-        $nextTerm    = Term::nextAfter($schoolId, $currentTerm);
-
-        return view('term.list', compact('terms', 'termId', 'currentTerm', 'nextTerm'));
+        return view('term.list', compact('terms'));
     }
 
     public function addTerm()

@@ -28,14 +28,19 @@ class FeeReminderSetting extends Model
 
     public static function forSchoolOrDefault(int $schoolId): self
     {
-        return static::withoutGlobalScopes()->firstOrCreate(
-            ['school_id' => $schoolId],
-            [
-                'enabled' => false,
-                'min_days_outstanding' => self::DEFAULT_MIN_DAYS,
-                'reminder_interval_days' => self::DEFAULT_INTERVAL_DAYS,
-                'current_term_only' => true,
-            ]
-        );
+        $existing = static::withoutGlobalScopes()
+            ->where('school_id', $schoolId)
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        return static::createForSchool($schoolId, [
+            'enabled' => false,
+            'min_days_outstanding' => self::DEFAULT_MIN_DAYS,
+            'reminder_interval_days' => self::DEFAULT_INTERVAL_DAYS,
+            'current_term_only' => true,
+        ]);
     }
 }

@@ -4,10 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\BankDeposit;
 use App\Models\BankReconciliationMatch;
-use App\Models\CashbookEntry;
-use App\Models\InvoicePayment;
 use App\Services\BankReconciliationService;
 use App\Support\TenantFilters;
+use App\Support\TenantRules;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
@@ -16,6 +15,8 @@ class BankReconciliationController extends Controller
 {
     public function index(Request $request, BankReconciliationService $service)
     {
+        $this->authorize('viewAny', BankDeposit::class);
+
         $schoolId = TenantFilters::schoolId();
 
         $from = $request->filled('from') ? Carbon::parse($request->from) : now()->subDays(30);
@@ -68,6 +69,8 @@ class BankReconciliationController extends Controller
 
     public function storeDeposit(Request $request, BankReconciliationService $service)
     {
+        $this->authorize('create', BankDeposit::class);
+
         $schoolId = TenantFilters::schoolId();
 
         $data = $request->validate([
@@ -95,11 +98,13 @@ class BankReconciliationController extends Controller
 
     public function match(Request $request, BankReconciliationService $service)
     {
+        $this->authorize('create', BankReconciliationMatch::class);
+
         $schoolId = TenantFilters::schoolId();
 
         $data = $request->validate([
-            'bank_deposit_id'   => 'required|integer|exists:bank_deposits,id',
-            'cashbook_entry_id' => 'required|integer|exists:cashbook_entries,id',
+            'bank_deposit_id'   => ['required', 'integer', TenantRules::exists('bank_deposits')],
+            'cashbook_entry_id' => ['required', 'integer', TenantRules::exists('cashbook_entries')],
         ]);
 
         try {
@@ -115,6 +120,8 @@ class BankReconciliationController extends Controller
 
     public function unmatch(BankReconciliationMatch $match, BankReconciliationService $service)
     {
+        $this->authorize('delete', $match);
+
         $schoolId = TenantFilters::schoolId();
 
         try {
@@ -128,6 +135,8 @@ class BankReconciliationController extends Controller
 
     public function updateDeposit(Request $request, BankDeposit $deposit, BankReconciliationService $service)
     {
+        $this->authorize('update', $deposit);
+
         $schoolId = TenantFilters::schoolId();
 
         $data = $request->validate([
@@ -157,6 +166,8 @@ class BankReconciliationController extends Controller
 
     public function destroyDeposit(BankDeposit $deposit, BankReconciliationService $service)
     {
+        $this->authorize('delete', $deposit);
+
         $schoolId = TenantFilters::schoolId();
 
         try {

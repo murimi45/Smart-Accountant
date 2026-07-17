@@ -65,9 +65,9 @@
 
                     <div class="col-md-4">
                         <label class="form-label"><i class="fa fa-search me-1"></i>Search Fee Name</label>
-                        <input type="text" 
-                               name="search" 
-                               class="form-control" 
+                        <input type="text"
+                               name="search"
+                               class="form-control"
                                value="{{ request('search') }}"
                                placeholder="Enter fee name">
                     </div>
@@ -100,7 +100,7 @@
 
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table fee-table mb-0">
+                <table class="table admin-table mb-0">
                     <thead>
                         <tr>
                             <th>Fee Name</th>
@@ -117,11 +117,11 @@
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <div class="fee-icon">
+                                    <div class="admin-avatar">
                                         {{ strtoupper(substr($extraFee->name, 0, 1)) }}
                                     </div>
                                     <div class="ms-3">
-                                        <div class="fee-name">{{ $extraFee->name }}</div>
+                                        <div class="admin-name">{{ $extraFee->name }}</div>
                                     </div>
                                 </div>
                             </td>
@@ -134,11 +134,11 @@
                                         <i class="fa fa-check me-1"></i>Yes
                                     </span>
                                 @else
-                                    <span class="badge-method">No</span>
+                                    <span class="role-badge">No</span>
                                 @endif
                             </td>
                             <td>
-                                <span class="badge-term">{{ $extraFee->term->name }}</span>
+                                <span class="role-badge">{{ $extraFee->term->name }}</span>
                             </td>
                             <td>
                                 <span class="year-text">{{ $extraFee->year }}</span>
@@ -154,14 +154,14 @@
                             </td>
                             <td>
                                 <div class="action-buttons">
-                                    <a href="{{ url('/editextrafee/' . $extraFee->id) }}" 
-                                       class="btn btn-sm btn-light" 
+                                    <a href="{{ url('/editextrafee/' . $extraFee->id) }}"
+                                       class="btn btn-sm btn-light"
                                        title="Edit Fee">
                                         <i class="fa fa-edit"></i>
                                     </a>
-                                    <a href="{{ url('/deleteextrafee/' . $extraFee->id) }}" 
-                                       class="btn btn-sm btn-danger" 
-                                       onclick="return confirm('Are you sure you want to delete this extra fee?')" 
+                                    <a href="{{ url('/deleteextrafee/' . $extraFee->id) }}"
+                                       class="btn btn-sm btn-danger"
+                                       onclick="return confirm('Are you sure you want to delete this extra fee?')"
                                        title="Delete Fee">
                                         <i class="fa fa-trash"></i>
                                     </a>
@@ -190,7 +190,7 @@
 </div>
 
 <style>
-/* Base Variables */
+/* Base Variables — matched exactly to Admin Management page (--gray-400 added, was missing/unused) */
 :root {
     --primary-color: #36a9e2;
     --success-color: #79c347;
@@ -200,6 +200,7 @@
     --gray-100: #f3f4f6;
     --gray-200: #e5e7eb;
     --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
     --gray-500: #6b7280;
     --gray-600: #4b5563;
     --gray-700: #374151;
@@ -235,6 +236,18 @@
 .table-card .card-header {
     background: var(--gray-50);
     border-bottom: 1px solid var(--gray-200);
+    padding: 16px 20px;
+}
+
+.table-card .card-header h5 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.card-footer {
+    background: var(--gray-50);
+    border-top: 1px solid var(--gray-200);
     padding: 16px 20px;
 }
 
@@ -324,17 +337,17 @@
     border-color: var(--gray-300);
 }
 
-/* Table */
-.fee-table {
+/* Table — using .admin-table to match Admin Management exactly */
+.admin-table {
     font-size: 14px;
 }
 
-.fee-table thead {
+.admin-table thead {
     background-color: var(--gray-50);
     border-bottom: 2px solid var(--gray-200);
 }
 
-.fee-table thead th {
+.admin-table thead th {
     font-weight: 600;
     color: var(--gray-700);
     padding: 12px 16px;
@@ -343,18 +356,18 @@
     letter-spacing: 0.3px;
 }
 
-.fee-table tbody td {
+.admin-table tbody td {
     padding: 16px;
     vertical-align: middle;
     border-bottom: 1px solid var(--gray-100);
 }
 
-.fee-table tbody tr:hover {
+.admin-table tbody tr:hover {
     background-color: var(--gray-50);
 }
 
-/* Fee Icon */
-.fee-icon {
+/* Avatar / Icon */
+.admin-avatar {
     width: 40px;
     height: 40px;
     border-radius: 8px;
@@ -368,7 +381,7 @@
     flex-shrink: 0;
 }
 
-.fee-name {
+.admin-name {
     font-weight: 500;
     color: var(--gray-900);
 }
@@ -393,17 +406,7 @@
     color: #3d7a1f;
 }
 
-.badge-method {
-    background-color: var(--gray-100);
-    color: var(--gray-700);
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-weight: 500;
-    font-size: 12px;
-    display: inline-block;
-}
-
-.badge-term {
+.role-badge {
     background-color: var(--gray-100);
     color: var(--gray-700);
     padding: 4px 10px;
@@ -486,30 +489,108 @@
     font-weight: 500;
 }
 
+/* Pagination — kept identical to Admin Management in case this list is paginated later */
+.pagination {
+    margin: 0;
+    display: flex;
+    list-style: none;
+    padding: 0;
+}
+
+.pagination .page-item {
+    margin: 0 2px;
+}
+
+.pagination .page-link {
+    position: relative;
+    display: block;
+    padding: 6px 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gray-600);
+    text-decoration: none;
+    background-color: white;
+    border: 1px solid var(--gray-300);
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.pagination .page-link:hover {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.pagination .page-item.disabled .page-link {
+    color: var(--gray-400);
+    background-color: var(--gray-50);
+    border-color: var(--gray-200);
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.pagination .page-link svg {
+    display: none;
+}
+
+.pagination .page-item:first-child .page-link::before {
+    content: '← Previous';
+    font-size: 13px;
+}
+
+.pagination .page-item:last-child .page-link::before {
+    content: 'Next →';
+    font-size: 13px;
+}
+
+.pagination .page-item:first-child .page-link,
+.pagination .page-item:last-child .page-link {
+    font-size: 0;
+}
+
+.pagination .page-item:first-child .page-link::before,
+.pagination .page-item:last-child .page-link::before {
+    font-size: 13px;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
-    .fee-icon {
+    .admin-avatar {
         width: 32px;
         height: 32px;
         font-size: 14px;
     }
-    
+
     .action-buttons .btn-sm {
         padding: 6px 10px;
         font-size: 12px;
     }
-    
-    .fee-table {
+
+    .admin-table {
         font-size: 13px;
     }
 
-    .fee-table thead th,
-    .fee-table tbody td {
+    .admin-table thead th,
+    .admin-table tbody td {
         padding: 10px;
     }
 
     .description-text {
         font-size: 12px;
+    }
+
+    .pagination .page-item:first-child .page-link::before {
+        content: '←';
+    }
+
+    .pagination .page-item:last-child .page-link::before {
+        content: '→';
     }
 }
 </style>

@@ -47,7 +47,7 @@ class AccountantController extends Controller
     {
         $this->authorize('manageAccountant', $accountant);
 
-        return view('accountant.edit', compact('accountant'));
+        return view('accountant.create', compact('accountant'));
     }
 
     public function update(Request $request, User $accountant)
@@ -70,7 +70,7 @@ class AccountantController extends Controller
 
         $accountant->save();
 
-        return redirect()->route('accountant.index')->with('success', 'Accountant updated successfully.');
+        return redirect()->route('accountants.index')->with('success', 'Accountant updated successfully.');
     }
 
     public function destroy(User $accountant)
@@ -78,6 +78,6 @@ class AccountantController extends Controller
         $this->authorize('manageAccountant', $accountant);
 
         $accountant->delete();
-        return redirect()->route('accountant.index')->with('success', 'Accountant deleted successfully.');
+        return redirect()->route('accountants.index')->with('success', 'Accountant deleted successfully.');
     }
 }

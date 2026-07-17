@@ -56,6 +56,10 @@ class BudgetTest extends TestCase
         $category = $tenant['expenseCategory'];
         $term = $tenant['term'];
 
+        // The shared isolation fixture includes a baseline expense. This test
+        // owns its actual total, so remove that baseline before asserting it.
+        $tenant['expense']->delete();
+
         Model::withoutEvents(function () use ($schoolId, $category, $term, $accountant) {
             Budget::createForSchool($schoolId, [
                 'expense_category_id' => $category->id,

@@ -13,7 +13,18 @@ class User extends Authenticatable
 
     public const ROLE_ACCOUNTANT = 'accountant';
 
+    public const ROLE_HR_MANAGER = 'hr_manager';
+
+    public const ROLE_TEACHER = 'teacher';
+
     public const ROLE_PLATFORM = 'platform';
+
+    /** Roles that belong to a product module (not shared Academics/core). */
+    public const MODULE_ROLES = [
+        self::ROLE_ACCOUNTANT => 'accountant',
+        self::ROLE_HR_MANAGER => 'hr',
+        self::ROLE_TEACHER => 'grading',
+    ];
 
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -67,25 +78,48 @@ class User extends Authenticatable
         return $this->belongsTo(Schools::class);
     }
 
-     public function isAdmin()
-{
-    return $this->role === 'admin';
-}
-
-public function isAccountant()
-{
-    return $this->role === 'accountant';
-}
-
-
-     public function isSensitiveRole(): bool
+    public function isAdmin(): bool
     {
-        return in_array($this->role, [self::ROLE_ADMIN, self::ROLE_ACCOUNTANT], true);
+        return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function isAccountant(): bool
+    {
+        return $this->role === self::ROLE_ACCOUNTANT;
+    }
+
+    public function isHrManager(): bool
+    {
+        return $this->role === self::ROLE_HR_MANAGER;
+    }
+
+    public function isTeacher(): bool
+    {
+        return $this->role === self::ROLE_TEACHER;
+    }
+
+    public function hasRole(string ...$roles): bool
+    {
+        $current = strtolower((string) $this->role);
+        $allowed = array_map('strtolower', $roles);
+
+        return in_array($current, $allowed, true);
+    }
+
+    public function isSensitiveRole(): bool
+    {
+        return $this->hasRole(self::ROLE_ADMIN, self::ROLE_ACCOUNTANT, self::ROLE_HR_MANAGER);
     }
 
     public function isPlatformAdmin(): bool
     {
         return $this->role === self::ROLE_PLATFORM && $this->school_id === null;
+    }
+
+    /** Module slug this role is tied to, if any (admin/platform are not module-scoped). */
+    public function moduleSlugForRole(): ?string
+    {
+        return self::MODULE_ROLES[$this->role] ?? null;
     }
 
     // Set 2FA secret (encrypt for storage)

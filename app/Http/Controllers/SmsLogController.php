@@ -9,6 +9,8 @@ class SmsLogController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', SmsLog::class);
+
         $logs = SmsLog::forSchool(TenantFilters::schoolId())
             ->latest()
             ->paginate(50);

@@ -2,12 +2,18 @@
 
 namespace Tests\Support;
 
+use App\Core\Modules\ModuleRegistry;
 use App\Models\AcademicYear;
+use App\Models\BankDeposit;
 use App\Models\Classes;
+use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\ExtraFee;
 use App\Models\IncomeCategory;
 use App\Models\Invoice;
+use App\Models\InvoiceWaiver;
+use App\Models\Module;
+use App\Models\OtherIncome;
 use App\Models\PaymentChannel;
 use App\Models\PromotionRun;
 use App\Models\Schools;
@@ -28,15 +34,18 @@ class TenantFixtureBuilder
 {
     public static function createPair(): array
     {
+        self::ensureModuleCatalog();
+
         $schoolA = self::createSchool('A');
         $schoolB = self::createSchool('B');
 
         $adminA = self::createUser($schoolA, 'admin-a@test.local', 'admin');
         $adminB = self::createUser($schoolB, 'admin-b@test.local', 'admin');
         $accountantA = self::createUser($schoolA, 'acct-a@test.local', 'accountant');
+        $accountantB = self::createUser($schoolB, 'acct-b@test.local', 'accountant');
 
         $tenantA = self::buildTenantGraph($schoolA, $adminA);
-        $tenantB = self::buildTenantGraph($schoolB, $adminB);
+        $tenantB = self::buildTenantGraph($schoolB, $adminB, withPendingWaiver: true);
 
         return [
             'schoolA' => $schoolA,
@@ -44,9 +53,28 @@ class TenantFixtureBuilder
             'adminA' => $adminA,
             'adminB' => $adminB,
             'accountantA' => $accountantA,
+            'accountantB' => $accountantB,
             'tenantA' => $tenantA,
             'tenantB' => $tenantB,
         ];
+    }
+
+    private static function ensureModuleCatalog(): void
+    {
+        if (Module::query()->where('slug', Module::SLUG_ACCOUNTANT)->exists()) {
+            return;
+        }
+
+        foreach ([
+            ['slug' => Module::SLUG_ACCOUNTANT, 'name' => 'Accountant', 'is_core' => true],
+            ['slug' => Module::SLUG_HR, 'name' => 'HR', 'is_core' => false],
+            ['slug' => Module::SLUG_GRADING, 'name' => 'Grading', 'is_core' => false],
+        ] as $row) {
+            Module::query()->create(array_merge([
+                'description' => null,
+                'version'     => '1.0.0',
+            ], $row));
+        }
     }
 
     private static function createSchool(string $label): Schools
@@ -59,6 +87,7 @@ class TenantFixtureBuilder
         ]);
 
         (new AccountsTableSeeder)->run($school->id);
+        ModuleRegistry::enableForSchool((int) $school->id, Module::SLUG_ACCOUNTANT);
 
         return $school;
     }
@@ -86,19 +115,23 @@ class TenantFixtureBuilder
      *   student: Student,
      *   enrollment: StudentEnrollment,
      *   invoice: Invoice,
+     *   invoiceWaiver?: InvoiceWaiver,
      *   extraFee: ExtraFee,
      *   assignment: StudentExtraFee,
      *   toTerm: Term,
      *   promotionRun: PromotionRun,
      *   expenseCategory: ExpenseCategory,
+     *   expense: Expense,
      *   incomeCategory: IncomeCategory,
+     *   otherIncome: OtherIncome,
      *   paymentChannel: PaymentChannel,
+     *   bankDeposit: BankDeposit,
      *   staffUser: User,
      * }
      */
-    private static function buildTenantGraph(Schools $school, User $actor): array
+    private static function buildTenantGraph(Schools $school, User $actor, bool $withPendingWaiver = false): array
     {
-        return Model::withoutEvents(function () use ($school, $actor) {
+        return Model::withoutEvents(function () use ($school, $actor, $withPendingWaiver) {
             $year = AcademicYear::createForSchool($school->id, [
                 'name'       => '2026',
                 'is_current' => true,
@@ -151,6 +184,20 @@ class TenantFixtureBuilder
                 'status'        => Invoice::STATUS_UNPAID,
             ]);
 
+            $invoiceWaiver = null;
+            if ($withPendingWaiver) {
+                $invoiceWaiver = InvoiceWaiver::createForSchool($school->id, [
+                    'invoice_id'     => $invoice->id,
+                    'scope'          => InvoiceWaiver::SCOPE_INVOICE,
+                    'discount_type'  => InvoiceWaiver::TYPE_FIXED,
+                    'value'          => 500,
+                    'reason'         => 'Pending waiver for isolation tests',
+                    'status'         => InvoiceWaiver::STATUS_PENDING,
+                    'requested_by'   => $actor->id,
+                    'requested_at'   => now(),
+                ]);
+            }
+
             $extraFee = ExtraFee::createForSchool($school->id, [
                 'name'              => 'Transport',
                 'amount'            => 500,
@@ -192,15 +239,46 @@ class TenantFixtureBuilder
                 'description' => 'Office supplies',
             ]);
 
+            $expense = Expense::createForSchool($school->id, [
+                'expense_category_id' => $expenseCategory->id,
+                'description'         => 'Stationery',
+                'amount'              => 1500,
+                'payment_method'      => 'cash',
+                'expense_date'        => $term->start_date,
+                'term_id'             => $term->id,
+                'year'                => 2026,
+                'created_by'          => $actor->id,
+            ]);
+
             $incomeCategory = IncomeCategory::createForSchool($school->id, [
                 'name'        => 'Donations',
                 'description' => 'General donations',
+            ]);
+
+            $otherIncome = OtherIncome::createForSchool($school->id, [
+                'income_category_id' => $incomeCategory->id,
+                'description'        => 'Parent contribution',
+                'amount'             => 2500,
+                'payment_method'     => 'cash',
+                'income_date'        => $term->start_date,
+                'term_id'            => $term->id,
+                'year'               => 2026,
+                'created_by'         => $actor->id,
             ]);
 
             $paymentChannel = PaymentChannel::createForSchool($school->id, [
                 'type'       => 'paybill',
                 'identifier' => 'PB'.$school->id,
                 'is_active'  => true,
+            ]);
+
+            $bankDeposit = BankDeposit::createForSchool($school->id, [
+                'deposit_date' => $term->start_date,
+                'amount'       => 5000,
+                'reference'    => 'DEP-'.$school->id,
+                'description'  => 'Test deposit',
+                'status'       => BankDeposit::STATUS_UNMATCHED,
+                'recorded_by'  => $actor->id,
             ]);
 
             $staffUser = User::unguarded(function () use ($school) {
@@ -223,12 +301,16 @@ class TenantFixtureBuilder
                 'student',
                 'enrollment',
                 'invoice',
+                'invoiceWaiver',
                 'extraFee',
                 'assignment',
                 'promotionRun',
                 'expenseCategory',
+                'expense',
                 'incomeCategory',
+                'otherIncome',
                 'paymentChannel',
+                'bankDeposit',
                 'staffUser',
             );
         });

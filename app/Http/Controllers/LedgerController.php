@@ -11,6 +11,8 @@ class LedgerController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('viewAny', LedgerEntry::class);
+
         $schoolId = TenantFilters::validate($request);
 
         $accounts = Account::where('school_id', $schoolId)->orderBy('name')->get();

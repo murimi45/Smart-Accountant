@@ -7,6 +7,7 @@ use App\Models\InvoiceWaiver;
 use App\Services\InvoiceWaiverService;
 use App\Support\TenantFilters;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use InvalidArgumentException;
 
 class InvoiceWaiverController extends Controller
@@ -45,7 +46,11 @@ class InvoiceWaiverController extends Controller
             'discount_type'  => 'required|in:fixed,percentage',
             'value'          => 'required|numeric|min:0.01',
             'reason'         => 'required|string|max:500',
-            'invoice_item_id'=> 'nullable|integer|exists:invoice_items,id',
+            'invoice_item_id'=> [
+                'nullable',
+                'integer',
+                Rule::exists('invoice_items', 'id')->where('invoice_id', $invoice->id),
+            ],
         ]);
 
         if ($data['scope'] === 'line' && empty($data['invoice_item_id'])) {

@@ -10,7 +10,7 @@
                 <p class="text-muted mb-0">Manage all system users</p>
             </div>
             <div class="col-md-6 text-md-end mt-3 mt-md-0">
-                <a href="{{ route('admins.create') }}" class="btn btn-primary">
+                <a href="{{ route('admins.create') }}" class="btn btn-success">
                     <i class="fa fa-plus me-2"></i>Add New User
                 </a>
             </div>
@@ -135,7 +135,7 @@
                                     <i class="fa fa-inbox fa-3x mb-3"></i>
                                     <p class="mb-2">No admins found</p>
                                     <small class="d-block mb-3">Try adjusting your search filters</small>
-                                    <a href="{{ route('admins.create') }}" class="btn btn-primary">
+                                    <a href="{{ route('admins.create') }}" class="btn btn-success">
                                         <i class="fa fa-plus me-2"></i>Add New Admin
                                     </a>
                                 </div>
@@ -166,10 +166,11 @@
 </div>
 
 <style>
-/* Base Variables */
+/* Base Variables — matched to Term Management page */
 :root {
     --primary-color: #36a9e2;
     --success-color: #79c347;
+    --success-dark: #5fa732;
     --danger-color: #ef4444;
     --gray-50: #f9fafb;
     --gray-100: #f3f4f6;
@@ -211,6 +212,12 @@
     background: var(--gray-50);
     border-bottom: 1px solid var(--gray-200);
     padding: 16px 20px;
+}
+
+.table-card .card-header h5 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--gray-900);
 }
 
 .card-footer {
@@ -257,6 +264,16 @@
 .btn-primary:hover {
     background-color: #2a8cbd;
     border-color: #2a8cbd;
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.btn-success:hover {
+    background-color: var(--success-dark);
+    border-color: var(--success-dark);
 }
 
 .btn-danger {
@@ -322,11 +339,11 @@
     background-color: var(--gray-50);
 }
 
-/* Admin Avatar */
+/* Admin Avatar — squared off to match Term page's term-icon style */
 .admin-avatar {
     width: 40px;
     height: 40px;
-    border-radius: 50%;
+    border-radius: 8px;
     background-color: var(--gray-100);
     color: var(--gray-700);
     display: flex;
@@ -349,7 +366,7 @@
     font-size: 13px;
 }
 
-/* Role Badge */
+/* Role Badge — matches Term page's year-badge styling */
 .role-badge {
     background-color: var(--gray-100);
     color: var(--gray-700);
