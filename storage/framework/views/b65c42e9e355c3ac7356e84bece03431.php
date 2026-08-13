@@ -106,7 +106,7 @@
                                 <span class="email-text"><?php echo e($admin->email); ?></span>
                             </td>
                             <td>
-                                <span class="phone-text"><?php echo e($admin->school->phone ?? 'N/A'); ?></span>
+                                <span class="phone-text"><?php echo e($admin->phone ?? 'N/A'); ?></span>
                             </td>
                             <td>
                                 <span class="role-badge"><?php echo e(ucfirst($admin->role)); ?></span>

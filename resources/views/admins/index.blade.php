@@ -104,7 +104,7 @@
                                 <span class="email-text">{{ $admin->email }}</span>
                             </td>
                             <td>
-                                <span class="phone-text">{{ $admin->school->phone ?? 'N/A' }}</span>
+                                <span class="phone-text">{{ $admin->phone ?? 'N/A' }}</span>
                             </td>
                             <td>
                                 <span class="role-badge">{{ ucfirst($admin->role) }}</span>

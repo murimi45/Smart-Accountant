@@ -1,4 +1,3 @@
-
 <?php $__env->startSection('main'); ?>
 
 <div class="main-wrapper">
@@ -6,8 +5,8 @@
     <div class="page-header mb-4">
         <div class="row align-items-center">
             <div class="col-md-6">
-                <h4 class="mb-1"><?php echo e(isset($admin) ? 'Edit Admin' : 'Add New Admin'); ?></h4>
-                <p class="text-muted mb-0"><?php echo e(isset($admin) ? 'Update admin details' : 'Create a new admin account'); ?></p>
+                <h4 class="mb-1"><?php echo e(isset($admin) ? 'Edit User' : 'Add New User'); ?></h4>
+                <p class="text-muted mb-0"><?php echo e(isset($admin) ? 'Update user details' : 'Create a school user (admin, accountant, teacher, or HR manager)'); ?></p>
             </div>
             <div class="col-md-6 text-md-end mt-3 mt-md-0">
                 <a href="<?php echo e(route('admins.index')); ?>" class="btn btn-outline-secondary">
@@ -117,9 +116,12 @@ unset($__errorArgs, $__bag); ?>
 
                     <div class="col-md-6">
                         <label class="form-label">Role</label>
+                        <?php $currentRole = old('role', isset($admin) ? strtolower((string) $admin->role) : ''); ?>
                         <select name="role" class="form-select" required>
-                            <option value="admin" <?php echo e((old('role', $admin->role ?? '') == 'admin') ? 'selected' : ''); ?>>Admin</option>
-                            <option value="Accountant" <?php echo e((old('role', $admin->role ?? '') == 'Accountant') ? 'selected' : ''); ?>>Accountant</option>
+                            <option value="admin" <?php echo e($currentRole === 'admin' ? 'selected' : ''); ?>>Admin</option>
+                            <option value="accountant" <?php echo e($currentRole === 'accountant' ? 'selected' : ''); ?>>Accountant</option>
+                            <option value="teacher" <?php echo e($currentRole === 'teacher' ? 'selected' : ''); ?>>Teacher</option>
+                            <option value="hr_manager" <?php echo e($currentRole === 'hr_manager' ? 'selected' : ''); ?>>HR Manager</option>
                         </select>
                         <?php $__errorArgs = ['role'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
@@ -136,7 +138,7 @@ unset($__errorArgs, $__bag); ?>
 
                 <div class="mt-4">
                     <button type="submit" class="btn btn-primary">
-                        <i class="fa fa-save me-2"></i><?php echo e(isset($admin) ? 'Update Admin' : 'Create Admin'); ?>
+                        <i class="fa fa-save me-2"></i><?php echo e(isset($admin) ? 'Update User' : 'Create User'); ?>
 
                     </button>
                     <a href="<?php echo e(route('admins.index')); ?>" class="btn btn-outline-secondary ms-2">Cancel</a>

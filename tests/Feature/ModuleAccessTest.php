@@ -185,6 +185,53 @@ class ModuleAccessTest extends TestCase
             ->assertSee('Grading');
     }
 
+    public function test_grading_home_blocked_without_module(): void
+    {
+        $teacher = User::unguarded(fn () => User::create([
+            'school_id'          => $this->fixtures['schoolA']->id,
+            'admin_name'         => 'Blocked Teacher',
+            'email'              => 'teacher-blocked@probe.test',
+            'password'           => bcrypt('password'),
+            'role'               => User::ROLE_TEACHER,
+            'two_factor_enabled' => false,
+        ]));
+
+        $this->actingAs($teacher)
+            ->get(route('grading.index'))
+            ->assertForbidden();
+    }
+
+    public function test_accountant_cannot_open_grading_home(): void
+    {
+        ModuleRegistry::enableForSchool(
+            (int) $this->fixtures['schoolA']->id,
+            Module::SLUG_GRADING
+        );
+
+        $this->actingAs($this->fixtures['accountantA'])
+            ->get(route('grading.index'))
+            ->assertForbidden();
+    }
+
+    public function test_admin_can_create_teacher_via_users_ui(): void
+    {
+        $this->actingAs($this->fixtures['adminA'])
+            ->post(route('admins.store'), [
+                'admin_name' => 'New Teacher',
+                'email' => 'new-teacher@probe.test',
+                'password' => 'password',
+                'password_confirmation' => 'password',
+                'role' => User::ROLE_TEACHER,
+            ])
+            ->assertRedirect(route('admins.index'));
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'new-teacher@probe.test',
+            'role' => User::ROLE_TEACHER,
+            'school_id' => $this->fixtures['schoolA']->id,
+        ]);
+    }
+
     public function test_accountant_cannot_open_hr_home(): void
     {
         ModuleRegistry::enableForSchool(

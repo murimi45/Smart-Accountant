@@ -8,7 +8,7 @@
                 <span>Users</span>
             </a>
             <ul class="collapse list-unstyled <?php echo e(Request::is('admins*') || Request::is('accountants*') ? 'show' : ''); ?>" id="usersMenu">
-                <li><a class="<?php echo e(Request::is('admins*') ? 'active' : ''); ?>" href="<?php echo e(route('admins.index')); ?>">Admins</a></li>
+                <li><a class="<?php echo e(Request::is('admins*') ? 'active' : ''); ?>" href="<?php echo e(route('admins.index')); ?>">School Users</a></li>
                 <li><a class="<?php echo e(Request::is('accountants*') ? 'active' : ''); ?>" href="<?php echo e(route('accountants.index')); ?>">Accountants</a></li>
             </ul>
         </li>

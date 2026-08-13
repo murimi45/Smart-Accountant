@@ -14,12 +14,17 @@ class UserPolicy
         return $this->isAdmin($user);
     }
 
-    /** Admin managing admin or accountant users in the same school. */
+    /** Admin managing school staff users in the same school. */
     public function update(User $user, User $model): bool
     {
         return $this->isAdmin($user)
             && $this->belongsToSameSchool($user, $model->school_id)
-            && in_array(strtolower((string) $model->role), ['admin', 'accountant'], true);
+            && in_array(strtolower((string) $model->role), [
+                'admin',
+                'accountant',
+                'teacher',
+                'hr_manager',
+            ], true);
     }
 
     public function delete(User $user, User $model): bool

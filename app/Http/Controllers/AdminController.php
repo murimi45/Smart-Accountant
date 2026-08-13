@@ -4,15 +4,38 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
 {
-    public function index()
-    {
-        $admins = $users = User::whereIn('role', ['Admin', 'Accountant'])
+    /** School-staff roles creatable from the Users UI (not platform). */
+    public const MANAGEABLE_ROLES = [
+        User::ROLE_ADMIN,
+        User::ROLE_ACCOUNTANT,
+        User::ROLE_TEACHER,
+        User::ROLE_HR_MANAGER,
+    ];
 
+    public function index(Request $request)
+    {
+        $query = User::query()
             ->where('school_id', auth()->user()->school_id)
-            ->paginate(10);
+            ->whereIn('role', self::MANAGEABLE_ROLES);
+
+        if ($request->filled('name')) {
+            $query->where('admin_name', 'like', '%'.$request->name.'%');
+        }
+
+        if ($request->filled('email')) {
+            $query->where('email', 'like', '%'.$request->email.'%');
+        }
+
+        if ($request->filled('role') && in_array($request->role, self::MANAGEABLE_ROLES, true)) {
+            $query->where('role', $request->role);
+        }
+
+        $admins = $query->orderBy('admin_name')->paginate(10)->withQueryString();
+
         return view('admins.index', compact('admins'));
     }
 
@@ -24,7 +47,8 @@ class AdminController extends Controller
             'admin_name'=>'required|string|max:255',
             'email'=>'required|email|unique:users,email',
             'password'=>'required|string|min:6|confirmed',
-            'role' => 'required|in:admin,Accountant',
+            'phone' => 'nullable|string|max:30',
+            'role' => ['required', Rule::in(self::MANAGEABLE_ROLES)],
             'school_id' => 'prohibited',
         ]);
 
@@ -32,7 +56,8 @@ class AdminController extends Controller
             'admin_name'=>$request->admin_name,
             'email'=>$request->email,
             'password'=>Hash::make($request->password),
-            'role' => $request->role,
+            'phone' => $request->phone,
+            'role' => strtolower($request->role),
         ]);
         $user->school_id = auth()->user()->school_id;
         $user->save();
@@ -55,12 +80,14 @@ class AdminController extends Controller
             'admin_name'=>'required|string|max:255',
             'email'=>'required|email|unique:users,email,'.$admin->id,
             'password'=>'nullable|string|min:6|confirmed',
-            'role' => 'required|in:admin,Accountant',
+            'phone' => 'nullable|string|max:30',
+            'role' => ['required', Rule::in(self::MANAGEABLE_ROLES)],
         ]);
 
         $admin->admin_name = $request->admin_name;
         $admin->email = $request->email;
-        $admin->role = $request->role;
+        $admin->phone = $request->phone;
+        $admin->role = strtolower($request->role);
         if($request->password) $admin->password = Hash::make($request->password);
         $admin->save();
 

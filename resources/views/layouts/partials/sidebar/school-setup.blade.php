@@ -8,7 +8,7 @@
                 <span>Users</span>
             </a>
             <ul class="collapse list-unstyled {{ Request::is('admins*') || Request::is('accountants*') ? 'show' : '' }}" id="usersMenu">
-                <li><a class="{{ Request::is('admins*') ? 'active' : '' }}" href="{{ route('admins.index') }}">Admins</a></li>
+                <li><a class="{{ Request::is('admins*') ? 'active' : '' }}" href="{{ route('admins.index') }}">School Users</a></li>
                 <li><a class="{{ Request::is('accountants*') ? 'active' : '' }}" href="{{ route('accountants.index') }}">Accountants</a></li>
             </ul>
         </li>

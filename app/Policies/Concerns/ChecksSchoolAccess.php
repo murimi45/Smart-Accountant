@@ -24,4 +24,9 @@ trait ChecksSchoolAccess
     {
         return in_array(strtolower((string) $user->role), ['admin', 'accountant'], true);
     }
+
+    protected function isGradingUser(User $user): bool
+    {
+        return in_array(strtolower((string) $user->role), ['admin', 'teacher'], true);
+    }
 }
