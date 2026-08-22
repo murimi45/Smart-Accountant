@@ -28,6 +28,15 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
+    @if (! $termId)
+        <div class="alert alert-info mb-4" role="alert">
+            <i class="fa fa-info-circle me-2"></i>
+            Create an academic year and a term in School Setup before enrolling students.
+            <a href="{{ url('/academic-years') }}" class="alert-link">Academic Years</a>
+            ·
+            <a href="{{ url('/term') }}" class="alert-link">Term Levels</a>
+        </div>
+    @endif
 
     {{-- Top Action Bar --}}
     <div class="card actions-card mb-3">
@@ -86,7 +95,8 @@
                         <i class="fa fa-arrow-right me-1"></i>Promote to next term
                     </button>
                     <button type="button" class="btn btn-primary btn-action"
-                            data-bs-toggle="modal" data-bs-target="#promoteClassModal">
+                            data-bs-toggle="modal" data-bs-target="#promoteClassModal"
+                            @if(!$activeTerm) disabled title="Create an academic year and term first" @endif>
                         <i class="fa fa-graduation-cap me-1"></i>Promote to next year
                     </button>
                 </div>

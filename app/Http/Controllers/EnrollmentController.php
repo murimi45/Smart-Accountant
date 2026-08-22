@@ -51,47 +51,64 @@ class EnrollmentController extends Controller
 
         $termId = $request->filled('term_id') ? (int) $request->term_id : $activeTerm?->id;
 
-        // 2. Build the enrollment query using scopes
-        $query = StudentEnrollment::with([
-                'student',                          // student name, admission
-                'schoolClass',                      // class name, level, is_final
-                'stream',                           // stream name e.g. "A"
-                'term',                             // term name
-                'invoice',                          // linked invoice (enrollment_id FK)
-            ])
-            ->where('school_id', $schoolId)
-            ->forTerm($termId)
-            ->visible()                             // excludes cancelled (audit-only)
-            ->search($request->search)
-            ->when($request->filled('class_id'), fn($q) => $q->forClass($request->class_id))
-            ->when($request->filled('status'),   fn($q) => $q->forStatus($request->status));
+        // No term yet (new school) — show an empty setup screen instead of crashing.
+        $emptyCounts = (object) [
+            'total'            => 0,
+            'promoting'        => 0,
+            'repeating'        => 0,
+            'inactive'         => 0,
+            'needs_correction' => 0,
+        ];
 
-        // 3. Paginate — keeps large schools fast
-        $enrollments = $query
-            ->orderBy(
-                // Sort by class level so Class 1 appears before Class 8
-                Classes::select('order')
-                    ->whereColumn('classes.id', 'student_enrollments.class_id')
-                    ->where('classes.school_id', $schoolId)
-                    ->limit(1)
-            )
-            ->orderBy('student_id')     // secondary sort: consistent ordering within class
-            ->paginate(25)
-            ->withQueryString();        // keeps filters active across pages
+        if ($termId === null) {
+            $enrollments = StudentEnrollment::query()
+                ->whereRaw('0 = 1')
+                ->paginate(25)
+                ->withQueryString();
+            $counts = $emptyCounts;
+        } else {
+            // 2. Build the enrollment query using scopes
+            $query = StudentEnrollment::with([
+                    'student',                          // student name, admission
+                    'schoolClass',                      // class name, level, is_final
+                    'stream',                           // stream name e.g. "A"
+                    'term',                             // term name
+                    'invoice',                          // linked invoice (enrollment_id FK)
+                ])
+                ->where('school_id', $schoolId)
+                ->forTerm($termId)
+                ->visible()                             // excludes cancelled (audit-only)
+                ->search($request->search)
+                ->when($request->filled('class_id'), fn($q) => $q->forClass((int) $request->class_id))
+                ->when($request->filled('status'),   fn($q) => $q->forStatus($request->status));
 
-        // 4. School-wide counts for the header stats bar
-        //    Always counts the whole school regardless of filters active
-        $counts = StudentEnrollment::where('school_id', $schoolId)
-            ->forTerm($termId)
-            ->visible()
-            ->selectRaw("
-                COUNT(*) as total,
-                SUM(CASE WHEN status = 'active'           THEN 1 ELSE 0 END) as promoting,
-                SUM(CASE WHEN status = 'repeating'        THEN 1 ELSE 0 END) as repeating,
-                SUM(CASE WHEN status = 'inactive'         THEN 1 ELSE 0 END) as inactive,
-                SUM(CASE WHEN status = 'wrongly_promoted' THEN 1 ELSE 0 END) as needs_correction
-            ")
-            ->first();
+            // 3. Paginate — keeps large schools fast
+            $enrollments = $query
+                ->orderBy(
+                    // Sort by class level so Class 1 appears before Class 8
+                    Classes::select('order')
+                        ->whereColumn('classes.id', 'student_enrollments.class_id')
+                        ->where('classes.school_id', $schoolId)
+                        ->limit(1)
+                )
+                ->orderBy('student_id')     // secondary sort: consistent ordering within class
+                ->paginate(25)
+                ->withQueryString();        // keeps filters active across pages
+
+            // 4. School-wide counts for the header stats bar
+            //    Always counts the whole school regardless of filters active
+            $counts = StudentEnrollment::where('school_id', $schoolId)
+                ->forTerm($termId)
+                ->visible()
+                ->selectRaw("
+                    COUNT(*) as total,
+                    SUM(CASE WHEN status = 'active'           THEN 1 ELSE 0 END) as promoting,
+                    SUM(CASE WHEN status = 'repeating'        THEN 1 ELSE 0 END) as repeating,
+                    SUM(CASE WHEN status = 'inactive'         THEN 1 ELSE 0 END) as inactive,
+                    SUM(CASE WHEN status = 'wrongly_promoted' THEN 1 ELSE 0 END) as needs_correction
+                ")
+                ->first() ?? $emptyCounts;
+        }
 
         // 5. Sidebar data for filter dropdowns
         $classes = Classes::where('school_id', $schoolId)
