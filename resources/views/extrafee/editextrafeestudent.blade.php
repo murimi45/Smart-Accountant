@@ -143,16 +143,20 @@
                                                             {{ $existing ? 'checked' : '' }}>
                                                     </td>
                                                     <td>
+                                                        @php
+                                                            $studentName = $student?->full_name ?? 'Deleted student';
+                                                            $studentAdmission = $student?->admission ?? 'N/A';
+                                                        @endphp
                                                         <div class="d-flex align-items-center">
                                                             <div class="user-avatar me-2" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #36a9e2 0%, #1e88c7 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;">
-                                                                {{ strtoupper(substr($student->full_name, 0, 1)) }}
+                                                                {{ strtoupper(substr($studentName, 0, 1)) }}
                                                             </div>
-                                                            <strong>{{ $student->full_name }}</strong>
+                                                            <strong>{{ $studentName }}</strong>
                                                         </div>
                                                     </td>
                                                     <td>
                                                         <span class="badge bg-light text-dark" style="padding: 6px 12px; border-radius: 6px;">
-                                                            {{ $student->admission }}
+                                                            {{ $studentAdmission }}
                                                         </span>
                                                     </td>
                                                     <td>{{ $className }}</td>

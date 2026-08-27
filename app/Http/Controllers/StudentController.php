@@ -3,13 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Classes;
+use App\Models\Invoice;
 use App\Models\Term;
 use App\Models\Student;
 use App\Models\StudentEnrollment;
+use App\Models\StudentExtraFee;
 use App\Support\TenantFilters;
 use App\Support\TenantRules;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class StudentController extends Controller
 {
@@ -162,8 +165,43 @@ class StudentController extends Controller
     {
         $student = Student::forSchool(TenantFilters::schoolId())->findOrFail($id);
         $this->authorize('delete', $student);
-        $student->delete();
+
+        if ($student->hasAnyInvoicePayments()) {
+            return redirect()->back()->with(
+                'error',
+                'This student has fee payment history and cannot be deleted. If they have left or transferred, mark them inactive on Enrollment instead.'
+            );
+        }
+
+        DB::transaction(function () use ($student) {
+            app()->instance('batchAssigningExtraFees', true);
+            try {
+                StudentExtraFee::withTrashed()
+                    ->where('student_id', $student->id)
+                    ->forceDelete();
+            } finally {
+                app()->forgetInstance('batchAssigningExtraFees');
+            }
+
+            $this->purgeStudentInvoices($student);
+            $student->forceDelete();
+        });
 
         return redirect()->back()->with('success', 'Deleted successfully.');
+    }
+
+    /**
+     * Production invoice_items / invoice_payments FKs do not cascade.
+     * Remove children first so forceDelete() can remove the student and invoices.
+     */
+    private function purgeStudentInvoices(Student $student): void
+    {
+        $invoices = Invoice::where('student_id', $student->id)->get();
+
+        foreach ($invoices as $invoice) {
+            $invoice->items()->delete();
+            $invoice->payments()->delete();
+            $invoice->delete();
+        }
     }
 }

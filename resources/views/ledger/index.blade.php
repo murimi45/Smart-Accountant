@@ -145,16 +145,7 @@
         {{-- Pagination --}}
         @if($entries->hasPages())
         <div class="card-footer">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div class="mb-2 mb-sm-0">
-                    <small class="text-muted">
-                        Showing {{ $entries->firstItem() }} to {{ $entries->lastItem() }} of {{ $entries->total() }} entries
-                    </small>
-                </div>
-                <div>
-                    {{ $entries->links() }}
-                </div>
-            </div>
+            {{ $entries->links() }}
         </div>
         @endif
     </div>

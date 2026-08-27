@@ -58,6 +58,15 @@ class Student extends Model
         return $this->hasMany(Invoice::class);
     }
 
+    /**
+     * True if this student has ever had a payment on any invoice (any term).
+     * Used to block hard-delete of students with fee history.
+     */
+    public function hasAnyInvoicePayments(): bool
+    {
+        return $this->invoices()->whereHas('payments')->exists();
+    }
+
      public function enrollments()
         {
             return $this->hasMany(StudentEnrollment::class);

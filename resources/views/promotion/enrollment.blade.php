@@ -192,11 +192,17 @@
                         </tr>
                     </thead>
                     <tbody>
+                        @php
+                            $canChangeStatus = $activeTerm && (int) $termId === (int) $activeTerm->id;
+                        @endphp
                         @forelse($enrollments as $enrollment)
                             @php
                                 $student    = $enrollment->student;
                                 $class      = $enrollment->schoolClass;
                                 $stream     = $enrollment->stream;
+                                $studentName = $student?->full_name ?? 'Deleted student';
+                                $studentAdmission = $student?->admission ?? 'N/A';
+                                $studentInitial = strtoupper(substr($studentName, 0, 1));
                                 $isWrong    = $enrollment->needsCorrection();
                                 $isRepeat   = $enrollment->status === 'repeating';
                                 $isInactive = $enrollment->status === 'inactive';
@@ -213,13 +219,13 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <div class="avatar {{ $isWrong ? 'avatar-danger' : ($isInactive ? 'avatar-inactive' : '') }}">
-                                            {{ strtoupper(substr($student->full_name, 0, 1)) }}
+                                            {{ $studentInitial }}
                                         </div>
                                         <div class="ms-3">
                                             <div class="student-name {{ $isInactive ? 'text-muted' : '' }}">
-                                                {{ $student->full_name }}
+                                                {{ $studentName }}
                                             </div>
-                                            <div class="student-id">{{ $student->admission }}</div>
+                                            <div class="student-id">{{ $studentAdmission }}</div>
                                         </div>
                                     </div>
                                 </td>
@@ -256,6 +262,20 @@
                                         <span class="badge-status status-wrong">
                                             <i class="fa fa-exclamation-triangle me-1"></i>Needs correction
                                         </span>
+                                    @elseif(! $canChangeStatus)
+                                        @php
+                                            $statusLabel = match ($enrollment->status) {
+                                                'repeating' => 'Repeating',
+                                                'inactive'  => 'Inactive',
+                                                default     => 'Promote',
+                                            };
+                                            $statusClass = match ($enrollment->status) {
+                                                'repeating' => 'status-repeating',
+                                                'inactive'  => 'status-inactive',
+                                                default     => 'status-active',
+                                            };
+                                        @endphp
+                                        <span class="badge-status {{ $statusClass }}">{{ $statusLabel }}</span>
                                     @else
                                         <form method="POST"
                                               action="{{ route('enrollment.update-status', $enrollment->id) }}"
@@ -280,8 +300,8 @@
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#correctionModal"
                                                 data-enrollment-id="{{ $enrollment->id }}"
-                                                data-student="{{ $student->full_name }}"
-                                                data-admission="{{ $student->admission }}"
+                                                data-student="{{ $studentName }}"
+                                                data-admission="{{ $studentAdmission }}"
                                                 data-wrong-class="{{ $class?->name }}{{ $stream?->name }}"
                                                 data-from-class="{{ $enrollment->promotedFrom?->schoolClass?->name ?? '—' }}"
                                                 onclick="openCorrection(this)">
@@ -702,6 +722,9 @@
 
 .badge-status { padding: 4px 10px; border-radius: 6px; font-weight: 500; font-size: 12px; display: inline-block; }
 .status-wrong { background: #fee2e2; color: #991b1b; }
+.status-active { background: #dcfce7; color: #166534; }
+.status-repeating { background: #fef3c7; color: #92400e; }
+.status-inactive { background: #f3f4f6; color: #4b5563; }
 
 .confirm-summary {
     background: var(--gray-50); border: 1px solid var(--gray-200);

@@ -30,6 +30,15 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <?php endif; ?>
+    <?php if(! $termId): ?>
+        <div class="alert alert-info mb-4" role="alert">
+            <i class="fa fa-info-circle me-2"></i>
+            Create an academic year and a term in School Setup before enrolling students.
+            <a href="<?php echo e(url('/academic-years')); ?>" class="alert-link">Academic Years</a>
+            ·
+            <a href="<?php echo e(url('/term')); ?>" class="alert-link">Term Levels</a>
+        </div>
+    <?php endif; ?>
 
     
     <div class="card actions-card mb-3">
@@ -90,7 +99,8 @@
                         <i class="fa fa-arrow-right me-1"></i>Promote to next term
                     </button>
                     <button type="button" class="btn btn-primary btn-action"
-                            data-bs-toggle="modal" data-bs-target="#promoteClassModal">
+                            data-bs-toggle="modal" data-bs-target="#promoteClassModal"
+                            <?php if(!$activeTerm): ?> disabled title="Create an academic year and term first" <?php endif; ?>>
                         <i class="fa fa-graduation-cap me-1"></i>Promote to next year
                     </button>
                 </div>
@@ -188,11 +198,17 @@
                         </tr>
                     </thead>
                     <tbody>
+                        <?php
+                            $canChangeStatus = $activeTerm && (int) $termId === (int) $activeTerm->id;
+                        ?>
                         <?php $__empty_1 = true; $__currentLoopData = $enrollments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $enrollment): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                             <?php
                                 $student    = $enrollment->student;
                                 $class      = $enrollment->schoolClass;
                                 $stream     = $enrollment->stream;
+                                $studentName = $student?->full_name ?? 'Deleted student';
+                                $studentAdmission = $student?->admission ?? 'N/A';
+                                $studentInitial = strtoupper(substr($studentName, 0, 1));
                                 $isWrong    = $enrollment->needsCorrection();
                                 $isRepeat   = $enrollment->status === 'repeating';
                                 $isInactive = $enrollment->status === 'inactive';
@@ -209,15 +225,15 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <div class="avatar <?php echo e($isWrong ? 'avatar-danger' : ($isInactive ? 'avatar-inactive' : '')); ?>">
-                                            <?php echo e(strtoupper(substr($student->full_name, 0, 1))); ?>
+                                            <?php echo e($studentInitial); ?>
 
                                         </div>
                                         <div class="ms-3">
                                             <div class="student-name <?php echo e($isInactive ? 'text-muted' : ''); ?>">
-                                                <?php echo e($student->full_name); ?>
+                                                <?php echo e($studentName); ?>
 
                                             </div>
-                                            <div class="student-id"><?php echo e($student->admission); ?></div>
+                                            <div class="student-id"><?php echo e($studentAdmission); ?></div>
                                         </div>
                                     </div>
                                 </td>
@@ -256,6 +272,20 @@
                                         <span class="badge-status status-wrong">
                                             <i class="fa fa-exclamation-triangle me-1"></i>Needs correction
                                         </span>
+                                    <?php elseif(! $canChangeStatus): ?>
+                                        <?php
+                                            $statusLabel = match ($enrollment->status) {
+                                                'repeating' => 'Repeating',
+                                                'inactive'  => 'Inactive',
+                                                default     => 'Promote',
+                                            };
+                                            $statusClass = match ($enrollment->status) {
+                                                'repeating' => 'status-repeating',
+                                                'inactive'  => 'status-inactive',
+                                                default     => 'status-active',
+                                            };
+                                        ?>
+                                        <span class="badge-status <?php echo e($statusClass); ?>"><?php echo e($statusLabel); ?></span>
                                     <?php else: ?>
                                         <form method="POST"
                                               action="<?php echo e(route('enrollment.update-status', $enrollment->id)); ?>"
@@ -280,8 +310,8 @@
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#correctionModal"
                                                 data-enrollment-id="<?php echo e($enrollment->id); ?>"
-                                                data-student="<?php echo e($student->full_name); ?>"
-                                                data-admission="<?php echo e($student->admission); ?>"
+                                                data-student="<?php echo e($studentName); ?>"
+                                                data-admission="<?php echo e($studentAdmission); ?>"
                                                 data-wrong-class="<?php echo e($class?->name); ?><?php echo e($stream?->name); ?>"
                                                 data-from-class="<?php echo e($enrollment->promotedFrom?->schoolClass?->name ?? '—'); ?>"
                                                 onclick="openCorrection(this)">
@@ -705,6 +735,9 @@
 
 .badge-status { padding: 4px 10px; border-radius: 6px; font-weight: 500; font-size: 12px; display: inline-block; }
 .status-wrong { background: #fee2e2; color: #991b1b; }
+.status-active { background: #dcfce7; color: #166534; }
+.status-repeating { background: #fef3c7; color: #92400e; }
+.status-inactive { background: #f3f4f6; color: #4b5563; }
 
 .confirm-summary {
     background: var(--gray-50); border: 1px solid var(--gray-200);

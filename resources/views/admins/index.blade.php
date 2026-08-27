@@ -150,16 +150,7 @@
         {{-- Pagination --}}
         @if($admins->hasPages())
         <div class="card-footer">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div class="mb-2 mb-sm-0">
-                    <small class="text-muted">
-                        Showing {{ $admins->firstItem() }} to {{ $admins->lastItem() }} of {{ $admins->total() }} entries
-                    </small>
-                </div>
-                <div>
-                    {{ $admins->links() }}
-                </div>
-            </div>
+            {{ $admins->links() }}
         </div>
         @endif
     </div>

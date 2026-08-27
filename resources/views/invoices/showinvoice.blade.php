@@ -217,11 +217,13 @@
                                             <span class="btn-text">Payment</span>
                                         </button>
                                         @endif
-                                        <a href="{{ route('statements.single', $invoice->student->id) }}" 
+                                        @if($student)
+                                        <a href="{{ route('statements.single', $student->id) }}" 
                                            class="btn btn-sm btn-light" 
                                            title="Print Statement">
                                             <i class="fa fa-print"></i>
                                         </a>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

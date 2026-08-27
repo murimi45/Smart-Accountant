@@ -181,16 +181,7 @@
         {{-- Pagination --}}
         @if($waivers->hasPages())
         <div class="card-footer">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div class="mb-2 mb-sm-0">
-                    <small class="text-muted">
-                        Showing {{ $waivers->firstItem() }} to {{ $waivers->lastItem() }} of {{ $waivers->total() }} entries
-                    </small>
-                </div>
-                <div>
-                    {{ $waivers->links() }}
-                </div>
-            </div>
+            {{ $waivers->links() }}
         </div>
         @endif
     </div>

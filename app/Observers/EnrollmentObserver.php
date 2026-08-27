@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Models\Invoice;
 use App\Models\StudentEnrollment;
 use App\Services\InvoiceService;
 
@@ -38,7 +39,12 @@ class EnrollmentObserver
                 StudentEnrollment::STATUS_INACTIVE,
             ], true))
         {
-            $this->voidInvoice($enrollment);
+            if ($enrollment->status === StudentEnrollment::STATUS_INACTIVE) {
+                $this->closeInvoiceOnInactive($enrollment);
+            } else {
+                $this->voidInvoice($enrollment);
+            }
+
             return;
         }
 
@@ -63,6 +69,35 @@ class EnrollmentObserver
                 $enrollment->id
             );
         }
+    }
+
+    /**
+     * Inactive (left / transferred out of this term):
+     * - unpaid (amount_paid = 0, not transferred/paid) → void
+     * - partial payment → keep invoice and remaining balance as debt
+     * - paid or transferred → leave the invoice as-is
+     */
+    private function closeInvoiceOnInactive(StudentEnrollment $enrollment): void
+    {
+        $invoice = $enrollment->invoice;
+
+        if (! $invoice) {
+            return;
+        }
+
+        if (in_array($invoice->status, [
+            Invoice::STATUS_TRANSFERRED,
+            Invoice::STATUS_PAID,
+            Invoice::STATUS_VOIDED,
+        ], true)) {
+            return;
+        }
+
+        if ((float) $invoice->amount_paid > 0) {
+            return;
+        }
+
+        $this->voidInvoice($enrollment);
     }
 
     private function voidInvoice(StudentEnrollment $enrollment): void

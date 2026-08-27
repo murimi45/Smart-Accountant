@@ -143,12 +143,15 @@
                    title="Edit Student">
                     <i class="fa fa-edit"></i>
                 </a>
-                <a href="<?php echo e(url('/deletestudent/' . $value->id)); ?>"
+                <button type="button"
                    class="btn btn-sm btn-danger"
-                   onclick="return confirm('Are you sure you want to delete this student?')"
+                   data-bs-toggle="modal"
+                   data-bs-target="#deleteStudentModal"
+                   data-student-name="<?php echo e($value->full_name); ?>"
+                   data-delete-url="<?php echo e(url('/deletestudent/' . $value->id)); ?>"
                    title="Delete Student">
                     <i class="fa fa-trash"></i>
-                </a>
+                </button>
             </div>
         </td>
     </tr>
@@ -174,19 +177,42 @@
         
         <?php if($getRecord->hasPages()): ?>
         <div class="card-footer">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div class="mb-2 mb-sm-0">
-                    <small class="text-muted">
-                        Showing <?php echo e($getRecord->firstItem()); ?> to <?php echo e($getRecord->lastItem()); ?> of <?php echo e($getRecord->total()); ?> entries
-                    </small>
-                </div>
-                <div>
-                    <?php echo e($getRecord->links()); ?>
+            <?php echo e($getRecord->links()); ?>
 
-                </div>
-            </div>
         </div>
         <?php endif; ?>
+    </div>
+</div>
+
+
+<div class="modal fade" id="deleteStudentModal" tabindex="-1" aria-labelledby="deleteStudentLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteStudentLabel">
+                    <i class="fa fa-trash me-2"></i>Delete student?
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">
+                    <strong id="deleteStudentName"></strong>
+                </p>
+                <p class="text-muted mb-0" style="font-size:14px;">
+                    Only delete a student who was added by mistake and has never paid fees.
+                    If they transferred or left, mark them inactive on Enrollment instead.
+                </p>
+            </div>
+            <div class="modal-footer d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a href="<?php echo e(route('enrollment.index')); ?>" class="btn btn-outline-primary">
+                    This is transfer/leave
+                </a>
+                <a href="#" id="confirmDeleteStudent" class="btn btn-danger">
+                    Delete mistaken student
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -579,6 +605,28 @@
     }
 }
 </style>
+
+<script>
+document.getElementById('deleteStudentModal')?.addEventListener('show.bs.modal', function (event) {
+    const button = event.relatedTarget;
+    if (! button) {
+        return;
+    }
+
+    const name = button.getAttribute('data-student-name') || '';
+    const url  = button.getAttribute('data-delete-url') || '#';
+
+    const nameEl = document.getElementById('deleteStudentName');
+    const linkEl = document.getElementById('confirmDeleteStudent');
+
+    if (nameEl) {
+        nameEl.textContent = name;
+    }
+    if (linkEl) {
+        linkEl.setAttribute('href', url);
+    }
+});
+</script>
 
 <?php $__env->stopSection(); ?>
 <?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\Allan\smart_accountant2\resources\views/student/list.blade.php ENDPATH**/ ?>

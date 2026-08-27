@@ -38,8 +38,8 @@
     <div class="row mb-4">
         <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
             <div class="summary-card">
-                <div class="summary-icon" style="background-color: #e8f5e0;">
-                    <i class="fa fa-money-bill-wave" style="color: #79c347;"></i>
+                <div class="summary-icon icon-green">
+                    <i class="fa fa-money-bill-wave"></i>
                 </div>
                 <div class="summary-content">
                     <div class="summary-value">KSh <?php echo e(number_format($incomes->sum('amount'), 2)); ?></div>
@@ -49,8 +49,8 @@
         </div>
         <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
             <div class="summary-card">
-                <div class="summary-icon" style="background-color: #e0f2fe;">
-                    <i class="fa fa-calendar-check" style="color: #36a9e2;"></i>
+                <div class="summary-icon icon-green">
+                    <i class="fa fa-calendar-check"></i>
                 </div>
                 <div class="summary-content">
                     <div class="summary-value"><?php echo e($incomes->count()); ?></div>
@@ -60,8 +60,8 @@
         </div>
         <div class="col-lg-3 col-md-6 mb-3 mb-md-0">
             <div class="summary-card">
-                <div class="summary-icon" style="background-color: #fef3c7;">
-                    <i class="fa fa-clock" style="color: #f59e0b;"></i>
+                <div class="summary-icon icon-green">
+                    <i class="fa fa-clock"></i>
                 </div>
                 <div class="summary-content">
                     <div class="summary-value">KSh <?php echo e(number_format($incomes->where('income_date', '>=', now()->startOfMonth())->sum('amount'), 2)); ?></div>
@@ -71,8 +71,8 @@
         </div>
         <div class="col-lg-3 col-md-6">
             <div class="summary-card">
-                <div class="summary-icon" style="background-color: #f3e8ff;">
-                    <i class="fa fa-tags" style="color: #a855f7;"></i>
+                <div class="summary-icon icon-green">
+                    <i class="fa fa-tags"></i>
                 </div>
                 <div class="summary-content">
                     <div class="summary-value"><?php echo e($incomes->groupBy('income_category_id')->count()); ?></div>
@@ -113,9 +113,9 @@
 
                     <div class="col-md-4">
                         <label class="form-label"><i class="fa fa-search me-1"></i>Search Description</label>
-                        <input type="text" 
-                               name="search" 
-                               class="form-control" 
+                        <input type="text"
+                               name="search"
+                               class="form-control"
                                value="<?php echo e(request('search')); ?>"
                                placeholder="Enter description keyword">
                     </div>
@@ -204,19 +204,19 @@
                             </td>
                             <td>
                                 <div class="action-buttons">
-                                    <a href="<?php echo e(route('other_incomes.edit', $income->id)); ?>" 
-                                       class="btn btn-sm btn-light" 
+                                    <a href="<?php echo e(route('other_incomes.edit', $income->id)); ?>"
+                                       class="btn btn-sm btn-light"
                                        title="Edit Income">
                                         <i class="fa fa-edit"></i>
                                     </a>
 
-                                    <form action="<?php echo e(route('other_incomes.destroy', $income->id)); ?>" 
-                                          method="POST" 
+                                    <form action="<?php echo e(route('other_incomes.destroy', $income->id)); ?>"
+                                          method="POST"
                                           class="d-inline"
                                           onsubmit="return confirm('Are you sure you want to delete this income record?')">
                                         <?php echo csrf_field(); ?>
                                         <?php echo method_field('DELETE'); ?>
-                                        <button class="btn btn-sm btn-danger" 
+                                        <button class="btn btn-sm btn-danger"
                                                 title="Delete Income">
                                             <i class="fa fa-trash"></i>
                                         </button>
@@ -263,17 +263,19 @@
 </div>
 
 <style>
-/* Base Variables */
+/* Base Variables — matched to Users List / standard system pages */
 :root {
     --primary-color: #36a9e2;
     --success-color: #79c347;
     --success-dark: #5fa732;
     --danger-color: #ef4444;
     --warning-color: #f59e0b;
+    --purple-color: #a855f7;
     --gray-50: #f9fafb;
     --gray-100: #f3f4f6;
     --gray-200: #e5e7eb;
     --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
     --gray-500: #6b7280;
     --gray-600: #4b5563;
     --gray-700: #374151;
@@ -299,10 +301,10 @@
     background: white;
     border: 1px solid var(--gray-200);
     border-radius: var(--border-radius);
-    padding: 20px;
+    padding: 16px;
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
     transition: all 0.2s;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
@@ -313,9 +315,9 @@
 }
 
 .summary-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 12px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -323,7 +325,36 @@
 }
 
 .summary-icon i {
-    font-size: 24px;
+    font-size: 15px;
+}
+
+/* Summary icon color variants (replaces inline styles) */
+.summary-icon.icon-green {
+    background-color: rgba(121, 195, 71, 0.12);
+}
+.summary-icon.icon-green i {
+    color: var(--success-color);
+}
+
+.summary-icon.icon-blue {
+    background-color: rgba(54, 169, 226, 0.12);
+}
+.summary-icon.icon-blue i {
+    color: var(--primary-color);
+}
+
+.summary-icon.icon-amber {
+    background-color: rgba(245, 158, 11, 0.12);
+}
+.summary-icon.icon-amber i {
+    color: var(--warning-color);
+}
+
+.summary-icon.icon-purple {
+    background-color: rgba(168, 85, 247, 0.12);
+}
+.summary-icon.icon-purple i {
+    color: var(--purple-color);
 }
 
 .summary-content {
@@ -363,6 +394,12 @@
     background: var(--gray-50);
     border-bottom: 1px solid var(--gray-200);
     padding: 16px 20px;
+}
+
+.table-card .card-header h5 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--gray-900);
 }
 
 .card-footer {
@@ -505,6 +542,7 @@
     justify-content: center;
     font-weight: 600;
     font-size: 16px;
+    flex-shrink: 0;
 }
 
 .category-name {
@@ -601,18 +639,38 @@
     color: #991b1b;
 }
 
-/* Pagination */
+/* Badge Override */
+.badge.bg-light {
+    background-color: var(--gray-100) !important;
+    color: var(--gray-700);
+    padding: 4px 12px;
+    font-weight: 500;
+}
+
+/* Pagination — matched to Users List page */
 .pagination {
     margin: 0;
+    display: flex;
+    list-style: none;
+    padding: 0;
+}
+
+.pagination .page-item {
+    margin: 0 2px;
 }
 
 .pagination .page-link {
-    border-radius: 6px;
-    margin: 0 3px;
-    border: 1px solid var(--gray-300);
-    color: var(--gray-600);
+    position: relative;
+    display: block;
     padding: 6px 12px;
     font-size: 14px;
+    font-weight: 500;
+    color: var(--gray-600);
+    text-decoration: none;
+    background-color: white;
+    border: 1px solid var(--gray-300);
+    border-radius: 6px;
+    transition: all 0.2s;
 }
 
 .pagination .page-link:hover {
@@ -624,34 +682,54 @@
 .pagination .page-item.active .page-link {
     background-color: var(--primary-color);
     border-color: var(--primary-color);
+    color: white;
 }
 
 .pagination .page-item.disabled .page-link {
     color: var(--gray-400);
     background-color: var(--gray-50);
+    border-color: var(--gray-200);
+    cursor: not-allowed;
+    pointer-events: none;
 }
 
-/* Badge Override */
-.badge.bg-light {
-    background-color: var(--gray-100) !important;
-    color: var(--gray-700);
-    padding: 4px 12px;
-    font-weight: 500;
+.pagination .page-link svg {
+    display: none;
+}
+
+.pagination .page-item:first-child .page-link::before {
+    content: '← Previous';
+    font-size: 13px;
+}
+
+.pagination .page-item:last-child .page-link::before {
+    content: 'Next →';
+    font-size: 13px;
+}
+
+.pagination .page-item:first-child .page-link,
+.pagination .page-item:last-child .page-link {
+    font-size: 0;
+}
+
+.pagination .page-item:first-child .page-link::before,
+.pagination .page-item:last-child .page-link::before {
+    font-size: 13px;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
     .summary-card {
-        padding: 16px;
+        padding: 12px;
     }
 
     .summary-icon {
-        width: 48px;
-        height: 48px;
+        width: 32px;
+        height: 32px;
     }
 
     .summary-icon i {
-        font-size: 20px;
+        font-size: 13px;
     }
 
     .summary-value {
@@ -663,12 +741,12 @@
         height: 32px;
         font-size: 14px;
     }
-    
+
     .action-buttons .btn-sm {
         padding: 6px 10px;
         font-size: 12px;
     }
-    
+
     .income-table {
         font-size: 13px;
     }
@@ -676,6 +754,14 @@
     .income-table thead th,
     .income-table tbody td {
         padding: 10px;
+    }
+
+    .pagination .page-item:first-child .page-link::before {
+        content: '←';
+    }
+
+    .pagination .page-item:last-child .page-link::before {
+        content: '→';
     }
 }
 </style>

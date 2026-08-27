@@ -171,17 +171,21 @@
                                                                <?php echo e($assigned ? 'checked' : ''); ?>>
                                                     </td>
                                                     <td>
+                                                        <?php
+                                                            $studentName = $student?->full_name ?? 'Deleted student';
+                                                            $studentAdmission = $student?->admission ?? 'N/A';
+                                                        ?>
                                                         <div class="d-flex align-items-center">
                                                             <div class="user-avatar me-2" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #36a9e2 0%, #1e88c7 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;">
-                                                                <?php echo e(strtoupper(substr($student->full_name, 0, 1))); ?>
+                                                                <?php echo e(strtoupper(substr($studentName, 0, 1))); ?>
 
                                                             </div>
-                                                            <strong><?php echo e($student->full_name); ?></strong>
+                                                            <strong><?php echo e($studentName); ?></strong>
                                                         </div>
                                                     </td>
                                                     <td>
                                                         <span class="badge bg-light text-dark" style="padding: 6px 12px; border-radius: 6px;">
-                                                            <?php echo e($student->admission); ?>
+                                                            <?php echo e($studentAdmission); ?>
 
                                                         </span>
                                                     </td>

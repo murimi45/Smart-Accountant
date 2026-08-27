@@ -197,16 +197,7 @@
         {{-- Pagination --}}
         @if($expenses->hasPages())
         <div class="card-footer">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div class="mb-2 mb-sm-0">
-                    <small class="text-muted">
-                        Showing {{ $expenses->firstItem() }} to {{ $expenses->lastItem() }} of {{ $expenses->total() }} entries
-                    </small>
-                </div>
-                <div>
-                    {{ $expenses->links() }}
-                </div>
-            </div>
+            {{ $expenses->links() }}
         </div>
         @endif
     </div>

@@ -222,11 +222,13 @@
                                             <span class="btn-text">Payment</span>
                                         </button>
                                         <?php endif; ?>
-                                        <a href="<?php echo e(route('statements.single', $invoice->student->id)); ?>" 
+                                        <?php if($student): ?>
+                                        <a href="<?php echo e(route('statements.single', $student->id)); ?>" 
                                            class="btn btn-sm btn-light" 
                                            title="Print Statement">
                                             <i class="fa fa-print"></i>
                                         </a>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>

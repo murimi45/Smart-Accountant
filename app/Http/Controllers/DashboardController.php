@@ -44,7 +44,10 @@ class DashboardController extends Controller
             return $this->academicsOnlyDashboard($request, $viewType, $terms, $academicYears, $schoolId);
         }
 
-        $recentPayments = InvoicePayment::with('invoice.student')
+        $recentPayments = InvoicePayment::with([
+                'invoice.student',
+                'invoice.enrollment.schoolClass',
+            ])
             ->whereHas('invoice', fn ($q) => $q->where('school_id', $schoolId))
             ->latest()
             ->take(5)
@@ -162,6 +165,8 @@ class DashboardController extends Controller
     {
         $invoiceTotals = Invoice::where('school_id', $schoolId)
             ->where('term_id', $termId)
+            ->excludeVoided()
+            ->excludeTransferred()
             ->selectRaw('SUM(total_amount) as billed')
             ->first();
 
@@ -225,7 +230,11 @@ class DashboardController extends Controller
 
     private function annualMetrics(int $schoolId, $termIds, AcademicYear $selectedYear): array
     {
-        $totalFeesBilled    = Invoice::where('school_id', $schoolId)->whereIn('term_id', $termIds)->sum('total_amount');
+        $totalFeesBilled    = Invoice::where('school_id', $schoolId)
+            ->whereIn('term_id', $termIds)
+            ->excludeVoided()
+            ->excludeTransferred()
+            ->sum('total_amount');
         $totalFeesCollected = InvoicePayment::whereHas('invoice', fn ($q) =>
             $q->where('school_id', $schoolId)->whereIn('term_id', $termIds)
         )->sum('amount');

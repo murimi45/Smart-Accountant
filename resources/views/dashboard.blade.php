@@ -164,15 +164,29 @@
                                 </thead>
                                 <tbody>
                                     @forelse($recentPayments as $payment)
+                                    @php
+                                        $student = $payment->invoice?->student;
+                                        $className = $payment->invoice?->enrollment?->schoolClass?->name;
+                                        $status = $payment->invoice?->status;
+                                        $statusLabel = $status
+                                            ? ucwords(str_replace('_', ' ', $status))
+                                            : 'Unknown';
+                                        $statusClass = match ($status) {
+                                            'paid' => 'badge-success',
+                                            'partially_paid' => 'badge-warning',
+                                            'unpaid' => 'badge-danger',
+                                            default => 'badge-danger',
+                                        };
+                                    @endphp
                                     <tr>
                                         <td>
-                                            <span class="student-id">{{ $payment->student?->student_id ?? 'N/A' }}</span>
+                                            <span class="student-id">{{ $student?->admission ?? 'N/A' }}</span>
                                         </td>
                                         <td class="student-name">
-                                            {{ $payment->student?->name ?? 'Unknown Student' }}
+                                            {{ $student?->full_name ?? 'Unknown Student' }}
                                         </td>
                                         <td class="d-none d-lg-table-cell">
-                                            <span class="badge-class">{{ $payment->student?->class_name ?? 'N/A' }}</span>
+                                            <span class="badge-class">{{ $className ?? 'N/A' }}</span>
                                         </td>
                                         <td class="text-end">
                                             <span class="amount-text">KSh {{ number_format($payment->amount) }}</span>
@@ -181,9 +195,8 @@
                                             <span class="date-text">{{ $payment->payment_date ? \Carbon\Carbon::parse($payment->payment_date)->format('M d, Y') : 'N/A' }}</span>
                                         </td>
                                         <td>
-                                            <span class="badge
-                                                {{ $payment->status === 'Paid' ? 'badge-success' : ($payment->status === 'Pending' ? 'badge-warning' : 'badge-danger') }}">
-                                                {{ $payment->status ?? 'Unknown' }}
+                                            <span class="badge {{ $statusClass }}">
+                                                {{ $statusLabel }}
                                             </span>
                                         </td>
                                     </tr>

@@ -18,8 +18,12 @@
     <p><strong>School Accounting System</strong></p>
 </div>
 
-<p><strong>Student:</strong> {{ $student->name }}<br>
-<strong>Class:</strong> {{ $student->class->name ?? 'N/A' }}<br></p>
+@php
+    $statementStudentName = $student?->full_name ?? 'Deleted student';
+    $statementClassName = $invoices->first()?->enrollment?->schoolClass?->name ?? 'N/A';
+@endphp
+<p><strong>Student:</strong> {{ $statementStudentName }}<br>
+<strong>Class:</strong> {{ $statementClassName }}<br></p>
 
 @php
 $total = $invoices->sum(fn($i) => $i->items->sum('amount'));

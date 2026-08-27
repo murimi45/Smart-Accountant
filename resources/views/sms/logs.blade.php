@@ -91,16 +91,7 @@
         {{-- Pagination --}}
         @if($logs->hasPages())
         <div class="card-footer">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div class="mb-2 mb-sm-0">
-                    <small class="text-muted">
-                        Showing {{ $logs->firstItem() }} to {{ $logs->lastItem() }} of {{ $logs->total() }} entries
-                    </small>
-                </div>
-                <div>
-                    {{ $logs->links() }}
-                </div>
-            </div>
+            {{ $logs->links() }}
         </div>
         @endif
     </div>

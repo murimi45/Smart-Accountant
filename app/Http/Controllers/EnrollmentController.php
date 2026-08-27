@@ -76,6 +76,7 @@ class EnrollmentController extends Controller
                     'invoice',                          // linked invoice (enrollment_id FK)
                 ])
                 ->where('school_id', $schoolId)
+                ->whereHas('student')
                 ->forTerm($termId)
                 ->visible()                             // excludes cancelled (audit-only)
                 ->search($request->search)
@@ -99,6 +100,7 @@ class EnrollmentController extends Controller
             //    Always counts the whole school regardless of filters active
             $counts = StudentEnrollment::where('school_id', $schoolId)
                 ->forTerm($termId)
+                ->whereHas('student')
                 ->visible()
                 ->selectRaw("
                     COUNT(*) as total,
@@ -160,6 +162,14 @@ class EnrollmentController extends Controller
         $enrollment = StudentEnrollment::where('school_id', $schoolId)->findOrFail($enrollmentId);
         $this->authorize('update', $enrollment);
 
+        $activeTerm = Term::current1($schoolId);
+        if (! $activeTerm || (int) $enrollment->term_id !== (int) $activeTerm->id) {
+            return redirect()->back()->with(
+                'error',
+                'Enrollment status can only be changed for the current term.'
+            );
+        }
+
         // If the student already has an active enrollment for this term
         // and admin is trying to change it → flag as wrongly_promoted instead
         // of a silent save. This is the correction trigger.
@@ -190,9 +200,18 @@ class EnrollmentController extends Controller
 
         $enrollment->update(['status' => $newStatus]);
 
-        $message = $newStatus === StudentEnrollment::STATUS_INACTIVE
-            ? 'Student marked inactive. Their invoice for this term has been voided.'
-            : 'Status updated.';
+        $message = 'Status updated.';
+        if ($newStatus === StudentEnrollment::STATUS_INACTIVE) {
+            $invoice = $enrollment->invoice()->first();
+            $message = match (true) {
+                $invoice?->status === Invoice::STATUS_VOIDED =>
+                    'Student marked inactive. Their invoice for this term has been voided.',
+                $invoice && (float) $invoice->amount_paid > 0 =>
+                    'Student marked inactive. Their invoice was kept because payments exist; the remaining balance is still due.',
+                default =>
+                    'Student marked inactive.',
+            };
+        }
 
         return redirect()->back()->with('success', $message);
     }

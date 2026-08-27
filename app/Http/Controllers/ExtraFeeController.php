@@ -201,7 +201,10 @@ public function assignStudentExtraFee(Request $request)
     if ($request->filled('extra_fee_id')) {
         $studentsQuery = Student::where('school_id', $schoolId)
             ->whereHas('enrollments', function ($q) use ($request, $activeTerm) {
-                $q->whereNotIn('status', [StudentEnrollment::STATUS_CANCELLED]);
+                $q->whereNotIn('status', [
+                    StudentEnrollment::STATUS_CANCELLED,
+                    StudentEnrollment::STATUS_INACTIVE,
+                ]);
 
                 if ($activeTerm) {
                     $q->where('term_id', $activeTerm->id);
@@ -212,7 +215,10 @@ public function assignStudentExtraFee(Request $request)
                 }
             })
             ->with(['enrollments' => function ($q) use ($activeTerm) {
-                $q->whereNotIn('status', [StudentEnrollment::STATUS_CANCELLED]);
+                $q->whereNotIn('status', [
+                    StudentEnrollment::STATUS_CANCELLED,
+                    StudentEnrollment::STATUS_INACTIVE,
+                ]);
 
                 if ($activeTerm) {
                     $q->where('term_id', $activeTerm->id);
@@ -236,6 +242,7 @@ public function assignStudentExtraFee(Request $request)
     if ($request->filled('extra_fee_id')) {
         $assignedExtraFees = StudentExtraFee::where('extra_fee_id', $request->extra_fee_id)
             ->where('school_id', auth()->user()->school_id)
+            ->whereHas('student')
             ->get()
             ->keyBy('student_id');
     }
@@ -256,7 +263,8 @@ public function assignStudentExtraFee(Request $request)
     {
         $schoolId = auth()->user()->school_id;
 
-        $query = StudentExtraFee::where('school_id', $schoolId);
+        $query = StudentExtraFee::where('school_id', $schoolId)
+            ->whereHas('student');
 
         if($request->filled('extra_fee_id')){
             $query->where('extra_fee_id',$request->extra_fee_id);
@@ -300,6 +308,7 @@ public function assignStudentExtraFee(Request $request)
 
         $assignedStudents = StudentExtraFee::where('school_id', $schoolId)
             ->where('extra_fee_id', $assignedFee->extra_fee_id)
+            ->whereHas('student')
             ->get();
         $extraFees = ExtraFee::with('term')->get();
 

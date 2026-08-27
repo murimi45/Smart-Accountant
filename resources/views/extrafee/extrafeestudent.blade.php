@@ -116,13 +116,18 @@
                                 </div>
                             </td>
                             <td>
+                                @php
+                                    $student = $extraFeeStudent->student;
+                                    $studentName = $student?->full_name ?? 'Deleted student';
+                                    $studentAdmission = $student?->admission ?? 'N/A';
+                                @endphp
                                 <div class="d-flex align-items-center">
                                     <div class="admin-avatar">
-                                        {{ strtoupper(substr($extraFeeStudent->student->full_name, 0, 1)) }}
+                                        {{ strtoupper(substr($studentName, 0, 1)) }}
                                     </div>
                                     <div class="ms-3">
-                                        <div class="admin-name">{{ $extraFeeStudent->student->full_name }}</div>
-                                        <small class="text-muted">{{ $extraFeeStudent->student->admission }}</small>
+                                        <div class="admin-name">{{ $studentName }}</div>
+                                        <small class="text-muted">{{ $studentAdmission }}</small>
                                     </div>
                                 </div>
                             </td>

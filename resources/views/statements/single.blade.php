@@ -58,10 +58,14 @@
         <p><strong>School Accounting System</strong></p>
     </div>
 
+    @php
+        $statementStudentName = $student?->full_name ?? 'Deleted student';
+        $statementClassName = $invoices->first()?->enrollment?->schoolClass?->name ?? 'N/A';
+    @endphp
     <div class="student-info">
-        <strong>Student:</strong> {{ $student->name }}<br>
-        <strong>Class:</strong> {{ $student->class->name ?? 'N/A' }}<br>
-        <strong>Term:</strong> {{ $invoices->first()->term->name ?? 'N/A' }}
+        <strong>Student:</strong> {{ $statementStudentName }}<br>
+        <strong>Class:</strong> {{ $statementClassName }}<br>
+        <strong>Term:</strong> {{ $invoices->first()?->term?->name ?? 'N/A' }}
     </div>
 
     @php

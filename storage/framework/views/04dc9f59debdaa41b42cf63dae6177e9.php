@@ -201,17 +201,8 @@
         
         <?php if($expenses->hasPages()): ?>
         <div class="card-footer">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div class="mb-2 mb-sm-0">
-                    <small class="text-muted">
-                        Showing <?php echo e($expenses->firstItem()); ?> to <?php echo e($expenses->lastItem()); ?> of <?php echo e($expenses->total()); ?> entries
-                    </small>
-                </div>
-                <div>
-                    <?php echo e($expenses->links()); ?>
+            <?php echo e($expenses->links()); ?>
 
-                </div>
-            </div>
         </div>
         <?php endif; ?>
     </div>

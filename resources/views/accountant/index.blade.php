@@ -150,16 +150,7 @@
         {{-- Pagination --}}
         @if($accountants->hasPages())
         <div class="card-footer">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div class="mb-2 mb-sm-0">
-                    <small class="text-muted">
-                        Showing {{ $accountants->firstItem() }} to {{ $accountants->lastItem() }} of {{ $accountants->total() }} entries
-                    </small>
-                </div>
-                <div>
-                    {{ $accountants->links() }}
-                </div>
-            </div>
+            {{ $accountants->links() }}
         </div>
         @endif
     </div>
