@@ -152,17 +152,8 @@
         
         <?php if($admins->hasPages()): ?>
         <div class="card-footer">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div class="mb-2 mb-sm-0">
-                    <small class="text-muted">
-                        Showing <?php echo e($admins->firstItem()); ?> to <?php echo e($admins->lastItem()); ?> of <?php echo e($admins->total()); ?> entries
-                    </small>
-                </div>
-                <div>
-                    <?php echo e($admins->links()); ?>
+            <?php echo e($admins->links()); ?>
 
-                </div>
-            </div>
         </div>
         <?php endif; ?>
     </div>

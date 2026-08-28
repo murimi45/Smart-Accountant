@@ -246,17 +246,8 @@
         
         <?php if(method_exists($incomes, 'hasPages') && $incomes->hasPages()): ?>
         <div class="card-footer">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div class="mb-2 mb-sm-0">
-                    <small class="text-muted">
-                        Showing <?php echo e($incomes->firstItem()); ?> to <?php echo e($incomes->lastItem()); ?> of <?php echo e($incomes->total()); ?> entries
-                    </small>
-                </div>
-                <div>
-                    <?php echo e($incomes->links()); ?>
+            <?php echo e($incomes->links()); ?>
 
-                </div>
-            </div>
         </div>
         <?php endif; ?>
     </div>

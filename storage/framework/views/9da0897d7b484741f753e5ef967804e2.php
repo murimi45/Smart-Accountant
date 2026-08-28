@@ -152,17 +152,8 @@
         
         <?php if($accountants->hasPages()): ?>
         <div class="card-footer">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div class="mb-2 mb-sm-0">
-                    <small class="text-muted">
-                        Showing <?php echo e($accountants->firstItem()); ?> to <?php echo e($accountants->lastItem()); ?> of <?php echo e($accountants->total()); ?> entries
-                    </small>
-                </div>
-                <div>
-                    <?php echo e($accountants->links()); ?>
+            <?php echo e($accountants->links()); ?>
 
-                </div>
-            </div>
         </div>
         <?php endif; ?>
     </div>

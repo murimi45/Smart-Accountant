@@ -84,6 +84,17 @@ class PromotionController extends Controller
             );
         }
 
+        $feeError = PromotionService::validateDestinationClassFees(
+            $schoolId,
+            $toTermId,
+            PromotionService::classIdsForTermPromotion($schoolId, $fromTermId),
+            $toTerm->name . ($toTerm->year ? ' — ' . $toTerm->year : '')
+        );
+
+        if ($feeError) {
+            return redirect()->route('addclassfee')->with('error', $feeError);
+        }
+
         try {
             $run = $this->startPromotionRun(
                 $schoolId,
@@ -242,6 +253,17 @@ class PromotionController extends Controller
 
         if ($configError) {
             return back()->with("error", $configError);
+        }
+
+        $feeError = PromotionService::validateDestinationClassFees(
+            $schoolId,
+            $nextYearFirstTerm->id,
+            PromotionService::destinationClassIdsForYearPromotion($schoolId, $activeTerm->id),
+            $nextYearFirstTerm->name . ' — ' . $targetYearName
+        );
+
+        if ($feeError) {
+            return redirect()->route('addclassfee')->with('error', $feeError);
         }
 
         try {

@@ -184,17 +184,8 @@
         
         <?php if($waivers->hasPages()): ?>
         <div class="card-footer">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div class="mb-2 mb-sm-0">
-                    <small class="text-muted">
-                        Showing <?php echo e($waivers->firstItem()); ?> to <?php echo e($waivers->lastItem()); ?> of <?php echo e($waivers->total()); ?> entries
-                    </small>
-                </div>
-                <div>
-                    <?php echo e($waivers->links()); ?>
+            <?php echo e($waivers->links()); ?>
 
-                </div>
-            </div>
         </div>
         <?php endif; ?>
     </div>

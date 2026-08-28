@@ -136,18 +136,8 @@
         
         <?php if($entries->hasPages()): ?>
         <div class="card-footer">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div class="mb-2 mb-sm-0">
-                    <small class="text-muted">
-                        Showing <?php echo e($entries->firstItem()); ?> to <?php echo e($entries->lastItem()); ?> of <?php echo e($entries->total()); ?> entries
-                    </small>
-                </div>
-                <div>
-                    <?php echo e($entries->links('pagination::bootstrap-4')); ?>
+            <?php echo e($entries->links()); ?>
 
-
-                </div>
-            </div>
         </div>
         <?php endif; ?>
     </div>

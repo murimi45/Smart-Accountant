@@ -26,6 +26,15 @@
         </div>
     <?php endif; ?>
 
+    <?php if(($pendingWaiverCount ?? 0) > 0): ?>
+        <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert">
+            <i class="fa fa-hand-holding-usd me-2"></i>
+            <?php echo e($pendingWaiverCount); ?> waiver request(s) awaiting approval.
+            <a href="<?php echo e(route('waivers.index')); ?>" class="alert-link">Review on Fee Waivers</a>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
     <?php if($currentTerm && !request('term_id')): ?>
         <div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
             <i class="fa fa-info-circle me-2"></i>
@@ -161,6 +170,10 @@
                                     && (int) $invoice->term_id === (int) $currentTerm->id;
                                 $rowId = "details-row-{$i}";
                                 $paymentRowId = "payment-row-{$i}";
+                                $waiverRowId = "waiver-row-{$i}";
+                                $canWaiver = $canPay
+                                    && auth()->user()->can('create', [\App\Models\InvoiceWaiver::class, $invoice]);
+                                $waiverLines = $invoice->items->filter(fn ($item) => (float) $item->amount > 0 && ! $item->invoice_waiver_id);
                             ?>
 
                             
@@ -222,8 +235,18 @@
                                             <span class="btn-text">Payment</span>
                                         </button>
                                         <?php endif; ?>
+                                        <?php if($canWaiver): ?>
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-primary toggle-row"
+                                                data-target="<?php echo e($waiverRowId); ?>"
+                                                data-label="Waiver"
+                                                title="Request Waiver">
+                                            <i class="fa fa-hand-holding-usd"></i>
+                                            <span class="btn-text">Waiver</span>
+                                        </button>
+                                        <?php endif; ?>
                                         <?php if($student): ?>
-                                        <a href="<?php echo e(route('statements.single', $student->id)); ?>" 
+                                        <a href="<?php echo e(route('statements.single', ['student' => $student->id, 'term_id' => request('term_id') ?: ($currentTerm->id ?? '')])); ?>" 
                                            class="btn btn-sm btn-light" 
                                            title="Print Statement">
                                             <i class="fa fa-print"></i>
@@ -313,6 +336,48 @@
                                                 </div>
                                             </div>
                                         </div>
+
+                                        <?php if($invoice->waivers->isNotEmpty()): ?>
+                                        <div class="mt-2">
+                                            <h6 class="section-title">
+                                                <i class="fa fa-hand-holding-usd me-2"></i>Waivers
+                                            </h6>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm inner-table mb-0">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Status</th>
+                                                            <th>Discount</th>
+                                                            <th>Reason</th>
+                                                            <th>Requested</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <?php $__currentLoopData = $invoice->waivers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $waiver): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                            <tr>
+                                                                <td>
+                                                                    <?php if($waiver->status === 'pending'): ?>
+                                                                        <span class="badge bg-warning text-dark">Pending</span>
+                                                                    <?php elseif($waiver->status === 'approved'): ?>
+                                                                        <span class="badge bg-success">Approved</span>
+                                                                    <?php else: ?>
+                                                                        <span class="badge bg-secondary"><?php echo e(ucfirst($waiver->status)); ?></span>
+                                                                    <?php endif; ?>
+                                                                </td>
+                                                                <td>
+                                                                    <?php echo e($waiver->discount_type === 'percentage' ? $waiver->value.'%' : 'KSh '.number_format($waiver->value, 2)); ?>
+
+                                                                    <span class="text-muted">(<?php echo e($waiver->scope); ?>)</span>
+                                                                </td>
+                                                                <td><?php echo e($waiver->reason); ?></td>
+                                                                <td><?php echo e($waiver->requestedBy?->admin_name ?? '—'); ?></td>
+                                                            </tr>
+                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>
@@ -356,6 +421,75 @@
                                 </td>
                             </tr>
                             <?php endif; ?>
+
+                            <?php if($canWaiver): ?>
+                            <tr class="payment-form-row d-none" id="<?php echo e($waiverRowId); ?>">
+                                <td colspan="6" class="payment-cell">
+                                    <div class="payment-content">
+                                        <h6 class="section-title">
+                                            <i class="fa fa-hand-holding-usd me-2"></i>Request waiver / bursary
+                                        </h6>
+                                        <p class="text-muted mb-3" style="font-size:13px;">
+                                            This is submitted for approval. An admin applies it from
+                                            <a href="<?php echo e(route('waivers.index')); ?>">Fee Waivers</a>.
+                                        </p>
+                                        <form action="<?php echo e(route('waivers.store', $invoice)); ?>" method="POST" class="row g-3 waiver-form">
+                                            <?php echo csrf_field(); ?>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Apply to</label>
+                                                <select name="scope" class="form-select waiver-scope" required>
+                                                    <option value="invoice">Whole invoice</option>
+                                                    <option value="line">One fee line</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3 waiver-line-wrap d-none">
+                                                <label class="form-label">Fee line</label>
+                                                <select name="invoice_item_id" class="form-select">
+                                                    <option value="">Select line</option>
+                                                    <?php $__currentLoopData = $waiverLines; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <option value="<?php echo e($item->id); ?>">
+                                                            <?php echo e($item->description); ?> (KSh <?php echo e(number_format($item->amount, 2)); ?>)
+                                                        </option>
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Type</label>
+                                                <select name="discount_type" class="form-select" required>
+                                                    <option value="fixed">Fixed (KSh)</option>
+                                                    <option value="percentage">Percentage (%)</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Value</label>
+                                                <input type="number"
+                                                       name="value"
+                                                       class="form-control"
+                                                       placeholder="Amount or %"
+                                                       step="0.01"
+                                                       min="0.01"
+                                                       required>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <label class="form-label">Reason</label>
+                                                <input type="text"
+                                                       name="reason"
+                                                       class="form-control"
+                                                       maxlength="500"
+                                                       placeholder="e.g. Bursary / hardship"
+                                                       required>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="fa fa-paper-plane me-1"></i>Submit for approval
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endif; ?>
+
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr>
                                 <td colspan="6" class="text-center py-5">
@@ -636,6 +770,7 @@
 /* Action Buttons */
 .action-buttons {
     display: flex;
+    flex-wrap: wrap;
     gap: 6px;
 }
 
@@ -788,16 +923,40 @@ document.addEventListener('click', function (e) {
     const icon = btn.querySelector('i');
     
     if (row.classList.contains('d-none')) {
-        if (btn.dataset.label === "Details") {
-            if (textSpan) textSpan.textContent = "Details";
-            if (icon) icon.className = "fa fa-eye";
-        } else {
-            if (textSpan) textSpan.textContent = "Payment";
-            if (icon) icon.className = "fa fa-plus";
+        if (textSpan) textSpan.textContent = btn.dataset.label;
+        if (icon) {
+            if (btn.dataset.label === 'Details') {
+                icon.className = 'fa fa-eye';
+            } else if (btn.dataset.label === 'Waiver') {
+                icon.className = 'fa fa-hand-holding-usd';
+            } else {
+                icon.className = 'fa fa-plus';
+            }
         }
     } else {
-        if (textSpan) textSpan.textContent = "Hide";
-        if (icon) icon.className = "fa fa-eye-slash";
+        if (textSpan) textSpan.textContent = 'Hide';
+        if (icon) icon.className = 'fa fa-eye-slash';
+    }
+});
+
+document.addEventListener('change', function (e) {
+    if (!e.target.matches('.waiver-scope')) return;
+
+    const form = e.target.closest('form');
+    if (!form) return;
+
+    const lineWrap = form.querySelector('.waiver-line-wrap');
+    const lineSelect = form.querySelector('[name="invoice_item_id"]');
+    const isLine = e.target.value === 'line';
+
+    if (lineWrap) {
+        lineWrap.classList.toggle('d-none', !isLine);
+    }
+    if (lineSelect) {
+        lineSelect.required = isLine;
+        if (!isLine) {
+            lineSelect.value = '';
+        }
     }
 });
 </script>

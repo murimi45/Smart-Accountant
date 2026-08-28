@@ -59,4 +59,58 @@ class PromotionTest extends TestCase
                 ->exists()
         );
     }
+
+    public function test_term_promotion_is_blocked_when_destination_class_fee_is_missing(): void
+    {
+        $fixtures = TenantFixtureBuilder::createPair();
+        $tenant = $fixtures['tenantA'];
+
+        $response = $this->actingAs($fixtures['adminA'])
+            ->from(route('enrollment.index'))
+            ->post(route('promotion.term'), [
+                'from_term_id' => $tenant['term']->id,
+                'to_term_id'   => $tenant['toTerm']->id,
+            ]);
+
+        $response->assertRedirect(route('addclassfee'))
+            ->assertSessionHas('error');
+
+        $this->assertStringContainsString('Grade 1', $response->getSession()->get('error'));
+    }
+
+    public function test_term_promotion_starts_when_destination_class_fee_exists(): void
+    {
+        $fixtures = TenantFixtureBuilder::createPair();
+        $tenant = $fixtures['tenantA'];
+
+        $tenant['promotionRun']->update([
+            'status'     => 'failed',
+            'active_key' => null,
+        ]);
+
+        ClassFee::createForSchool($fixtures['schoolA']->id, [
+            'class_id' => $tenant['class']->id,
+            'term_id'  => $tenant['toTerm']->id,
+            'amount'   => 5000,
+        ]);
+
+        $response = $this->actingAs($fixtures['adminA'])
+            ->from(route('enrollment.index'))
+            ->post(route('promotion.term'), [
+                'from_term_id' => $tenant['term']->id,
+                'to_term_id'   => $tenant['toTerm']->id,
+            ]);
+
+        $run = PromotionRun::withoutGlobalScopes()
+            ->where('school_id', $fixtures['schoolA']->id)
+            ->where('from_term_id', $tenant['term']->id)
+            ->where('to_term_id', $tenant['toTerm']->id)
+            ->where('type', 'term_promotion')
+            ->whereNotNull('active_key')
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($run);
+        $response->assertRedirect(route('promotion.progress', $run->id));
+    }
 }

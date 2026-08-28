@@ -166,7 +166,6 @@ class DashboardController extends Controller
         $invoiceTotals = Invoice::where('school_id', $schoolId)
             ->where('term_id', $termId)
             ->excludeVoided()
-            ->excludeTransferred()
             ->selectRaw('SUM(total_amount) as billed')
             ->first();
 
@@ -233,8 +232,8 @@ class DashboardController extends Controller
         $totalFeesBilled    = Invoice::where('school_id', $schoolId)
             ->whereIn('term_id', $termIds)
             ->excludeVoided()
-            ->excludeTransferred()
-            ->sum('total_amount');
+            ->selectRaw('SUM(total_amount - COALESCE(balance_forward, 0) + COALESCE(credit_forward, 0)) as billed')
+            ->value('billed') ?? 0;
         $totalFeesCollected = InvoicePayment::whereHas('invoice', fn ($q) =>
             $q->where('school_id', $schoolId)->whereIn('term_id', $termIds)
         )->sum('amount');

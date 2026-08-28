@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Term;
 use App\Models\AcademicYear;
 use App\Models\Classes;
+use App\Models\ClassFee;
 use App\Models\PromotionRun;
 use App\Models\StudentEnrollment;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +27,100 @@ class PromotionService
         }
 
         return 'Cannot promote to next year: ' . implode('; ', $issues) . '.';
+    }
+
+    /**
+     * Classes with active/repeating enrollments in the from-term (same class in term promotion).
+     *
+     * @return list<int>
+     */
+    public static function classIdsForTermPromotion(int $schoolId, int $fromTermId): array
+    {
+        return StudentEnrollment::withoutGlobalScopes()
+            ->where('school_id', $schoolId)
+            ->where('term_id', $fromTermId)
+            ->whereIn('status', [
+                StudentEnrollment::STATUS_ACTIVE,
+                StudentEnrollment::STATUS_REPEATING,
+            ])
+            ->distinct()
+            ->pluck('class_id')
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Destination classes for year promotion (next class, or same class if repeating).
+     * Graduating students are skipped.
+     *
+     * @return list<int>
+     */
+    public static function destinationClassIdsForYearPromotion(int $schoolId, int $fromTermId): array
+    {
+        $enrollments = StudentEnrollment::withoutGlobalScopes()
+            ->with('schoolClass')
+            ->where('school_id', $schoolId)
+            ->where('term_id', $fromTermId)
+            ->whereIn('status', [
+                StudentEnrollment::STATUS_ACTIVE,
+                StudentEnrollment::STATUS_REPEATING,
+            ])
+            ->get();
+
+        $classIds = [];
+
+        foreach ($enrollments as $enrollment) {
+            $action = self::resolveClassPromotionAction($enrollment, $schoolId);
+            if (($action['action'] ?? null) === 'promote' && isset($action['class_id'])) {
+                $classIds[] = (int) $action['class_id'];
+            }
+        }
+
+        return array_values(array_unique($classIds));
+    }
+
+    /**
+     * Block promotion when destination-term class fees are missing for classes that will receive students.
+     * Empty classes with no promoting students are not required.
+     */
+    public static function validateDestinationClassFees(
+        int $schoolId,
+        int $toTermId,
+        array $classIds,
+        ?string $termLabel = null
+    ): ?string {
+        $classIds = array_values(array_unique(array_filter($classIds)));
+
+        if ($classIds === []) {
+            return null;
+        }
+
+        $pricedClassIds = ClassFee::withoutGlobalScopes()
+            ->where('school_id', $schoolId)
+            ->where('term_id', $toTermId)
+            ->whereIn('class_id', $classIds)
+            ->pluck('class_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $missing = Classes::withoutGlobalScopes()
+            ->where('school_id', $schoolId)
+            ->whereIn('id', $classIds)
+            ->whereNotIn('id', $pricedClassIds)
+            ->orderBy('order')
+            ->pluck('name');
+
+        if ($missing->isEmpty()) {
+            return null;
+        }
+
+        $term = $termLabel
+            ?? Term::withoutGlobalScopes()->where('school_id', $schoolId)->find($toTermId)?->name
+            ?? 'the destination term';
+
+        return 'Set class fees for '.$term.' before promoting: '.$missing->implode(', ').'.';
     }
 
     /*

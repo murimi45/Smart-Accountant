@@ -7,24 +7,42 @@ use ZipArchive;
 use Illuminate\Http\Request;
 use App\Models\Student;
 use App\Models\Invoice;
+use App\Services\InvoiceService;
 use App\Services\OverdueSmsReminderService;
 use App\Support\TenantFilters;
 use App\Support\TenantStorage;
 
 class StatementController extends Controller
 {
-    public function single(Student $student)
+    public function single(Request $request, Student $student)
     {
         $this->authorize('view', $student);
 
         $schoolId = TenantFilters::schoolId();
+        $currentTerm = InvoiceService::currentTermForSchool($schoolId);
 
-        $invoices = Invoice::where('school_id', $schoolId)
+        if ($request->filled('term_id')) {
+            TenantFilters::validate($request, ['term_id']);
+            $termId = (int) $request->term_id;
+        } else {
+            $termId = $currentTerm?->id;
+        }
+
+        $query = Invoice::where('school_id', $schoolId)
             ->where('student_id', $student->id)
             ->excludeVoided()
             ->with(['items', 'payments', 'enrollment.schoolClass', 'enrollment.stream', 'term'])
-            ->orderBy('created_at')
-            ->get();
+            ->orderBy('created_at');
+
+        if ($termId) {
+            $query->where('term_id', $termId);
+        }
+
+        $invoices = $query->get();
+
+        if ($invoices->isEmpty()) {
+            return back()->with('error', 'No invoice found for this student in the selected term.');
+        }
 
         $pdf = Pdf::loadView('statements.single', compact('student', 'invoices'));
 

@@ -58,10 +58,14 @@
         <p><strong>School Accounting System</strong></p>
     </div>
 
+    <?php
+        $statementStudentName = $student?->full_name ?? 'Deleted student';
+        $statementClassName = $invoices->first()?->enrollment?->schoolClass?->name ?? 'N/A';
+    ?>
     <div class="student-info">
-        <strong>Student:</strong> <?php echo e($student->name); ?><br>
-        <strong>Class:</strong> <?php echo e($student->class->name ?? 'N/A'); ?><br>
-        <strong>Term:</strong> <?php echo e($invoices->first()->term->name ?? 'N/A'); ?>
+        <strong>Student:</strong> <?php echo e($statementStudentName); ?><br>
+        <strong>Class:</strong> <?php echo e($statementClassName); ?><br>
+        <strong>Term:</strong> <?php echo e($invoices->first()?->term?->name ?? 'N/A'); ?>
 
     </div>
 

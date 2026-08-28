@@ -104,6 +104,18 @@ class InvoiceWaiverTest extends TestCase
         $this->assertFalse($invoice->items()->whereNotNull('invoice_waiver_id')->exists());
     }
 
+    public function test_fee_summary_shows_waiver_request_form(): void
+    {
+        $invoice = $this->invoiceWithItems($this->fixtures['tenantA']['invoice']);
+
+        $this->actingAs($this->fixtures['accountantA'])
+            ->get(route('invoices.index'))
+            ->assertOk()
+            ->assertSee('Request Waiver', false)
+            ->assertSee('Submit for approval')
+            ->assertSee(route('waivers.store', $invoice), false);
+    }
+
     public function test_accountant_cannot_approve_waiver(): void
     {
         $tenant = $this->fixtures['tenantA'];

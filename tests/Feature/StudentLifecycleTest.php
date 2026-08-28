@@ -299,12 +299,19 @@ class StudentLifecycleTest extends TestCase
             ->assertDontSee($student->full_name);
     }
 
-    public function test_dashboard_billed_excludes_voided_and_transferred_invoices(): void
+    public function test_dashboard_term_billed_keeps_transferred_and_excludes_voided(): void
     {
         $tenant = $this->fixtures['tenantA'];
         $invoice = $tenant['invoice'];
         $admin = $this->fixtures['adminA'];
         $termId = $tenant['term']->id;
+
+        $this->actingAs($admin)
+            ->get(route('dashboard', ['view' => 'term', 'term_id' => $termId]))
+            ->assertOk()
+            ->assertSee('10,000.00');
+
+        $invoice->update(['status' => Invoice::STATUS_TRANSFERRED]);
 
         $this->actingAs($admin)
             ->get(route('dashboard', ['view' => 'term', 'term_id' => $termId]))
@@ -317,17 +324,40 @@ class StudentLifecycleTest extends TestCase
             ->get(route('dashboard', ['view' => 'term', 'term_id' => $termId]))
             ->assertOk()
             ->assertDontSee('10,000.00');
+    }
 
-        $invoice->update([
-            'status'       => Invoice::STATUS_UNPAID,
+    public function test_dashboard_annual_billed_excludes_voided_and_balance_forward(): void
+    {
+        $tenant = $this->fixtures['tenantA'];
+        $admin = $this->fixtures['adminA'];
+        $schoolId = (int) $this->fixtures['schoolA']->id;
+
+        $tenant['invoice']->update([
+            'status'       => Invoice::STATUS_TRANSFERRED,
             'total_amount' => 10000,
+            'balance_forward' => 0,
         ]);
-        $invoice->update(['status' => Invoice::STATUS_TRANSFERRED]);
+
+        Invoice::createForSchool($schoolId, [
+            'student_id'      => $tenant['student']->id,
+            'term_id'         => $tenant['toTerm']->id,
+            'enrollment_id'   => $tenant['enrollment']->id,
+            'total_amount'    => 8000,
+            'amount_paid'     => 0,
+            'balance'         => 8000,
+            'balance_forward' => 3000,
+            'credit_forward'  => 0,
+            'invoice_date'    => now()->toDateString(),
+            'status'          => Invoice::STATUS_UNPAID,
+        ]);
 
         $this->actingAs($admin)
-            ->get(route('dashboard', ['view' => 'term', 'term_id' => $termId]))
+            ->get(route('dashboard', [
+                'view' => 'annual',
+                'academic_year_id' => $tenant['year']->id,
+            ]))
             ->assertOk()
-            ->assertDontSee('10,000.00');
+            ->assertSee('15,000.00');
     }
 
     private function recordPayment(Invoice $invoice, float $amount): void
