@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Services\EmployeeImportService;
 use App\Models\Classes;
 use App\Models\ClassFee;
 use App\Models\Invoice;
@@ -31,6 +32,10 @@ class BulkImportExportService
             ],
             'opening_balances' => [
                 'admission', 'term', 'opening_balance', 'notes',
+            ],
+            'employees' => [
+                'staff_number', 'full_name', 'grade', 'phone', 'status', 'start_date',
+                'kra_pin', 'nssf_number', 'shif_number', 'payment_method', 'bank_name', 'account_number',
             ],
         ];
     }
@@ -146,6 +151,7 @@ class BulkImportExportService
             'fees'     => ['Grade 1', 'Term 1 - 2026', '15000', 'Tuition Term 1', 'active'],
             'payments' => ['ADM001', '5000', 'Mpesa', now()->toDateString(), 'Term 1 - 2026'],
             'opening_balances' => ['ADM001', 'Term 1 - 2026', '3500', 'Arrears 2025 Term 3'],
+            'employees' => ['T001', 'Jane Doe', 'Teacher', '0712345678', 'active', '2026-01-06', 'A001234567B', '', '', 'mpesa', '', '0712345678'],
             default    => array_fill(0, count($headers), ''),
         };
 
@@ -482,6 +488,17 @@ class BulkImportExportService
         $year = $term->year ?? $term->academicYear?->name ?? '';
 
         return trim($term->name.($year ? ' - '.$year : ''));
+    }
+
+        public function exportEmployees(int $schoolId): StreamedResponse
+    {
+        return app(EmployeeImportService::class)->export($schoolId);
+    }
+
+    /** @return array{created: int, updated: int, skipped: int, errors: list<string>} */
+    public function importEmployees(int $schoolId, string $filePath): array
+    {
+        return app(EmployeeImportService::class)->importFile($schoolId, $filePath);
     }
 
     private function resolveClass(int $schoolId, string $name): ?Classes

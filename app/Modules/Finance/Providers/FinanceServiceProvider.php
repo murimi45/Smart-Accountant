@@ -51,6 +51,14 @@ use App\Policies\StudentExtraFeePolicy;
 use App\Policies\TransactionPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use App\Models\Employee;
+use App\Models\SalaryGrade;
+use App\Policies\EmployeePolicy;
+use App\Policies\SalaryGradePolicy;
+use App\Models\EmployeeDeduction;
+use App\Models\PayrollRun;
+use App\Policies\EmployeeDeductionPolicy;
+use App\Policies\PayrollRunPolicy;
 
 class FinanceServiceProvider extends ServiceProvider
 {
@@ -76,6 +84,10 @@ class FinanceServiceProvider extends ServiceProvider
         Gate::policy(BankReconciliationMatch::class, BankReconciliationMatchPolicy::class);
         Gate::policy(SmsLog::class, SmsLogPolicy::class);
         Gate::policy(Transaction::class, TransactionPolicy::class);
+        Gate::policy(SalaryGrade::class, SalaryGradePolicy::class);
+        Gate::policy(Employee::class, EmployeePolicy::class);
+        Gate::policy(EmployeeDeduction::class, EmployeeDeductionPolicy::class);
+        Gate::policy(PayrollRun::class, PayrollRunPolicy::class);
 
         ClassFee::observe(ClassFeeObserver::class);
         ExtraFee::observe(ExtraFeeObserver::class);

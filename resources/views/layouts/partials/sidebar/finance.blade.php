@@ -55,6 +55,17 @@
                     <li><a class="{{ Request::is('budgets*') ? 'active' : '' }}" href="{{ route('budgets.index') }}">Budgets</a></li>
                 </ul>
             </li>
+            <li>
+    <a href="#payrollMenu" data-toggle="collapse" aria-expanded="{{ Request::is('payroll/*') ? 'true' : 'false' }}" class="dropdown-toggle">
+        <i class="fa fa-id-badge green_color"></i>
+        <span>Payroll</span>
+    </a>
+    <ul class="collapse list-unstyled {{ Request::is('payroll/*') ? 'show' : '' }}" id="payrollMenu">
+        <li><a class="{{ Request::is('payroll/runs*') ? 'active' : '' }}" href="{{ route('payroll.runs.index') }}">Payroll Months</a></li>
+        <li><a class="{{ Request::is('payroll/grades*') ? 'active' : '' }}" href="{{ route('salary_grades.index') }}">Salary Grades</a></li>
+        <li><a class="{{ Request::is('payroll/employees*') ? 'active' : '' }}" href="{{ route('employees.index') }}">Employees</a></li>
+    </ul>
+</li>
         </ul>
     </div>
 

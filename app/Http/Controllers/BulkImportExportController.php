@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ClassFee;
+use App\Models\Employee;
 use App\Models\Invoice;
 use App\Models\Student;
 use App\Models\Term;
@@ -34,6 +35,7 @@ class BulkImportExportController extends Controller
             'fees'     => $service->exportFees($schoolId, $termId),
             'payments' => $service->exportPayments($schoolId, $termId),
             'opening_balances' => $service->exportOpeningBalances($schoolId, $termId),
+            'employees' => $service->exportEmployees($schoolId),
             default    => abort(404),
         };
     }
@@ -66,6 +68,7 @@ class BulkImportExportController extends Controller
             'fees'     => $service->importClassFees($schoolId, $path),
             'payments' => $service->importPayments($schoolId, $path),
             'opening_balances' => $service->importOpeningBalances($schoolId, $path),
+            'employees' => $service->importEmployees($schoolId, $path),
             default    => abort(404),
         };
 
@@ -87,7 +90,7 @@ class BulkImportExportController extends Controller
 
     private function authorizeType(string $type, string $action): void
     {
-        if (! in_array($type, ['students', 'fees', 'payments', 'opening_balances'], true)) {
+        if (! in_array($type, ['students', 'fees', 'payments', 'opening_balances', 'employees'], true)) {
             abort(404);
         }
 
@@ -113,6 +116,14 @@ class BulkImportExportController extends Controller
 
         if ($type === 'opening_balances') {
             abort_unless(in_array(auth()->user()->role, ['admin', 'accountant'], true), 403);
+
+            return;
+        }
+
+        if ($type === 'employees') {
+            $action === 'export'
+                ? $this->authorize('viewAny', Employee::class)
+                : $this->authorize('create', Employee::class);
 
             return;
         }

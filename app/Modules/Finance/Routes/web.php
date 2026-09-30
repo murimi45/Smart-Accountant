@@ -21,6 +21,10 @@ use App\Http\Controllers\OtherIncomeController;
 use App\Http\Controllers\PaymentChannelController;
 use App\Http\Controllers\SmsLogController;
 use App\Http\Controllers\StatementController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\SalaryGradeController;
+use App\Http\Controllers\EmployeeDeductionController;
+use App\Http\Controllers\PayrollRunController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth', 'school', 'tenant', '2fa', 'module:accountant'])
@@ -131,7 +135,36 @@ Route::middleware(['web', 'auth', 'school', 'tenant', '2fa', 'module:accountant'
             Route::get('/bulk/export/{type}', [BulkImportExportController::class, 'export'])->name('bulk.export');
             Route::get('/bulk/template/{type}', [BulkImportExportController::class, 'template'])->name('bulk.template');
             Route::post('/bulk/import/{type}', [BulkImportExportController::class, 'import'])->name('bulk.import');
+ 
+            
+            Route::get('/payroll/runs', [PayrollRunController::class, 'index'])->name('payroll.runs.index');
+            Route::post('/payroll/runs', [PayrollRunController::class, 'store'])->name('payroll.runs.store');
+            Route::get('/payroll/runs/{id}', [PayrollRunController::class, 'show'])->name('payroll.runs.show');
+            Route::post('/payroll/runs/{id}/recalculate', [PayrollRunController::class, 'recalculate'])->name('payroll.runs.recalculate');
+            Route::post('/payroll/runs/{id}/lock', [PayrollRunController::class, 'lock'])->name('payroll.runs.lock');
+            Route::put('/payroll/runs/{runId}/payslips/{payslipId}', [PayrollRunController::class, 'updatePayslip'])->name('payroll.payslips.update');
 
+            Route::get('/payroll/grades', [SalaryGradeController::class, 'index'])->name('salary_grades.index');
+            Route::post('/payroll/grades', [SalaryGradeController::class, 'store'])->name('salary_grades.store');
+            Route::put('/payroll/grades/{id}', [SalaryGradeController::class, 'update'])->name('salary_grades.update');
+            Route::delete('/payroll/grades/{id}', [SalaryGradeController::class, 'destroy'])->name('salary_grades.destroy');
+
+            Route::get('/payroll/employees', [EmployeeController::class, 'index'])->name('employees.index');
+            Route::get('/payroll/employees/create', [EmployeeController::class, 'create'])->name('employees.create');
+            Route::post('/payroll/employees', [EmployeeController::class, 'store'])->name('employees.store');
+            Route::get('/payroll/employees/{id}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
+           
+           
+           
+           Route::post('/payroll/employees/{employeeId}/deductions', [EmployeeDeductionController::class, 'store'])
+                 ->name('employees.deductions.store');
+           Route::put('/payroll/employees/{employeeId}/deductions/{deductionId}', [EmployeeDeductionController::class, 'update'])
+                 ->name('employees.deductions.update');
+            Route::post('/payroll/employees/{employeeId}/deductions/{deductionId}/stop', [EmployeeDeductionController::class, 'stop'])
+                 ->name('employees.deductions.stop');
+           
+           
+            Route::put('/payroll/employees/{id}', [EmployeeController::class, 'update'])->name('employees.update');
             Route::get('/payment_channels', [PaymentChannelController::class, 'index'])->name('payment_channels.index');
             Route::post('/payment_channels', [PaymentChannelController::class, 'store'])->name('payment_channels.store');
             Route::put('/payment_channels/{id}', [PaymentChannelController::class, 'update'])->name('payment_channels.update');

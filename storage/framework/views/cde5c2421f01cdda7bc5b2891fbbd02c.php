@@ -55,6 +55,17 @@
                     <li><a class="<?php echo e(Request::is('budgets*') ? 'active' : ''); ?>" href="<?php echo e(route('budgets.index')); ?>">Budgets</a></li>
                 </ul>
             </li>
+            <li>
+    <a href="#payrollMenu" data-toggle="collapse" aria-expanded="<?php echo e(Request::is('payroll/*') ? 'true' : 'false'); ?>" class="dropdown-toggle">
+        <i class="fa fa-id-badge green_color"></i>
+        <span>Payroll</span>
+    </a>
+    <ul class="collapse list-unstyled <?php echo e(Request::is('payroll/*') ? 'show' : ''); ?>" id="payrollMenu">
+        <li><a class="<?php echo e(Request::is('payroll/runs*') ? 'active' : ''); ?>" href="<?php echo e(route('payroll.runs.index')); ?>">Payroll Months</a></li>
+        <li><a class="<?php echo e(Request::is('payroll/grades*') ? 'active' : ''); ?>" href="<?php echo e(route('salary_grades.index')); ?>">Salary Grades</a></li>
+        <li><a class="<?php echo e(Request::is('payroll/employees*') ? 'active' : ''); ?>" href="<?php echo e(route('employees.index')); ?>">Employees</a></li>
+    </ul>
+</li>
         </ul>
     </div>
 

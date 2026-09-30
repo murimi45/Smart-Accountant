@@ -26,5 +26,6 @@ class DatabaseSeeder extends Seeder
         $this->call(AccountsTableSeeder::class, false, ['schoolId' => $school->id]);
         $this->call(ModulesSeeder::class);
         $this->call(GradingSchemesSeeder::class);
+        $this->call(StatutoryRatesSeeder::class);
     }
 }

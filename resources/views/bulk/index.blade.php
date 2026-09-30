@@ -144,6 +144,24 @@
                 </div>
             </div>
         </div>
+        <div class="col-lg-6">
+            <div class="card form-card h-100">
+                <div class="card-header"><h5 class="mb-0"><i class="fa fa-id-badge me-2"></i>Employees</h5></div>
+                <div class="card-body">
+                    <p class="text-muted small">Import staff for payroll, or export the current list. The grade name must already exist under Salary Grades.</p>
+                    <div class="d-grid gap-2 mb-2">
+                        <a href="{{ route('bulk.template', 'employees') }}" class="btn btn-outline-secondary btn-sm"><i class="fa fa-download me-1"></i>Download template</a>
+                        <a href="{{ route('bulk.export', 'employees') }}" class="btn btn-outline-primary btn-sm"><i class="fa fa-file-export me-1"></i>Export employees</a>
+                    </div>
+                    <form action="{{ route('bulk.import', 'employees') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <input type="file" name="file" class="form-control form-control-sm mb-2" accept=".csv,text/csv" required>
+                        <button type="submit" class="btn btn-success btn-sm w-100"><i class="fa fa-upload me-1"></i>Import employees</button>
+                    </form>
+                    <p class="text-muted small mt-2 mb-0">Required columns: <code>staff_number</code>, <code>full_name</code>, <code>grade</code>. Importing the same staff number updates that person.</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     {{-- CSV Tips --}}
@@ -156,6 +174,7 @@
                 <li>Duplicate student admissions update the existing record and add enrollment for a new term if needed.</li>
                 <li>Payment import uses the same rules as manual payment entry (current term invoice, not voided).</li>
                 <li><strong>Opening balances</strong> are for old debt only — use the current term column (e.g. first term you are billing in the system).</li>
+                <li><strong>Employees:</strong> create the salary grade first. <code>status</code> is <code>active</code> or <code>left</code>. <code>payment_method</code> is <code>bank</code>, <code>mpesa</code>, or <code>cash</code>.</li>
             </ul>
         </div>
     </div>
