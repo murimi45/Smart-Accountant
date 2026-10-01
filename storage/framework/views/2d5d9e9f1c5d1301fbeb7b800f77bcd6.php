@@ -767,7 +767,7 @@
                     </div>
                 </div>
                 <div class="col-lg-6 hero-image mt-5 mt-lg-0">
-                    <img src="{{ asset('images/dashboard-preview.png') }}" alt="Btek Skools dashboard" class="fade-in">
+                    <img src="<?php echo e(asset('images/dashboard-preview.png')); ?>" alt="Btek Skools dashboard" class="fade-in">
                 </div>
             </div>
         </div>
@@ -1206,4 +1206,4 @@
     </script>
 
 </body>
-</html>
+</html><?php /**PATH /Users/allanmurimi/Projects/Smart-Accountant/resources/views/welcome.blade.php ENDPATH**/ ?>
